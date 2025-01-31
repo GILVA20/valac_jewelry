@@ -6,3 +6,43 @@
 <img src="{{ url_for('static', filename='images/sapphire-ring.jpg') }}" alt="Sapphire Gold Ring" class="w-full h-56 object-cover mb-4">
 <img src="{{ url_for('static', filename='images/diamond-earrings.jpg') }}" alt="Diamond Stud Earrings" class="w-full h-56 object-cover mb-4">
 <img src="{{ url_for('static', filename='images/silver-bracelet.jpg') }}" alt="Silver Bracelet" class="w-full h-56 object-cover mb-4">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VALAC Joyas</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
+    <style>
+        /* Aplica la tipografía a todo el sitio */
+        body {
+            font-family: 'Playfair Display', serif;
+            font-weight: 400; /* Peso normal para el cuerpo */
+            color: #424242; /* Color de texto general */
+        }
+
+        /* Estilo de los títulos */
+        h1, h2, h3 {
+            font-family: 'Playfair Display', serif;
+            font-weight: 600; /* Negrita para los títulos */
+        }
+
+        /* Estilo para párrafos */
+        p {
+            font-family: 'Playfair Display', serif;
+            font-weight: 400; /* Peso normal para los párrafos */
+        }
+
+        /* Estilo para enlaces */
+        a {
+            font-family: 'Playfair Display', serif;
+            font-weight: 600; /* Un poco más audaz para los enlaces */
+            color: #424242; /* Color de enlace */
+        }
+
+        a:hover {
+            color: #d5a300; /* Color de enlace al pasar el mouse */
+        }
+    </style>
+</head>
+

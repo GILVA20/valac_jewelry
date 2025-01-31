@@ -1,3 +1,50 @@
+/* Para utilizar esta paleta en tu proyecto con TailwindCSS */
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  /* Fondo blanco */
+  body {
+    background-color: #FFFFFF;
+    color: #333333;
+  }
+
+  /* Colores principales */
+  .bg-primary {
+    background-color: #A67C00; /* Oro */
+  }
+
+  .text-primary {
+    color: #A67C00; /* Oro */
+  }
+
+  /* Colores de texto */
+  .text-dark {
+    color: #333333; /* Gris oscuro */
+  }
+
+  .text-light {
+    color: #B0B0B0; /* Gris claro */
+  }
+
+  /* Para secciones de fondo gris claro */
+  .bg-light {
+    background-color: #D1D1D1; /* Gris claro */
+  }
+  
+  /* Color de texto principal */
+  .text-black {
+    color: #000000;
+  }
+
+  /* Para bordes */
+  .border-dark {
+    border-color: #333333; /* Gris oscuro */
+  }
+
+  .border-light {
+    border-color: #B0B0B0; /* Gris claro */
+  }
+}

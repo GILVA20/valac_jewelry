@@ -4,3 +4,26 @@ __pycache__/
 instance/
 *.log
 *.pyc
+# Python
+*.pyc
+*.pyo
+__pycache__/
+
+# Node.js
+node_modules/
+
+# Flask
+instance/
+*.log
+
+# Firebase
+valacjoyas-e23f2-firebase-adminsdk-fbsvc-f4e24e9ab4.json
+
+# Otros archivos temporales
+*.swp
+*.bak
+
+# IDEs
+.vscode/
+.idea/
+

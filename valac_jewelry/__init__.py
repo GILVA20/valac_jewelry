@@ -1,41 +1,40 @@
 # valac_jewelry/__init__.py
-from flask import Flask
-from .config import Config
-from flask import Flask, render_template
-import firebase_admin
-from firebase_admin import credentials, db
-from firebase_admin import credentials, initialize_app
 import os
-    # Importar y registrar los Blueprints
-from .routes.main import main_bp
-from .routes.collection import collections_bp
-from .routes.products import products_bp
+import logging
+from flask import Flask
+from flask_admin import Admin
+from supabase import create_client
+from .config import Config
+
+logging.basicConfig(level=logging.DEBUG)
 
 def create_app():
-    app = Flask(__name__, instance_relative_config=True)
-    app.config.from_object(Config)
-
-    # Inicializar Firebase (si lo necesitas aquí, o en otro módulo de configuración)
-    # 1. Inicializar Firebase
+    # Calcula la ruta base y define la carpeta estática
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    cred_path = os.path.join(base_dir, 'instance', 'valacjoyas-e23f2-firebase-adminsdk-fbsvc-f4e24e9ab4.json')
+    static_folder = os.path.join(base_dir, 'static')
     
-        # Calcular la ruta base (la carpeta raíz de tu proyecto)
-    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    # Construir la ruta absoluta a la carpeta "static"
-    static_folder = os.path.join(base_dir, 'static') 
-        # Crear la aplicación usando la ruta absoluta para la carpeta estática
-    app = Flask(__name__, static_folder=static_folder)
+    # Crea la aplicación
+    app = Flask(__name__, static_folder=static_folder, instance_relative_config=True)
     app.config.from_object(Config)
-
-    cred = credentials.Certificate(cred_path)
-    firebase_admin.initialize_app(cred, {
-        'databaseURL': 'https://valacjoyas-e23f2-default-rtdb.firebaseio.com/'
-    })
-
-
-    app.register_blueprint(main_bp)  # Rutas sin prefijo, p.ej: '/', '/about'
+    
+    # Inicializa el cliente de Supabase y lo asigna a la app
+    supabase_url = app.config.get("SUPABASE_URL")
+    supabase_key = app.config.get("SUPABASE_KEY")
+    app.supabase = create_client(supabase_url, supabase_key)
+    
+    # Registrar blueprints
+    from .routes.main import main_bp
+    app.register_blueprint(main_bp)
+    
+    from .routes.collection import collections_bp  # Asegúrate de que el archivo se llame collection.py
     app.register_blueprint(collections_bp, url_prefix='/collection')
+    
+    from .routes.products import products_bp
     app.register_blueprint(products_bp, url_prefix='/producto')
-
+    
+    # Inicializa Flask-Admin con la vista personalizada para Supabase
+    admin = Admin(app, name='VALAC Joyas Admin', template_mode='bootstrap3', url='/admin', endpoint='admin')
+    from .routes.admin import SupabaseProductAdmin
+    admin.add_view(SupabaseProductAdmin(name='Productos Supabase', endpoint='supabase_products'))
+    
     return app

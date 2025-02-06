@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Editar Producto - Supabase</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
+    <!-- Incluye FontAwesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="bg-gray-100 p-6">
+    <div class="max-w-xl mx-auto bg-white p-8 rounded-lg shadow-lg">
+        <h1 class="text-3xl font-bold mb-6 text-center text-gray-800">Editar Producto</h1>
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div class="mb-4">
+              {% for category, message in messages %}
+                <div class="p-4 mb-2 rounded-lg {% if category == 'error' %}bg-red-200 text-red-800{% elif category == 'success' %}bg-green-200 text-green-800{% else %}bg-gray-200 text-gray-800{% endif %}">
+                  {{ message }}
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+        <form method="POST">
+            <!-- Nombre -->
+            <div class="mb-6">
+                <label for="nombre" class="block text-gray-700 font-medium mb-2">Nombre:</label>
+                <input type="text" id="nombre" name="nombre" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" value="{{ product.nombre }}" required>
+            </div>
+
+            <!-- Descripción -->
+            <div class="mb-6">
+                <label for="descripcion" class="block text-gray-700 font-medium mb-2">Descripción:</label>
+                <textarea id="descripcion" name="descripcion" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" rows="4" required>{{ product.descripcion }}</textarea>
+            </div>
+
+            <!-- Precio -->
+            <div class="mb-6">
+                <label for="precio" class="block text-gray-700 font-medium mb-2">Precio:</label>
+                <input type="number" step="0.01" id="precio" name="precio" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" value="{{ product.precio }}" required>
+            </div>
+
+            <!-- Tipo de Producto -->
+            <div class="mb-6">
+                <label for="tipo_producto" class="block text-gray-700 font-medium mb-2">Tipo de Producto:</label>
+                <select id="tipo_producto" name="tipo_producto" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    <option value="Anillos" {% if product.tipo_producto == "Anillos" %}selected{% endif %}>Anillos</option>
+                    <option value="Collares" {% if product.tipo_producto == "Collares" %}selected{% endif %}>Collares</option>
+                    <option value="Pulsos" {% if product.tipo_producto == "Pulsos" %}selected{% endif %}>Pulsos</option>
+                    <option value="Cadenas" {% if product.tipo_producto == "Cadenas" %}selected{% endif %}>Cadenas</option>
+                    <option value="Dijes" {% if product.tipo_producto == "Dijes" %}selected{% endif %}>Dijes</option>
+                </select>
+            </div>
+
+            <!-- Categoría (Género) -->
+            <div class="mb-6">
+                <label for="genero" class="block text-gray-700 font-medium mb-2">Categoría:</label>
+                <select id="genero" name="genero" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    <option value="Hombre" {% if product.genero == "Hombre" %}selected{% endif %}>Hombre</option>
+                    <option value="Mujer" {% if product.genero == "Mujer" %}selected{% endif %}>Mujer</option>
+                    <option value="Unisex" {% if product.genero == "Unisex" %}selected{% endif %}>Unisex</option>
+                </select>
+            </div>
+
+            <!-- Tipo de Oro -->
+            <div class="mb-6">
+                <label for="tipo_oro" class="block text-gray-700 font-medium mb-2">Tipo de Oro:</label>
+                <select id="tipo_oro" name="tipo_oro" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    <option value="10k" {% if product.tipo_oro == "10k" %}selected{% endif %}>10k</option>
+                    <option value="14k" {% if product.tipo_oro == "14k" %}selected{% endif %}>14k</option>
+                </select>
+            </div>
+
+            <!-- Subir Imagen -->
+            <div class="mb-6">
+                <label for="file-upload" class="block text-gray-700 font-medium mb-2">Subir Imagen:</label>
+                <div class="flex items-center justify-center w-full">
+                    <label for="file-upload" class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500">
+                        <i id="upload-icon" class="fas fa-upload text-gray-500 text-2xl mb-2"></i>
+                        <p class="text-gray-500">Haz clic para subir una imagen</p>
+                    </label>
+                    <input type="file" id="file-upload" accept="image/*" onchange="handleFileUpload(event)" class="hidden">
+                </div>
+                <p id="upload-status" class="text-sm text-gray-500 mt-2"></p>
+            </div>
+
+            <!-- Campo oculto para la URL de la imagen -->
+            <input type="hidden" id="imagen" name="imagen" value="{{ product.imagen }}">
+
+            <!-- Botón de Enviar -->
+            <div>
+                <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300">
+                    Guardar Cambios
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Bloque de JavaScript: Coloca esto justo antes del cierre de </body> -->
+    <script type="module">
+        import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+
+        // Inyecta las variables de configuración desde Flask
+        const SUPABASE_URL = "{{ config['SUPABASE_URL'] }}";
+        const SUPABASE_KEY = "{{ config['SUPABASE_KEY'] }}";
+        
+        // Inicializa el cliente Supabase
+        const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+        console.log("Cliente Supabase inicializado:", supabase);
+
+        async function uploadImage(file) {
+            const fileName = 'products/' + file.name;
+            console.log("Subiendo archivo:", fileName);
+            const { data, error } = await supabase
+                .storage
+                .from('CatalogoJoyasValacJoyas') // Si cambiaste el bucket para eliminar espacios, usa el nuevo nombre.
+                .upload(fileName, file);
+            if (error) {
+                console.error("Error en la subida:", error);
+                throw error;
+            }
+            // Obtener la URL pública; agregamos un timestamp para evitar caché.
+            const { data: urlData, error: urlError } = supabase
+                .storage
+                .from('CatalogoJoyasValacJoyas')
+                .getPublicUrl(fileName);
+            if (urlError) {
+                console.error("Error obteniendo URL pública:", urlError);
+                throw urlError;
+            }
+            let publicURL = urlData.publicURL || urlData.publicUrl;
+            if (!publicURL || publicURL === "undefined") {
+                throw new Error("La URL pública es undefined");
+            }
+            // Para evitar caché, agregamos un query string con el timestamp
+            publicURL += "?t=" + new Date().getTime();
+            console.log("URL de descarga:", publicURL);
+            return publicURL;
+        }
+
+        async function handleFileUpload(event) {
+            const file = event.target.files[0];
+            const statusEl = document.getElementById("upload-status");
+            const uploadIcon = document.getElementById("upload-icon");
+
+            if (file) {
+                statusEl.innerText = "Subiendo imagen...";
+                uploadIcon.classList.remove("fa-upload");
+                uploadIcon.classList.add("fa-spinner", "fa-spin");
+
+                try {
+                    const url = await uploadImage(file);
+                    // Si la URL es undefined o no válida, se lanzará un error
+                    document.getElementById("imagen").value = url;
+                    statusEl.innerText = "Imagen subida exitosamente!";
+                    statusEl.classList.remove("text-gray-500");
+                    statusEl.classList.add("text-green-500");
+                } catch (error) {
+                    console.error("Error al subir la imagen:", error);
+                    statusEl.innerText = "Error al subir la imagen.";
+                    statusEl.classList.remove("text-gray-500");
+                    statusEl.classList.add("text-red-500");
+                } finally {
+                    uploadIcon.classList.remove("fa-spinner", "fa-spin");
+                    uploadIcon.classList.add("fa-upload");
+                }
+            }
+        }
+
+        window.handleFileUpload = handleFileUpload;
+    </script>
+</body>
+</html>

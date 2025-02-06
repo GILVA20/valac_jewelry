@@ -1,14 +1,24 @@
-# valac_jewelry/routes/collections.py
-from flask import Blueprint, render_template
-from firebase_admin import db
-import logging
+# valac_jewelry/routes/collection.py
+from flask import Blueprint, render_template, current_app
+
 collections_bp = Blueprint('collection', __name__)
 
-@collections_bp.route('/<coleccion_slug>')
-def collection(coleccion_slug):
-    # Consulta a Firebase para obtener los productos de la colección
-    ref = db.reference(f'collection/{coleccion_slug}/productos')
-    productos = ref.get()  # Se espera un diccionario de productos
-    productos_lista = list(productos.values()) if productos else []
-    logging.debug("Se ha accedido a la ruta /collections/ del blueprint.")
-    return render_template('collection.html', productos=productos_lista, coleccion=coleccion_slug)
+@collections_bp.route('/')
+def collection_home():
+    supabase = current_app.supabase
+    response = supabase.table("products").select("*").execute()
+    # Si response.data existe, úsalo; de lo contrario, asigna una lista vacía
+    products = response.data if response.data else []
+    return render_template('collection.html', products=products)
+
+@collections_bp.route('/')
+def list_products():
+    supabase = current_app.supabase
+    response = supabase.table("products").select("*").execute()
+    if not response.data:
+        current_app.logger.error("Error al obtener productos: " + str(response))
+        products = []
+    else:
+        products = response.data
+        current_app.logger.info(f"Productos obtenidos: {products}")
+    return render_template('collection.html', products=products)

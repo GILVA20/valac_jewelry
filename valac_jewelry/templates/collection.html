@@ -4,63 +4,192 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Colección - VALAC Joyas</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
-  <!-- Agrega enlaces a Slick o cualquier otro plugin si los requieres -->
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body class="bg-gray-100 font-serif">
+<body class="font-serif bg-[#f7f7f7]">
 
-  <!-- Encabezado (puedes reutilizar tu header o incluirlo con un include) -->
-  <header class="bg-white text-gray-700 flex justify-between p-6 items-center shadow-md">
+  <!-- Encabezado -->
+  <header class="bg-white text-[#424242] flex justify-between p-6 items-center fixed top-0 left-0 right-0 z-50 shadow-md">
     <div class="text-4xl font-bold">
-      <a href="/" class="text-gray-700">VALAC Joyas</a>
+      <a href="/" class="text-[#424242] hover:text-[#d5a300] transition-colors">VALAC Joyas</a>
     </div>
     <nav class="space-x-6">
-      <a href="/" class="hover:text-yellow-600">Inicio</a>
-      <a href="/collection" class="hover:text-yellow-600">Colección</a>
-      <a href="/about" class="hover:text-yellow-600">Sobre Nosotros</a>
-      <a href="/contact" class="hover:text-yellow-600">Contacto</a>
+      <a href="/" class="text-[#424242] text-xl hover:text-[#d5a300] transition-colors">Inicio</a>
+      <a href="/collection" class="text-[#424242] text-xl hover:text-[#d5a300] transition-colors">Colección</a>
+      <a href="/about" class="text-[#424242] text-xl hover:text-[#d5a300] transition-colors">Sobre Nosotros</a>
+      <a href="/contact" class="text-[#424242] text-xl hover:text-[#d5a300] transition-colors">Contacto</a>
     </nav>
+    <div class="space-x-6">
+      <a href="#" class="text-[#424242] hover:text-[#d5a300] transition-colors">
+        <i class="fab fa-facebook text-2xl"></i>
+      </a>
+      <a href="#" class="text-[#424242] hover:text-[#d5a300] transition-colors">
+        <i class="fab fa-instagram text-2xl"></i>
+      </a>
+      <a href="#" class="text-[#424242] hover:text-[#d5a300] transition-colors">
+        <i class="fab fa-twitter text-2xl"></i>
+      </a>
+    </div>
   </header>
 
-  <!-- Sección de Colección -->
-  <section class="py-12">
-    <div class="container mx-auto px-4">
-      <h1 class="text-3xl font-semibold mb-8 text-center text-gray-700">Colección de Joyas</h1>
+  <!-- Contenido Principal -->
+  <main class="pt-24">
+    <div class="container mx-auto flex">
+      <!-- Filtros Laterales -->
+      <aside class="w-64 p-6 border-r border-gray-200">
+        <h3 class="text-lg font-semibold mb-4">Filtrar por</h3>
+        <ul class="space-y-2">
+          <li><a href="/collection" class="text-gray-700 hover:text-[#d5a300]">Todos</a></li>
+          <li><a href="/collection?category=collares" class="text-gray-700 hover:text-[#d5a300]">Collares</a></li>
+          <li><a href="/collection?category=pulsos" class="text-gray-700 hover:text-[#d5a300]">Pulsos</a></li>
+          <li><a href="/collection?category=aretes" class="text-gray-700 hover:text-[#d5a300]">Aretes</a></li>
+          <li><a href="/collection?category=anillos" class="text-gray-700 hover:text-[#d5a300]">Anillos</a></li>
+          <li><a href="/collection?category=dijes" class="text-gray-700 hover:text-[#d5a300]">Dijes</a></li>
+        </ul>
+      </aside>
 
-      <!-- Aquí podrías agregar filtros o categorías -->
-      <div class="mb-8 text-center">
-        <!-- Ejemplo simple de botones de filtrado -->
-        <button class="px-4 py-2 bg-yellow-600 text-white rounded hover:bg-yellow-500">Todos</button>
-        <button class="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded hover:bg-gray-100">Cadenas</button>
-        <button class="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded hover:bg-gray-100">Pulsos</button>
-        <button class="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded hover:bg-gray-100">Aretes</button>
-        <button class="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded hover:bg-gray-100">Anillos</button>
-        <button class="px-4 py-2 bg-white text-gray-700 border border-gray-300 rounded hover:bg-gray-100">Dijes</button>
-      </div>
+      <!-- Grid de Productos -->
+      <section class="flex-1 p-6">
+        <h1 class="text-3xl font-semibold mb-8 text-[#424242]">Colección de Joyas</h1>
+        <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+          <!-- Los productos se cargarán aquí dinámicamente -->
+        </div>
+      </section>
+    </div>
+  </main>
 
-      <!-- Grid de productos -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-        {% for producto in productos %}
-          <div class="bg-white p-4 rounded-lg shadow hover:shadow-lg transition-shadow">
-            <img src="{{ url_for('static', filename=producto.imagen) }}" alt="{{ producto.nombre }}" class="w-full h-56 object-cover rounded-t-lg">
-            <div class="p-4">
-              <h2 class="text-xl font-semibold text-gray-800">{{ producto.nombre }}</h2>
-              <p class="text-gray-600 mt-2">{{ producto.descripcion }}</p>
-              <p class="text-gray-800 mt-2 font-bold">Precio: ${{ producto.precio }}</p>
-              <a href="/producto/{{ producto.id }}" class="mt-4 inline-block bg-yellow-600 text-white px-4 py-2 rounded hover:bg-yellow-500 transition-colors">Ver detalles</a>
-            </div>
-          </div>
-        {% endfor %}
+  <!-- Visualizador de Producto (Modal) -->
+  <div id="product-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white p-8 rounded-lg w-11/12 max-w-3xl">
+      <button id="close-modal" class="absolute top-4 right-4 text-gray-700 hover:text-[#d5a300]">
+        <i class="fas fa-times text-2xl"></i>
+      </button>
+      <div id="modal-content" class="flex flex-col md:flex-row gap-8">
+        <!-- Contenido del producto se cargará aquí -->
       </div>
     </div>
-  </section>
+  </div>
 
-  <!-- Pie de Página (footer) -->
-  <footer class="bg-white text-gray-700 py-8">
-    <div class="container mx-auto text-center">
-      <p>© 2025 VALAC Joyas. Todos los derechos reservados.</p>
+  <!-- Pie de Página -->
+  <footer class="bg-white text-[#424242] py-12">
+    <div class="container mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div>
+        <h3 class="text-xl font-semibold mb-4">VALAC Joyas</h3>
+        <p>Experimenta la elegancia con un diseño atemporal.</p>
+      </div>
+      <div>
+        <h3 class="text-xl font-semibold mb-4">Enlaces Rápidos</h3>
+        <ul>
+          <li><a href="/" class="hover:text-[#d5a300] transition-colors">Inicio</a></li>
+          <li><a href="/collection" class="hover:text-[#d5a300] transition-colors">Colección</a></li>
+          <li><a href="/about" class="hover:text-[#d5a300] transition-colors">Sobre Nosotros</a></li>
+          <li><a href="/contact" class="hover:text-[#d5a300] transition-colors">Contacto</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="text-xl font-semibold mb-4">Síguenos</h3>
+        <div class="flex space-x-4">
+          <a href="#" class="text-[#424242] hover:text-[#d5a300] transition-colors">
+            <i class="fab fa-facebook text-2xl"></i>
+          </a>
+          <a href="#" class="text-[#424242] hover:text-[#d5a300] transition-colors">
+            <i class="fab fa-instagram text-2xl"></i>
+          </a>
+          <a href="#" class="text-[#424242] hover:text-[#d5a300] transition-colors">
+            <i class="fab fa-twitter text-2xl"></i>
+          </a>
+        </div>
+      </div>
     </div>
   </footer>
 
+  <!-- Scripts -->
+  <script type="module">
+    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+  
+    const SUPABASE_URL = "{{ config['SUPABASE_URL'] }}";
+    const SUPABASE_KEY = "{{ config['SUPABASE_KEY'] }}";
+  
+    // Crear la instancia del cliente
+    const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+    console.log('Supabase inicializado:', supabaseClient);
+
+    // Obtener la categoría de la URL (filtrado por tipo_producto)
+    const urlParams = new URLSearchParams(window.location.search);
+    const category = urlParams.get('category') || '';
+
+    // Función para cargar productos
+    async function loadProducts() {
+      let query = supabaseClient
+        .from('products')
+        .select('id, nombre, descripcion, precio, tipo_producto, genero, tipo_oro, imagen, created_at');
+      
+      if (category) {
+        query = query.eq('tipo_producto', category);
+      }
+
+      const { data: products, error } = await query;
+      if (error) {
+        console.error('Error al cargar productos:', error);
+        return;
+      }
+
+      const productGrid = document.getElementById('product-grid');
+      productGrid.innerHTML = '';
+
+      products.forEach(product => {
+        // Usar imagen de respaldo si no hay imagen
+        const imageUrl = product.imagen || '/static/images/placeholder.jpg';
+        
+        const productCard = `
+          <div class="bg-white p-5 rounded-lg shadow-lg transition-transform transform hover:scale-105 hover:shadow-xl">
+            <img src="${imageUrl}" alt="${product.nombre}" class="w-full h-64 object-cover mb-4">
+            <h3 class="text-xl font-semibold text-[#424242]">${product.nombre}</h3>
+            <p class="text-gray-800 mt-2 font-bold">$${product.precio}</p>
+            <button onclick="openProductModal(${product.id})" class="mt-4 inline-block bg-[#d5a300] text-white px-4 py-2 rounded hover:bg-[#b38f00] transition-colors">
+              Ver detalles
+            </button>
+          </div>
+        `;
+        productGrid.innerHTML += productCard;
+      });
+    }
+
+    // Función para abrir el modal del producto
+    async function openProductModal(productId) {
+      const { data: product, error } = await supabaseClient
+        .from('products')
+        .select('id, nombre, descripcion, precio, imagen')
+        .eq('id', productId)
+        .single();
+
+      if (error) {
+        console.error('Error al cargar el producto:', error);
+        return;
+      }
+
+      const modalContent = document.getElementById('modal-content');
+      modalContent.innerHTML = `
+        <img src="${product.imagen || '/static/images/placeholder.jpg'}" alt="${product.nombre}" class="w-full md:w-1/2 h-64 object-cover rounded-lg">
+        <div class="w-full md:w-1/2">
+          <h3 class="text-2xl font-semibold text-[#424242]">${product.nombre}</h3>
+          <p>${product.descripcion}</p>
+          <p class="text-gray-800 mt-2 font-bold">$${product.precio}</p>
+        </div>
+      `;
+      document.getElementById('product-modal').classList.remove('hidden');
+    }
+
+    // Cerrar el modal
+    document.getElementById('close-modal').addEventListener('click', () => {
+      document.getElementById('product-modal').classList.add('hidden');
+    });
+
+    // Cargar los productos al iniciar la página
+    loadProducts();
+  </script>
 </body>
 </html>

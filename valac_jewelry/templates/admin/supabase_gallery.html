@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Galería de Productos - Supabase</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
+  <!-- Incluye FontAwesome para iconos -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    /* Estilos para el modal de imagen */
+    .modal {
+      position: fixed;
+      z-index: 50;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.8);
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-content {
+      max-width: 90%;
+      max-height: 90%;
+    }
+  </style>
+</head>
+<body class="bg-gray-100 p-6">
+  <div class="container mx-auto">
+    <header class="mb-8">
+      <h1 class="text-4xl font-bold text-center text-gray-800">Galería de Productos</h1>
+      <!-- Botón para agregar producto y placeholder para ordenación -->
+      <div class="flex justify-between items-center mt-4">
+        <a href="{{ url_for('.new') }}" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
+          <i class="fas fa-plus mr-2"></i>Agregar Producto
+        </a>
+        <!-- Placeholder para controles de ordenación (podrías extender con botones de drag & drop o filtros avanzados) -->
+        <div>
+          <button class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 mr-2">Ordenar A-Z</button>
+          <button class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">Ordenar Z-A</button>
+        </div>
+      </div>
+      <!-- Campo de búsqueda -->
+      <div class="mt-4">
+        <input type="text" id="search" placeholder="Buscar producto..." class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+    </header>
+
+    <!-- Grid de Productos -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      {% for prod in products %}
+      <div class="bg-white rounded-lg shadow hover:shadow-xl transition-all relative group">
+        {% if prod.imagen and prod.imagen != 'undefined' %}
+          <img src="{{ prod.imagen }}" alt="{{ prod.nombre }}" class="w-full h-56 object-cover rounded-t-lg cursor-pointer" onclick="openModal('{{ prod.imagen }}')">
+        {% else %}
+          <div class="w-full h-56 flex items-center justify-center bg-gray-200 rounded-t-lg">
+            <span class="text-red-500">Sin imagen</span>
+          </div>
+        {% endif %}
+        <div class="p-4">
+          <h2 class="text-xl font-semibold text-gray-800">{{ prod.nombre }}</h2>
+          <p class="text-gray-600 mt-1 text-sm">{{ prod.tipo_producto }} | {{ prod.genero }} | {{ prod.tipo_oro }}</p>
+          <p class="text-gray-800 mt-1 font-bold">Precio: ${{ prod.precio }}</p>
+          <!-- Acciones: Editar y Eliminar -->
+          <div class="mt-3 flex items-center justify-between">
+            <a href="{{ url_for('.edit_product', id=prod.id) }}" class="text-blue-500 hover:text-blue-600">
+              <i class="fas fa-edit"></i>
+            </a>
+            <form method="POST" action="{{ url_for('supabase_products.delete_product', product_id=prod.id) }}" onsubmit="return confirm('¿Estás seguro de eliminar este producto?');">
+              <button type="submit" class="text-red-500 hover:text-red-600">
+                <i class="fas fa-trash"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <!-- Modal para ampliar imagen -->
+  <div id="image-modal" class="modal flex">
+    <div class="modal-content relative">
+      <span id="close-modal" class="absolute top-2 right-2 text-white text-3xl cursor-pointer">&times;</span>
+      <img id="modal-image" src="" alt="Imagen ampliada" class="w-full h-auto rounded-lg">
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script>
+    // Búsqueda interactiva
+    document.getElementById('search').addEventListener('input', function() {
+      const searchTerm = this.value.toLowerCase();
+      const cards = document.querySelectorAll('.group');
+      cards.forEach(card => {
+        const name = card.querySelector('h2').textContent.toLowerCase();
+        card.style.display = name.includes(searchTerm) ? '' : 'none';
+      });
+    });
+
+    // Función para abrir el modal y mostrar la imagen en grande
+    function openModal(imageUrl) {
+      const modal = document.getElementById('image-modal');
+      const modalImage = document.getElementById('modal-image');
+      modalImage.src = imageUrl + "?t=" + new Date().getTime();
+      modal.style.display = 'flex';
+    }
+
+    // Función para cerrar el modal
+    document.getElementById('close-modal').addEventListener('click', function() {
+      document.getElementById('image-modal').style.display = 'none';
+    });
+
+    // Cierra el modal al hacer clic fuera de la imagen
+    window.onclick = function(event) {
+      const modal = document.getElementById('image-modal');
+      if (event.target === modal) {
+        modal.style.display = 'none';
+      }
+    }
+  </script>
+</body>
+</html>

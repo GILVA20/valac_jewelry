@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>VALAC Joyas</title>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
   <!-- Slick Slider CSS -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.css">
@@ -13,6 +13,60 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <!-- AOS (Animate On Scroll) -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
+  <style>
+    /* Dropdown para "Colección" en el header */
+    .dropdown {
+      position: relative;
+      display: inline-block;
+    }
+    .dropdown-content {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      background-color: white;
+      min-width: 200px;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(10px);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      z-index: 50;
+    }
+    .dropdown:hover .dropdown-content,
+    .dropdown:focus-within .dropdown-content {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+    .dropdown-content .column {
+      float: left;
+      width: 50%;
+    }
+    .dropdown-content .column h3 {
+      font-size: 1rem;
+      font-weight: bold;
+      margin-bottom: 0.5rem;
+      border-bottom: 1px solid #e5e7eb;
+      padding-bottom: 0.25rem;
+    }
+    .dropdown-content a {
+      color: #4b5563;
+      padding: 0.25rem 0;
+      text-decoration: none;
+      display: block;
+      transition: color 0.3s;
+    }
+    .dropdown-content a:hover {
+      color: #d5a300;
+    }
+    .clearfix::after {
+      content: "";
+      clear: both;
+      display: table;
+    }
+  </style>
 </head>
 <body class="font-serif bg-[#f7f7f7]">
 
@@ -23,7 +77,29 @@
     </div>
     <nav class="space-x-6">
       <a href="/" class="text-[#424242] text-xl hover:text-[#d5a300] transition-colors">Inicio</a>
-      <a href="/collection" class="text-[#424242] text-xl hover:text-[#d5a300] transition-colors">Colección</a>
+      <!-- Dropdown para Colección -->
+      <div class="dropdown inline-block">
+        <a href="/collection" class="text-[#424242] text-xl hover:text-[#d5a300] transition-colors flex items-center">
+          Colección <i class="fas fa-chevron-down ml-1"></i>
+        </a>
+        <div class="dropdown-content clearfix" data-aos="fade-left" data-aos-duration="800">
+          <div class="column">
+            <h3>Hombre</h3>
+            <a href="/collection/hombre/anillos">Anillos</a>
+            <a href="/collection/hombre/pulsos">Pulsos</a>
+            <a href="/collection/hombre/cadenas">Cadenas</a>
+            <a href="/collection/hombre/dijes">Dijes</a>
+          </div>
+          <div class="column">
+            <h3>Mujer</h3>
+            <a href="/collection/mujer/anillos">Anillos</a>
+            <a href="/collection/mujer/aretes">Aretes</a>
+            <a href="/collection/mujer/pulsos">Pulsos</a>
+            <a href="/collection/mujer/cadenas">Cadenas</a>
+            <a href="/collection/mujer/dijes">Dijes</a>
+          </div>
+        </div>
+      </div>
       <a href="/about" class="text-[#424242] text-xl hover:text-[#d5a300] transition-colors">Sobre Nosotros</a>
       <a href="/contact" class="text-[#424242] text-xl hover:text-[#d5a300] transition-colors">Contacto</a>
     </nav>
@@ -40,67 +116,52 @@
     </div>
   </header>
 
-<!-- Sección del Banner -->
-<section class="relative mt-24">
-    <!-- Contenedor relativo que envuelve el slider y el overlay -->
+  <!-- Sección del Banner -->
+  <section class="relative mt-24">
     <div class="relative">
-      <!-- Slider con las imágenes -->
       <div class="banner-slider">
-        <img src="{{ url_for('static', filename='images/sapphire-ring.jpg') }}" alt="Banner" class="w-full h-[600px] object-cover object-center">
-        <img src="{{ url_for('static', filename='images/mangoldchain.jpg') }}" alt="Banner" class="w-full h-[600px] object-cover object-center">
-        <img src="{{ url_for('static', filename='images/goldwomencollar.jpg') }}" alt="Banner" class="w-full h-[600px] object-cover object-center">
+        <img src="{{ url_for('static', filename='images/sapphire-ring.jpg') }}" alt="Banner 1" class="w-full h-[600px] object-cover object-center">
+        <img src="{{ url_for('static', filename='images/mangoldchain.jpg') }}" alt="Banner 2" class="w-full h-[600px] object-cover object-center">
+        <img src="{{ url_for('static', filename='images/goldwomencollar.jpg') }}" alt="Banner 3" class="w-full h-[600px] object-cover object-center">
       </div>
-      <!-- Contenedor overlay centrado con flexbox -->
       <div class="absolute inset-0 flex items-center justify-center" data-aos="fade-up" data-aos-duration="1000">
         <div class="text-center text-white bg-black bg-opacity-50 px-8 py-6 rounded-lg">
           <h1 class="text-5xl font-bold">VALAC Joyas</h1>
           <p class="mt-4 text-2xl">Experimenta la elegancia con un diseño atemporal</p>
           <p class="mt-2 text-xl">Joyas en oro 10k y 14k para hombre y mujer: cadenas, pulsos, aretes, anillos y dijes</p>
-          <a href="#productos-destacados" class="mt-6 inline-block bg-[#d5a300] text-white px-8 py-3 rounded-lg text-xl hover:bg-[#b38f00] transition-colors">Explora nuestra colección</a>
+          <a href="#productos-destacados" class="mt-6 inline-block bg-yellow-500 text-white px-8 py-3 rounded-lg text-xl hover:bg-yellow-600 transition-colors">Explora nuestra colección</a>
         </div>
       </div>
     </div>
   </section>
-  
 
   <!-- Sección de Productos Destacados -->
   <section id="productos-destacados" class="py-12 bg-white">
     <div class="container mx-auto text-center">
-      <h2 class="text-3xl font-semibold mb-8 text-[#424242]" data-aos="fade-up" data-aos-duration="1000">Productos Destacados</h2>
+      <h2 class="text-3xl font-semibold mb-8 text-gray-800" data-aos="fade-up" data-aos-duration="1000">Productos Destacados</h2>
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
-        <!-- Producto 1: Anillo de Oro con Zafiro -->
-        <div class="bg-white p-5 rounded-lg shadow-lg transition-transform transform hover:scale-105 hover:shadow-xl" data-aos="fade-up" data-aos-duration="1000">
-          <img src="{{ url_for('static', filename='images/sapphire-ring.jpg') }}" alt="Anillo de Oro con Zafiro" class="w-full h-56 object-cover mb-4">
-          <h3 class="text-xl font-semibold text-[#424242]">Anillo de Oro Hombre y Mujer</h3>
-          <p class="text-[#424242] mb-4">
-            Experimenta la elegancia con este exquisito anillo de oro, disponible en 10k y 14k.  
-          </p>
-          <a href="#" class="bg-[#d5a300] text-white px-4 py-2 rounded hover:bg-[#b38f00] transition-colors">Ver detalles</a>
+        {% for producto in products %}
+        <div class="bg-white rounded-lg shadow hover:shadow-xl transition-transform transform hover:scale-105" data-aos="fade-up" data-aos-duration="1000">
+          <img src="{{ producto.imagen }}" alt="{{ producto.nombre }}" class="w-full h-56 object-cover rounded-t-lg">
+          <div class="p-4">
+            <h3 class="text-xl font-semibold text-gray-800">{{ producto.nombre }}</h3>
+            <p class="text-gray-600 mt-2">{{ producto.descripcion }}</p>
+            <p class="text-gray-800 mt-2 font-bold">Precio: ${{ producto.precio }}</p>
+            <p class="text-sm text-gray-500 mt-1">
+              Tipo: {{ producto.tipo_producto }}<br>
+              Género: {{ producto.genero }}<br>
+              Oro: {{ producto.tipo_oro }}
+            </p>
+            <a href="/producto/{{ producto.id }}" class="mt-4 inline-block bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 transition-colors">Ver detalles</a>
+          </div>
         </div>
-        <!-- Producto 2: Cadenas de Oro -->
-        <div class="bg-white p-5 rounded-lg shadow-lg transition-transform transform hover:scale-105 hover:shadow-xl" data-aos="fade-up" data-aos-duration="1200">
-          <img src="{{ url_for('static', filename='images/diamond-earrings.jpg') }}" alt="Aretes de Oro con Diamante" class="w-full h-56 object-cover mb-4">
-          <h3 class="text-xl font-semibold text-[#424242]">Cadenas de Oro Hombre y Mujer</h3>
-          <p class="text-[#424242] mb-4">
-            Añade un toque de lujo a tu estilo con estos elegantes cadenas de oro.
-          </p>
-          <a href="#" class="bg-[#d5a300] text-white px-4 py-2 rounded hover:bg-[#b38f00] transition-colors">Ver detalles</a>
-        </div>
-        <!-- Producto 3: Pulsera de Oro Clásica -->
-        <div class="bg-white p-5 rounded-lg shadow-lg transition-transform transform hover:scale-105 hover:shadow-xl" data-aos="fade-up" data-aos-duration="1400">
-          <img src="{{ url_for('static', filename='images/silver-bracelet.jpg') }}" alt="Pulsera de Oro Clásica" class="w-full h-56 object-cover mb-4">
-          <h3 class="text-xl font-semibold text-[#424242]">Pulseras de Oro Hombre y Mujer</h3>
-          <p class="text-[#424242] mb-4">
-            Descubre nuestra exclusiva colección de pulseras de oro en 10k y 14k, diseñadas para complementar cualquier estilo y ocasión. 
-          </p>
-          <a href="#" class="bg-[#d5a300] text-white px-4 py-2 rounded hover:bg-[#b38f00] transition-colors">Ver detalles</a>
-        </div>
+        {% endfor %}
       </div>
     </div>
   </section>
 
   <!-- Sección Nuestra Historia -->
-  <section class="py-12 bg-white text-[#424242]">
+  <section class="py-12 bg-white text-gray-800">
     <div class="container mx-auto flex flex-col md:flex-row items-center">
       <div class="md:w-1/2" data-aos="fade-right" data-aos-duration="1000">
         <img src="{{ url_for('static', filename='images/our-story.jpg') }}" alt="Nuestra Historia" class="rounded-lg shadow-lg">
@@ -108,8 +169,7 @@
       <div class="md:w-1/2 md:pl-8 mt-6 md:mt-0" data-aos="fade-left" data-aos-duration="1000">
         <h2 class="text-3xl font-semibold mb-6">Nuestra Historia</h2>
         <p class="text-lg">
-            En VALAC Joyas, la tradición y la pasión por el oro se transmiten de generación en generación. Con una sólida herencia familiar en el negocio del oro, cada pieza que ofrecemos es el reflejo de un legado de compromiso, calidad y elegancia. Nuestra selección de joyería en oro 10k y 14k nace del amor por lo auténtico, buscando siempre resaltar la belleza en cada detalle.
-            Nos enorgullece compartir esta tradición, llevando lo mejor del oro a cada diseño, y ofreciéndote piezas que cuentan una historia de confianza y sofisticación.
+          En VALAC Joyas, la tradición y la pasión por el oro se transmiten de generación en generación. Con una sólida herencia familiar, cada pieza es el reflejo de compromiso, calidad y elegancia.
         </p>
       </div>
     </div>
@@ -118,14 +178,14 @@
   <!-- Sección Reseñas de Clientes -->
   <section class="bg-white py-12">
     <div class="container mx-auto text-center">
-      <h2 class="text-3xl font-semibold mb-8 text-[#424242]" data-aos="fade-up" data-aos-duration="1000">Reseñas de Clientes</h2>
+      <h2 class="text-3xl font-semibold mb-8 text-gray-800" data-aos="fade-up" data-aos-duration="1000">Reseñas de Clientes</h2>
       <div class="review-slider">
         <div class="bg-white p-5 rounded-lg shadow-lg w-64 mx-4" data-aos="fade-up" data-aos-duration="1000">
-          <p>"Estoy absolutamente encantada con mi compra en VALAC Joyas. La calidad es insuperable y la atención al cliente fue excepcional."</p>
+          <p>"Estoy encantada con mi compra en VALAC Joyas. La calidad es insuperable y el servicio excepcional."</p>
           <p class="mt-2 font-semibold">- Joss G.</p>
         </div>
         <div class="bg-white p-5 rounded-lg shadow-lg w-64 mx-4" data-aos="fade-up" data-aos-duration="1200">
-          <p>"Piezas hermosas y entrega rápida. Definitivamente volveré a comprar para lucir mis nuevas joyas de oro."</p>
+          <p>"Piezas hermosas y entrega rápida. Definitivamente volveré a comprar."</p>
           <p class="mt-2 font-semibold">- Daniel O.</p>
         </div>
         <div class="bg-white p-5 rounded-lg shadow-lg w-64 mx-4" data-aos="fade-up" data-aos-duration="1400">
@@ -137,7 +197,7 @@
   </section>
 
   <!-- Pie de Página -->
-  <footer class="bg-white text-[#424242] py-12">
+  <footer class="bg-white text-gray-800 py-12">
     <div class="container mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
       <div data-aos="fade-up" data-aos-duration="1000">
         <h3 class="text-xl font-semibold mb-4">VALAC Joyas</h3>
@@ -146,22 +206,22 @@
       <div data-aos="fade-up" data-aos-duration="1200">
         <h3 class="text-xl font-semibold mb-4">Enlaces Rápidos</h3>
         <ul>
-          <li><a href="/" class="hover:text-[#d5a300] transition-colors">Inicio</a></li>
-          <li><a href="/collection" class="hover:text-[#d5a300] transition-colors">Colección</a></li>
-          <li><a href="/about" class="hover:text-[#d5a300] transition-colors">Sobre Nosotros</a></li>
-          <li><a href="/contact" class="hover:text-[#d5a300] transition-colors">Contacto</a></li>
+          <li><a href="/" class="hover:text-yellow-600 transition-colors">Inicio</a></li>
+          <li><a href="/collection" class="hover:text-yellow-600 transition-colors">Colección</a></li>
+          <li><a href="/about" class="hover:text-yellow-600 transition-colors">Sobre Nosotros</a></li>
+          <li><a href="/contact" class="hover:text-yellow-600 transition-colors">Contacto</a></li>
         </ul>
       </div>
       <div data-aos="fade-up" data-aos-duration="1400">
         <h3 class="text-xl font-semibold mb-4">Síguenos</h3>
         <div class="flex space-x-4">
-          <a href="#" class="text-[#424242] hover:text-[#d5a300] transition-colors">
+          <a href="#" class="text-gray-800 hover:text-yellow-600 transition-colors">
             <i class="fab fa-facebook text-2xl"></i>
           </a>
-          <a href="#" class="text-[#424242] hover:text-[#d5a300] transition-colors">
+          <a href="#" class="text-gray-800 hover:text-yellow-600 transition-colors">
             <i class="fab fa-instagram text-2xl"></i>
           </a>
-          <a href="#" class="text-[#424242] hover:text-[#d5a300] transition-colors">
+          <a href="#" class="text-gray-800 hover:text-yellow-600 transition-colors">
             <i class="fab fa-twitter text-2xl"></i>
           </a>
         </div>
@@ -172,7 +232,7 @@
   <!-- Slick Slider JS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.js"></script>
-  <!-- AOS (Animate On Scroll) -->
+  <!-- AOS JS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
   <script>
     $(document).ready(function(){
@@ -198,8 +258,6 @@
         ]
       });
     });
-
-    // Inicializar AOS
     AOS.init();
   </script>
 </body>

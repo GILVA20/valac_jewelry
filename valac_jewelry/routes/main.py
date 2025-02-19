@@ -10,7 +10,7 @@ main_bp = Blueprint('main', __name__)
 def home():
     supabase = current_app.supabase
     # Se obtiene únicamente los primeros 3 productos
-    response = supabase.table("productos").select("*").limit(3).execute()
+    response = supabase.table("products").select("*").limit(3).execute()
     products = response.data if response.data else []
     return render_template('home.html', products=products)
     return render_template('home.html')

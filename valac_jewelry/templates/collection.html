@@ -136,7 +136,7 @@
         <!-- Panel de Filtros -->
         <aside id="filters-panel" class="filters-panel border border-gray-200 rounded-md p-6 sidebar-sticky bg-white">
           <h3 class="text-lg font-semibold mb-4">Filtrar por</h3>
-          <form action="" method="GET" class="space-y-6">
+          <form id="filters-form" action="" method="GET" class="space-y-6">
             <!-- Categoría -->
             <div>
               <label class="block font-semibold mb-2">Categoría</label>
@@ -289,7 +289,7 @@
   
   <!-- Scripts -->
   <script type="module">
-    // Aseguramos que $ esté disponible en el ámbito del módulo
+    // Aseguramos que jQuery ($) esté disponible
     const $ = window.jQuery;
     document.addEventListener("DOMContentLoaded", async function(){
       console.log("DOM fully loaded, starting initialization...");
@@ -413,13 +413,14 @@
           const productGrid = document.getElementById('product-grid');
           if (productGrid) {
             productGrid.innerHTML = "";
-            filteredProducts.forEach(product => {
+            filteredProducts.forEach((product, index) => {
               const imageUrl = product.imagen && product.imagen !== 'undefined' ? product.imagen : '/static/images/placeholder.jpg';
               productGrid.innerHTML += `
-                <div class="bg-white p-5 rounded-lg shadow-md product-card">
-                  <img src="${imageUrl}" alt="${product.nombre}" class="w-full h-64 object-cover mb-4 rounded">
+                <div class="bg-white p-5 rounded-lg shadow-md product-card" data-aos="fade-up" data-aos-delay="${index * 50}">
+                  <img src="${imageUrl}" loading="lazy" alt="${product.nombre}" class="w-full h-64 object-cover mb-4 rounded">
                   <h3 class="text-xl font-semibold text-[#424242]">${product.nombre}</h3>
                   <p class="text-gray-800 mt-2 font-bold">$${product.precio}</p>
+                  <p class="text-gray-600 mt-1 text-sm">Oro: ${product.tipo_oro} | Género: ${product.genero}</p>
                   <a href="/producto/${product.id}" class="mt-4 inline-block bg-[#d5a300] text-white px-4 py-2 rounded hover:bg-[#b38f00] transition-colors">
                     Ver detalles
                   </a>
@@ -433,6 +434,13 @@
         }
 
         loadProducts();
+
+        // Actualización dinámica de filtros sin recargar la página
+        document.querySelectorAll('#filters-form input').forEach(input => {
+          input.addEventListener('change', () => {
+            loadProducts();
+          });
+        });
 
       } catch (err) {
         console.error("Error en la importación de Supabase:", err);
@@ -459,7 +467,7 @@
       } else {
         console.error("Elementos del slider de precio máximo no encontrados.");
       }
-
+      
       // Eventos para chips de filtro
       document.querySelectorAll('.chip-label').forEach(label => {
         label.addEventListener('click', () => {
@@ -469,7 +477,7 @@
           console.log("Chip seleccionado para grupo", group, ":", label.textContent.trim());
         });
       });
-
+      
       // Cerrar modal, si existe
       const closeModalBtn = document.getElementById('close-modal');
       if (closeModalBtn) {

@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Misión, Visión y Valores - VALAC Joyas</title>
+  <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+  <!-- Fuentes -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+  <!-- TailwindCSS -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <!-- AOS CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
+  <style>
+    .section-title {
+      font-size: 2.5rem;
+      font-weight: bold;
+      margin-bottom: 1.5rem;
+      color: #424242;
+    }
+    .section-content {
+      font-size: 1.1rem;
+      color: #666;
+      line-height: 1.8;
+    }
+    .icon-box {
+      background-color: #fff7e6;
+      border-radius: 0.5rem;
+      padding: 1.5rem;
+      text-align: center;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .icon-box:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+    .icon-box i {
+      font-size: 2.5rem;
+      color: #d5a300;
+      margin-bottom: 1rem;
+    }
+    .icon-box h3 {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #424242;
+      margin-bottom: 1rem;
+    }
+    .icon-box p {
+      font-size: 1rem;
+      color: #666;
+    }
+  </style>
+</head>
+<body class="font-serif bg-[#f7f7f7]">
+  <!-- Encabezado -->
+  <header class="bg-white text-[#424242] flex justify-between p-6 items-center fixed top-0 left-0 right-0 z-50 shadow-md">
+    <div class="text-4xl font-bold">
+      <a href="/" class="text-[#424242] hover:text-[#d5a300] transition-colors">VALAC Joyas</a>
+    </div>
+    <nav class="space-x-6">
+      <a href="/" class="text-[#424242] text-xl hover:text-[#d5a300] transition-colors">Inicio</a>
+      <a href="/collection" class="text-[#424242] text-xl hover:text-[#d5a300] transition-colors">Colección</a>
+      <a href="/about" class="text-[#424242] text-xl hover:text-[#d5a300] transition-colors">Sobre Nosotros</a>
+      <a href="/contact" class="text-[#424242] text-xl hover:text-[#d5a300] transition-colors">Contacto</a>
+    </nav>
+  </header>
+
+  <!-- Contenido Principal -->
+  <main class="pt-24">
+    <!-- Sección de Misión -->
+    <section class="py-12 bg-white">
+      <div class="container mx-auto px-4">
+        <h2 class="section-title text-center" data-aos="fade-up" data-aos-duration="1000">Nuestra Misión</h2>
+        <div class="max-w-3xl mx-auto text-center">
+          <p class="section-content" data-aos="fade-up" data-aos-duration="1200">
+            En <strong>VALAC Joyas</strong>, nuestra misión es ofrecer joyas de la más alta calidad, elaboradas con materiales nobles como el oro de 10k y 14k, que reflejen elegancia, durabilidad y diseño atemporal. Nos esforzamos por brindar una experiencia excepcional a nuestros clientes, combinando artesanía tradicional con innovación, para que cada pieza sea un símbolo de distinción y estilo.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sección de Visión -->
+    <section class="py-12 bg-gray-100">
+      <div class="container mx-auto px-4">
+        <h2 class="section-title text-center" data-aos="fade-up" data-aos-duration="1000">Nuestra Visión</h2>
+        <div class="max-w-3xl mx-auto text-center">
+          <p class="section-content" data-aos="fade-up" data-aos-duration="1200">
+            Aspiramos a ser reconocidos como líderes en el mercado de joyería fina, tanto a nivel nacional como internacional, destacándonos por nuestra excelencia en diseño, calidad y servicio al cliente. Buscamos inspirar confianza y satisfacción en cada persona que elige <strong>VALAC Joyas</strong>, convirtiéndonos en su marca preferida para celebrar momentos especiales y expresar su estilo único.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sección de Valores -->
+    <section class="py-12 bg-white">
+      <div class="container mx-auto px-4">
+        <h2 class="section-title text-center" data-aos="fade-up" data-aos-duration="1000">Nuestros Valores</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 mt-8">
+          <!-- Valor 1: Calidad -->
+          <div class="icon-box" data-aos="fade-up" data-aos-duration="1000">
+            <i class="fas fa-gem"></i>
+            <h3>Calidad</h3>
+            <p>Nos comprometemos a utilizar los mejores materiales y técnicas de fabricación para garantizar la durabilidad y belleza de cada pieza.</p>
+          </div>
+          <!-- Valor 2: Innovación -->
+          <div class="icon-box" data-aos="fade-up" data-aos-duration="1200">
+            <i class="fas fa-lightbulb"></i>
+            <h3>Innovación</h3>
+            <p>Buscamos constantemente nuevas tendencias y diseños para ofrecer joyas únicas y modernas que reflejen la personalidad de nuestros clientes.</p>
+          </div>
+          <!-- Valor 3: Honestidad -->
+          <div class="icon-box" data-aos="fade-up" data-aos-duration="1400">
+            <i class="fas fa-handshake"></i>
+            <h3>Honestidad</h3>
+            <p>Mantenemos una relación transparente y cercana con nuestros clientes, asegurando confianza y satisfacción en cada compra.</p>
+          </div>
+          <!-- Valor 4: Compromiso -->
+          <div class="icon-box" data-aos="fade-up" data-aos-duration="1600">
+            <i class="fas fa-heart"></i>
+            <h3>Compromiso</h3>
+            <p>Nos esforzamos por superar las expectativas de nuestros clientes, brindando un servicio personalizado y atención al detalle.</p>
+          </div>
+          <!-- Valor 5: Tradición -->
+          <div class="icon-box" data-aos="fade-up" data-aos-duration="1800">
+            <i class="fas fa-history"></i>
+            <h3>Tradición</h3>
+            <p>Honramos la herencia familiar y la artesanía tradicional, combinándola con técnicas modernas para crear joyas únicas.</p>
+          </div>
+          <!-- Valor 6: Sostenibilidad -->
+          <div class="icon-box" data-aos="fade-up" data-aos-duration="2000">
+            <i class="fas fa-leaf"></i>
+            <h3>Sostenibilidad</h3>
+            <p>Nos preocupamos por el medio ambiente, utilizando prácticas responsables en la elaboración de nuestras joyas.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Pie de Página -->
+  <footer class="bg-white text-gray-800 py-12">
+    <div class="container mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
+      <div>
+        <h3 class="text-xl font-semibold mb-4">VALAC Joyas</h3>
+        <p>Experimenta la elegancia con un diseño atemporal.</p>
+      </div>
+      <div>
+        <h3 class="text-xl font-semibold mb-4">Enlaces Rápidos</h3>
+        <ul>
+          <li><a href="/" class="hover:text-[#d5a300] transition-colors">Inicio</a></li>
+          <li><a href="/collection" class="hover:text-[#d5a300] transition-colors">Colección</a></li>
+          <li><a href="/about" class="hover:text-[#d5a300] transition-colors">Sobre Nosotros</a></li>
+          <li><a href="/contact" class="hover:text-[#d5a300] transition-colors">Contacto</a></li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="text-xl font-semibold mb-4">Síguenos</h3>
+        <div class="flex space-x-4">
+          <a href="#" class="text-[#424242] hover:text-[#d5a300] transition-colors">
+            <i class="fab fa-facebook text-2xl"></i>
+          </a>
+          <a href="#" class="text-[#424242] hover:text-[#d5a300] transition-colors">
+            <i class="fab fa-instagram text-2xl"></i>
+          </a>
+          <a href="#" class="text-[#424242] hover:text-[#d5a300] transition-colors">
+            <i class="fab fa-twitter text-2xl"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      AOS.init();
+    });
+  </script>
+</body>
+</html>

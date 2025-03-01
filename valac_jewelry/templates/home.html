@@ -4,72 +4,97 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>VALAC Joyas</title>
+  <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+  <!-- Fuentes -->
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+  <!-- TailwindCSS -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <!-- Slick Slider CSS -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick-theme.min.css">
-  <!-- FontAwesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <!-- AOS (Animate On Scroll) -->
+  <!-- AOS CSS -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
   <style>
-    /* Dropdown para "Colección" en el header */
-    .dropdown {
-      position: relative;
-      display: inline-block;
-    }
-    .dropdown-content {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      background-color: white;
-      min-width: 200px;
-      padding: 1rem;
-      border-radius: 0.5rem;
-      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-      opacity: 0;
-      visibility: hidden;
-      transform: translateY(10px);
-      transition: opacity 0.3s ease, transform 0.3s ease;
-      z-index: 50;
-    }
-    .dropdown:hover .dropdown-content,
-    .dropdown:focus-within .dropdown-content {
-      opacity: 1;
-      visibility: visible;
-      transform: translateY(0);
-    }
-    .dropdown-content .column {
-      float: left;
-      width: 50%;
-    }
-    .dropdown-content .column h3 {
-      font-size: 1rem;
-      font-weight: bold;
-      margin-bottom: 0.5rem;
-      border-bottom: 1px solid #e5e7eb;
-      padding-bottom: 0.25rem;
-    }
-    .dropdown-content a {
-      color: #4b5563;
-      padding: 0.25rem 0;
-      text-decoration: none;
+    /* Estilos para las "chips" de filtros */
+    .chip-label {
       display: block;
-      transition: color 0.3s;
+      text-align: center;
+      padding: 0.25rem 0;
+      border: 1px solid #d4d4d4;
+      border-radius: 0.375rem;
+      font-size: 0.75rem;
+      transition: background-color 0.3s, color 0.3s, border-color 0.3s;
     }
-    .dropdown-content a:hover {
-      color: #d5a300;
+    .chip-label:hover {
+      border-color: #d5a300;
+      background-color: #fff7e6;
+      cursor: pointer;
     }
-    .clearfix::after {
-      content: "";
-      clear: both;
-      display: table;
+    .chip-label.active {
+      background-color: #d5a300;
+      color: #fff;
+      border-color: #d5a300;
+    }
+    /* Panel de filtros con ancho fijo en pantallas md+ */
+    .filters-panel {
+      width: 16rem;
+    }
+    /* Sidebar sticky en pantallas medianas y grandes */
+    @media (min-width: 768px) {
+      .sidebar-sticky {
+        position: sticky;
+        top: 6rem;
+        max-height: calc(100vh - 6rem);
+        overflow-y: auto;
+      }
+    }
+    /* Slider de precios */
+    .slider {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 6px;
+      background: #d4d4d4;
+      border-radius: 5px;
+      outline: none;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
+    .slider:hover {
+      opacity: 1;
+    }
+    .slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      background: #d5a300;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    .slider::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      background: #d5a300;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    /* Tarjetas de producto */
+    .product-card {
+      transition: all 0.3s ease-in-out;
+    }
+    .product-card:hover {
+      transform: scale(1.05);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.2);
     }
   </style>
+  <!-- Importar jQuery y Slick Slider (sin type="module") -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.js"></script>
+  <!-- Importar AOS JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
 </head>
 <body class="font-serif bg-[#f7f7f7]">
-
   <!-- Encabezado -->
   <header class="bg-white text-[#424242] flex justify-between p-6 items-center fixed top-0 left-0 right-0 z-50 shadow-md">
     <div class="text-4xl font-bold">
@@ -77,31 +102,13 @@
     </div>
     <nav class="space-x-6">
       <a href="/" class="text-[#424242] text-xl hover:text-[#d5a300] transition-colors">Inicio</a>
-      <!-- Dropdown para Colección -->
-      <div class="dropdown inline-block">
-        <a href="/collection" class="text-[#424242] text-xl hover:text-[#d5a300] transition-colors flex items-center">
-          Colección <i class="fas fa-chevron-down ml-1"></i>
-        </a>
-        <div class="dropdown-content clearfix" data-aos="fade-left" data-aos-duration="800">
-          <div class="column">
-            <h3>Hombre</h3>
-            <a href="/collection/hombre/anillos">Anillos</a>
-            <a href="/collection/hombre/pulsos">Pulsos</a>
-            <a href="/collection/hombre/cadenas">Cadenas</a>
-            <a href="/collection/hombre/dijes">Dijes</a>
-          </div>
-          <div class="column">
-            <h3>Mujer</h3>
-            <a href="/collection/mujer/anillos">Anillos</a>
-            <a href="/collection/mujer/aretes">Aretes</a>
-            <a href="/collection/mujer/pulsos">Pulsos</a>
-            <a href="/collection/mujer/cadenas">Cadenas</a>
-            <a href="/collection/mujer/dijes">Dijes</a>
-          </div>
-        </div>
-      </div>
+      <!-- Enlace simple a Colección (sin dropdown) -->
+      <a href="/collection" class="text-[#424242] text-xl hover:text-[#d5a300] transition-colors">Colección</a>
       <a href="/about" class="text-[#424242] text-xl hover:text-[#d5a300] transition-colors">Sobre Nosotros</a>
       <a href="/contact" class="text-[#424242] text-xl hover:text-[#d5a300] transition-colors">Contacto</a>
+      <a href="/cart" class="text-[#424242] text-xl hover:text-[#d5a300] transition-colors">
+        <i class="fas fa-shopping-cart"></i> Carrito
+      </a>
     </nav>
     <div class="space-x-6">
       <a href="#" class="text-[#424242] hover:text-[#d5a300] transition-colors">
@@ -116,46 +123,34 @@
     </div>
   </header>
 
-  <!-- Sección del Banner -->
+  <!-- Opcional: Banner Principal -->
   <section class="relative mt-24">
-    <div class="relative">
-      <div class="banner-slider">
-        <img src="{{ url_for('static', filename='images/sapphire-ring.jpg') }}" alt="Banner 1" class="w-full h-[600px] object-cover object-center">
-        <img src="{{ url_for('static', filename='images/mangoldchain.jpg') }}" alt="Banner 2" class="w-full h-[600px] object-cover object-center">
-        <img src="{{ url_for('static', filename='images/goldwomencollar.jpg') }}" alt="Banner 3" class="w-full h-[600px] object-cover object-center">
-      </div>
-      <div class="absolute inset-0 flex items-center justify-center" data-aos="fade-up" data-aos-duration="1000">
-        <div class="text-center text-white bg-black bg-opacity-50 px-8 py-6 rounded-lg">
-          <h1 class="text-5xl font-bold">VALAC Joyas</h1>
-          <p class="mt-4 text-2xl">Experimenta la elegancia con un diseño atemporal</p>
-          <p class="mt-2 text-xl">Joyas en oro 10k y 14k para hombre y mujer: cadenas, pulsos, aretes, anillos y dijes</p>
-          <a href="#productos-destacados" class="mt-6 inline-block bg-yellow-500 text-white px-8 py-3 rounded-lg text-xl hover:bg-yellow-600 transition-colors">Explora nuestra colección</a>
-        </div>
+    <div class="banner-slider">
+      <img src="{{ url_for('static', filename='images/sapphire-ring.jpg') }}" alt="Banner 1" class="w-full h-[600px] object-cover object-center">
+      <img src="{{ url_for('static', filename='images/mangoldchain.jpg') }}" alt="Banner 2" class="w-full h-[600px] object-cover object-center">
+      <img src="{{ url_for('static', filename='images/goldwomencollar.jpg') }}" alt="Banner 3" class="w-full h-[600px] object-cover object-center">
+    </div>
+    <div class="absolute inset-0 flex items-center justify-center" data-aos="fade-up" data-aos-duration="1000">
+      <div class="text-center text-white bg-black bg-opacity-50 px-8 py-6 rounded-lg">
+        <h1 class="text-5xl font-bold">VALAC Joyas</h1>
+        <p class="mt-4 text-2xl">Experimenta la elegancia con un diseño atemporal</p>
+        <p class="mt-2 text-xl">Joyas en oro 10k y 14k para hombre y mujer: cadenas, pulsos, aretes, anillos y dijes</p>
       </div>
     </div>
   </section>
 
-  <!-- Sección de Productos Destacados -->
+  <!-- Sección de Productos Destacados (mostrar solo 3 productos) -->
   <section id="productos-destacados" class="py-12 bg-white">
     <div class="container mx-auto text-center">
       <h2 class="text-3xl font-semibold mb-8 text-gray-800" data-aos="fade-up" data-aos-duration="1000">Productos Destacados</h2>
-      <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
-        {% for producto in products %}
-        <div class="bg-white rounded-lg shadow hover:shadow-xl transition-transform transform hover:scale-105" data-aos="fade-up" data-aos-duration="1000">
-          <img src="{{ producto.imagen }}" alt="{{ producto.nombre }}" class="w-full h-56 object-cover rounded-t-lg">
-          <div class="p-4">
-            <h3 class="text-xl font-semibold text-gray-800">{{ producto.nombre }}</h3>
-            <p class="text-gray-600 mt-2">{{ producto.descripcion }}</p>
-            <p class="text-gray-800 mt-2 font-bold">Precio: ${{ producto.precio }}</p>
-            <p class="text-sm text-gray-500 mt-1">
-              Tipo: {{ producto.tipo_producto }}<br>
-              Género: {{ producto.genero }}<br>
-              Oro: {{ producto.tipo_oro }}
-            </p>
-            <a href="/producto/{{ producto.id }}" class="mt-4 inline-block bg-yellow-500 text-white px-4 py-2 rounded hover:bg-yellow-600 transition-colors">Ver detalles</a>
-          </div>
-        </div>
-        {% endfor %}
+      <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+        <!-- Los productos se cargarán dinámicamente (solo los 3 primeros) -->
+      </div>
+      <!-- Botón para ver más (redirecciona a /collection) -->
+      <div class="mt-8">
+        <a href="/collection" class="bg-yellow-500 text-white px-6 py-3 rounded-lg text-xl hover:bg-yellow-600 transition-colors">
+          Ver Colección Completa
+        </a>
       </div>
     </div>
   </section>
@@ -229,36 +224,211 @@
     </div>
   </footer>
 
-  <!-- Slick Slider JS -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.js"></script>
-  <!-- AOS JS -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
-  <script>
-    $(document).ready(function(){
-      $('.banner-slider').slick({
-        autoplay: true,
-        autoplaySpeed: 3000,
-        arrows: true,
-        dots: true
-      });
-      $('.review-slider').slick({
-        autoplay: true,
-        autoplaySpeed: 3000,
-        arrows: true,
-        dots: true,
-        slidesToShow: 3,
-        responsive: [
-          {
-            breakpoint: 768,
-            settings: {
-              slidesToShow: 1
-            }
+  <!-- Scripts -->
+  <script type="module">
+    // Aseguramos que jQuery ($) esté disponible
+    const $ = window.jQuery;
+    document.addEventListener("DOMContentLoaded", async function(){
+      console.log("DOM fully loaded, starting initialization...");
+
+      // Inicializar Slick Slider para banner y reseñas
+      if (typeof $ !== "undefined" && $.fn.slick) {
+        $('.banner-slider').slick({
+          autoplay: true,
+          autoplaySpeed: 3000,
+          arrows: true,
+          dots: true
+        });
+        $('.review-slider').slick({
+          autoplay: true,
+          autoplaySpeed: 3000,
+          arrows: true,
+          dots: true,
+          slidesToShow: 3,
+          responsive: [
+            { breakpoint: 768, settings: { slidesToShow: 1 } }
+          ]
+        });
+        console.log("Slick Slider inicializado.");
+      } else {
+        console.error("Slick Slider no se encontró. Verifica que jQuery y Slick estén cargados.");
+      }
+
+      // Inicializar AOS
+      AOS.init();
+      console.log("AOS inicializado.");
+
+      // Botón para alternar visibilidad de filtros y ajustar el layout
+      const toggleBtn = document.getElementById('toggle-filters');
+      const filtersPanel = document.getElementById('filters-panel');
+      const mainContainer = document.getElementById('main-container');
+      const productsSection = document.getElementById('products-section');
+      if(toggleBtn && filtersPanel && mainContainer && productsSection){
+        toggleBtn.addEventListener('click', () => {
+          filtersPanel.classList.toggle('hidden');
+          if(filtersPanel.classList.contains('hidden')){
+            toggleBtn.textContent = "Mostrar filtros";
+            mainContainer.classList.remove("md:flex-row");
+            console.log("Filtros ocultos, área de productos expandida.");
+          } else {
+            toggleBtn.textContent = "Ocultar filtros";
+            mainContainer.classList.add("md:flex-row");
+            console.log("Filtros mostrados, layout con panel lateral activado.");
           }
-        ]
+        });
+      } else {
+        console.error("Error en el toggle de filtros: Elementos no encontrados.");
+      }
+
+      // Conexión a Supabase usando importación dinámica
+      try {
+        const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm");
+        const SUPABASE_URL = "{{ config['SUPABASE_URL'] }}";
+        const SUPABASE_KEY = "{{ config['SUPABASE_KEY'] }}";
+        console.log("Inicializando Supabase con URL:", SUPABASE_URL);
+        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+        console.log("Supabase inicializado:", supabaseClient);
+
+        // Obtener parámetros de URL para filtros
+        const urlParams = new URLSearchParams(window.location.search);
+        const category = urlParams.get('category') || '';
+        const type_oro = urlParams.get('type_oro') || '';
+        const genero = urlParams.get('genero') || '';
+        const price_min = urlParams.get('price_min') || 0;
+        const price_max = urlParams.get('price_max') || 250000;
+        const search = urlParams.get('search') || '';
+        const sort = urlParams.get('sort') || '';
+        console.log("Parámetros de filtros:", { category, type_oro, genero, price_min, price_max, search, sort });
+
+        async function loadProducts() {
+          let query = supabaseClient
+            .from('products')
+            .select('id, nombre, descripcion, precio, tipo_producto, genero, tipo_oro, imagen, created_at');
+
+          if (category) {
+            query = query.eq('tipo_producto', category);
+            console.log("Filtrando por categoría:", category);
+          }
+          if (type_oro) {
+            query = query.eq('tipo_oro', type_oro);
+            console.log("Filtrando por tipo de oro:", type_oro);
+          }
+          if (genero) {
+            query = query.eq('genero', genero);
+            console.log("Filtrando por género:", genero);
+          }
+          query = query.gte('precio', parseInt(price_min)).lte('precio', parseInt(price_max));
+          console.log("Filtrando por rango de precio:", price_min, price_max);
+
+          const { data: products, error } = await query;
+          if (error) {
+            console.error("Error al cargar productos:", error);
+            return;
+          }
+          console.log("Productos cargados desde Supabase:", products);
+
+          let filteredProducts = products;
+          if (search) {
+            filteredProducts = products.filter(product => {
+              const combinedText = (product.nombre + ' ' + product.descripcion).toLowerCase();
+              return combinedText.includes(search.toLowerCase());
+            });
+            console.log("Productos filtrados por búsqueda:", filteredProducts);
+          }
+
+          if (sort === 'precio_asc') {
+            filteredProducts.sort((a, b) => a.precio - b.precio);
+            console.log("Productos ordenados por precio ascendente");
+          } else if (sort === 'precio_desc') {
+            filteredProducts.sort((a, b) => b.precio - a.precio);
+            console.log("Productos ordenados por precio descendente");
+          } else if (sort === 'novedades') {
+            filteredProducts.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            console.log("Productos ordenados por novedades");
+          }
+
+          const productGrid = document.getElementById('product-grid');
+          if (productGrid) {
+            productGrid.innerHTML = "";
+            // Mostrar solo los 3 primeros productos
+            filteredProducts.slice(0, 3).forEach((product, index) => {
+              const imageUrl = product.imagen && product.imagen !== 'undefined' ? product.imagen : '/static/images/placeholder.jpg';
+              productGrid.innerHTML += `
+                <div class="bg-white p-5 rounded-lg shadow-md product-card" data-aos="fade-up" data-aos-delay="${index * 50}">
+                  <img src="${imageUrl}" loading="lazy" alt="${product.nombre}" class="w-full h-64 object-cover mb-4 rounded">
+                  <h3 class="text-xl font-semibold text-[#424242]">${product.nombre}</h3>
+                  <p class="text-gray-800 mt-2 font-bold">$${product.precio}</p>
+                  <p class="text-gray-600 mt-1 text-sm">Oro: ${product.tipo_oro} | Género: ${product.genero}</p>
+                  <a href="/producto/${product.id}" class="mt-4 inline-block bg-[#d5a300] text-white px-4 py-2 rounded hover:bg-[#b38f00] transition-colors">
+                    Ver detalles
+                  </a>
+                </div>
+              `;
+            });
+            console.log("Productos renderizados en la página (3 primeros).");
+          } else {
+            console.error("El contenedor de productos no se encontró.");
+          }
+        }
+
+        loadProducts();
+
+        // Actualización dinámica de filtros sin recargar la página
+        document.querySelectorAll('#filters-form input').forEach(input => {
+          input.addEventListener('change', () => {
+            loadProducts();
+          });
+        });
+
+      } catch (err) {
+        console.error("Error en la importación de Supabase:", err);
+      }
+
+      // Actualizar outputs de los sliders
+      const priceMinInput = document.getElementById('priceMin');
+      const priceMinOutput = document.getElementById('priceMinOutput');
+      if (priceMinInput && priceMinOutput) {
+        priceMinInput.addEventListener('input', () => {
+          priceMinOutput.value = priceMinInput.value;
+          console.log("Slider precio mínimo:", priceMinInput.value);
+        });
+      } else {
+        console.error("Elementos del slider de precio mínimo no encontrados.");
+      }
+      const priceMaxInput = document.getElementById('priceMax');
+      const priceMaxOutput = document.getElementById('priceMaxOutput');
+      if (priceMaxInput && priceMaxOutput) {
+        priceMaxInput.addEventListener('input', () => {
+          priceMaxOutput.value = priceMaxInput.value;
+          console.log("Slider precio máximo:", priceMaxInput.value);
+        });
+      } else {
+        console.error("Elementos del slider de precio máximo no encontrados.");
+      }
+      
+      // Eventos para chips de filtro
+      document.querySelectorAll('.chip-label').forEach(label => {
+        label.addEventListener('click', () => {
+          const group = label.getAttribute('data-group');
+          document.querySelectorAll(`[data-group="${group}"]`).forEach(l => l.classList.remove('active'));
+          label.classList.add('active');
+          console.log("Chip seleccionado para grupo", group, ":", label.textContent.trim());
+        });
       });
+      
+      // Cerrar modal, si existe
+      const closeModalBtn = document.getElementById('close-modal');
+      if (closeModalBtn) {
+        closeModalBtn.addEventListener('click', () => {
+          const modal = document.getElementById('product-modal');
+          if (modal) {
+            modal.classList.add('hidden');
+            console.log("Modal cerrado.");
+          }
+        });
+      }
+      
     });
-    AOS.init();
   </script>
 </body>
 </html>

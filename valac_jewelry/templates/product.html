@@ -1,57 +1,87 @@
-<!-- valac_jewelry/templates/product.html -->
 <!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ product.nombre }} - VALAC Joyas</title>
+  <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+  <!-- Fuentes -->
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+  <!-- TailwindCSS -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
   <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <!-- Slick Carousel (opcional) -->
+  <!-- Slick Slider CSS -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick-theme.min.css">
+  <!-- AOS CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
+  <style>
+    /* Slider de imágenes del producto */
+    .product-slider img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    /* Modal de Pedido */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+    }
+    .modal-content {
+      background: #fff;
+      padding: 2rem;
+      border-radius: 0.5rem;
+      width: 90%;
+      max-width: 600px;
+    }
+  </style>
+  <!-- Importar jQuery y Slick Slider (sin type="module") -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.js"></script>
+  <!-- Importar AOS JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
 </head>
 <body class="bg-[#f7f7f7]">
-
-  <!-- Encabezado (puedes extraerlo a base.html si gustas) -->
+  <!-- Encabezado -->
   <header class="bg-white text-[#424242] flex justify-between p-6 items-center fixed top-0 left-0 right-0 z-50 shadow-md">
     <div class="text-4xl font-bold">
-      <a href="/" class="text-[#424242] hover:text-[#d5a300] transition-colors">VALAC Joyas</a>
+      <a href="/" class="hover:text-[#d5a300] transition-colors">VALAC Joyas</a>
     </div>
     <nav class="space-x-6">
-      <a href="/" class="text-[#424242] text-xl hover:text-[#d5a300] transition-colors">Inicio</a>
-      <a href="/collection" class="text-[#424242] text-xl hover:text-[#d5a300] transition-colors">Colección</a>
-      <a href="/about" class="text-[#424242] text-xl hover:text-[#d5a300] transition-colors">Sobre Nosotros</a>
-      <a href="/contact" class="text-[#424242] text-xl hover:text-[#d5a300] transition-colors">Contacto</a>
-      <a href="/cart" class="text-[#424242] text-xl hover:text-[#d5a300] transition-colors">
+      <a href="/" class="text-xl hover:text-[#d5a300] transition-colors">Inicio</a>
+      <a href="/collection" class="text-xl hover:text-[#d5a300] transition-colors">Colección</a>
+      <a href="/about" class="text-xl hover:text-[#d5a300] transition-colors">Sobre Nosotros</a>
+      <a href="/contact" class="text-xl hover:text-[#d5a300] transition-colors">Contacto</a>
+      <a href="/cart" class="text-xl hover:text-[#d5a300] transition-colors">
         <i class="fas fa-shopping-cart"></i> Carrito
       </a>
     </nav>
     <div class="space-x-6">
-      <a href="#" class="text-[#424242] hover:text-[#d5a300] transition-colors">
-        <i class="fab fa-facebook text-2xl"></i>
-      </a>
-      <a href="#" class="text-[#424242] hover:text-[#d5a300] transition-colors">
-        <i class="fab fa-instagram text-2xl"></i>
-      </a>
-      <a href="#" class="text-[#424242] hover:text-[#d5a300] transition-colors">
-        <i class="fab fa-twitter text-2xl"></i>
-      </a>
+      <a href="#" class="hover:text-[#d5a300] transition-colors"><i class="fab fa-facebook text-2xl"></i></a>
+      <a href="#" class="hover:text-[#d5a300] transition-colors"><i class="fab fa-instagram text-2xl"></i></a>
+      <a href="#" class="hover:text-[#d5a300] transition-colors"><i class="fab fa-twitter text-2xl"></i></a>
     </div>
   </header>
 
   <main class="pt-24 container mx-auto p-6">
     <div class="flex flex-col md:flex-row gap-8">
-      <!-- Carrusel de Imágenes -->
+      <!-- Slider de Imágenes del Producto -->
       <div class="md:w-1/2">
         <div class="product-slider">
-          <!-- Si tuvieras varias imágenes, podrías iterar aquí -->
+          <!-- Imagen principal del producto -->
           <div>
-            <img src="{{ product.imagen or '/static/images/placeholder.jpg' }}" alt="{{ product.nombre }}" class="w-full h-96 object-cover rounded-lg">
+            <img src="{{ product.imagen or url_for('static', filename='images/placeholder.jpg') }}" alt="{{ product.nombre }}" class="rounded-lg">
           </div>
-          <!-- Más imágenes si existieran -->
+          {# Aquí se pueden agregar otras imágenes si están disponibles #}
         </div>
       </div>
 
@@ -60,25 +90,24 @@
         <h1 class="text-3xl font-bold text-[#424242] mb-4">{{ product.nombre }}</h1>
         <p class="text-xl text-gray-600 mb-2">Precio: ${{ product.precio }}</p>
         <p class="text-md text-gray-500 mb-4">
-          Tipo de Oro: {{ product.tipo_oro }} <br>
-          Género: {{ product.genero }} <br>
+          Tipo de Oro: {{ product.tipo_oro }}<br>
+          Género: {{ product.genero }}<br>
           Categoría: {{ product.tipo_producto }}
+          {% if product.peso %}<br>Peso: {{ product.peso }} g{% endif %}
         </p>
         <p class="mb-6 text-gray-800">{{ product.descripcion }}</p>
-
-        <!-- Botón para añadir al carrito -->
-        <form action="{{ url_for('cart.add_to_cart', product_id=product.id) }}" method="POST" class="inline-block">
-          <button type="submit" class="bg-[#d5a300] text-white px-6 py-3 rounded hover:bg-[#b38f00] transition-colors mb-4">
-            <i class="fas fa-shopping-cart"></i> Agregar al Carrito
+        <div class="flex flex-wrap gap-4">
+          <!-- Botón para Agregar al Carrito -->
+          <form action="{{ url_for('cart.add_to_cart', product_id=product.id) }}" method="POST" class="inline-block">
+            <button type="submit" class="bg-[#d5a300] text-white px-6 py-3 rounded hover:bg-[#b38f00] transition-colors">
+              <i class="fas fa-shopping-cart"></i> Agregar al Carrito
+            </button>
+          </form>
+          <!-- Botón para Comprar Ahora -->
+          <button id="buy-now-btn" class="bg-green-600 text-white px-6 py-3 rounded hover:bg-green-700 transition-colors">
+            <i class="fas fa-credit-card"></i> Comprar Ahora
           </button>
-        </form>
-
-        <!-- Botón para wishlist -->
-        <form action="{{ url_for('cart.add_to_wishlist', product_id=product.id) }}" method="POST" class="inline-block ml-2">
-          <button type="submit" class="bg-blue-600 text-white px-6 py-3 rounded hover:bg-blue-700 transition-colors mb-4">
-            <i class="fas fa-heart"></i> Agregar a Favoritos
-          </button>
-        </form>
+        </div>
       </div>
     </div>
 
@@ -87,8 +116,8 @@
       <h2 class="text-2xl font-semibold text-[#424242] mb-6">También te puede interesar</h2>
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
         {% for rp in related_products %}
-        <div class="bg-white p-5 rounded-lg shadow-lg transition-transform transform hover:scale-105 hover:shadow-xl">
-          <img src="{{ rp.imagen or '/static/images/placeholder.jpg' }}" alt="{{ rp.nombre }}" class="w-full h-64 object-cover mb-4">
+        <div class="bg-white p-5 rounded-lg shadow-lg transition-transform transform hover:scale-105 hover:shadow-xl" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 50 }}">
+          <img src="{{ rp.imagen or url_for('static', filename='images/placeholder.jpg') }}" alt="{{ rp.nombre }}" class="w-full h-64 object-cover mb-4 rounded">
           <h3 class="text-xl font-semibold text-[#424242]">{{ rp.nombre }}</h3>
           <p class="text-gray-800 mt-2 font-bold">$ {{ rp.precio }}</p>
           <a href="{{ url_for('products.product_detail', product_id=rp.id) }}"
@@ -101,7 +130,30 @@
     </div>
   </main>
 
-  <!-- Pie de Página -->
+  <!-- Modal de Pedido -->
+  <div id="order-modal" class="modal">
+    <div class="modal-content">
+      <h2 class="text-2xl font-bold mb-4">Confirmar Pedido</h2>
+      <p class="mb-4">Producto: {{ product.nombre }}</p>
+      <p class="mb-4">Precio: ${{ product.precio }}</p>
+      <form id="order-form">
+        <label class="block mb-2">Cantidad:</label>
+        <input type="number" name="quantity" value="1" min="1" class="border border-gray-300 p-2 rounded mb-4 w-full" required>
+        <label class="block mb-2">Correo Electrónico:</label>
+        <input type="email" name="email" placeholder="tu@correo.com" class="border border-gray-300 p-2 rounded mb-4 w-full" required>
+        <label class="block mb-2">Número de WhatsApp:</label>
+        <input type="text" name="whatsapp" placeholder="+52..." class="border border-gray-300 p-2 rounded mb-4 w-full" required>
+        <button type="submit" class="bg-green-600 text-white px-6 py-3 rounded hover:bg-green-700 transition-colors">
+          Confirmar Pedido
+        </button>
+      </form>
+      <button id="close-order-modal" class="mt-4 bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600 transition-colors">
+        Cancelar
+      </button>
+    </div>
+  </div>
+
+  <!-- Footer -->
   <footer class="bg-white text-[#424242] py-12 mt-8">
     <div class="container mx-auto grid grid-cols-1 md:grid-cols-3 gap-8">
       <div>
@@ -120,30 +172,54 @@
       <div>
         <h3 class="text-xl font-semibold mb-4">Síguenos</h3>
         <div class="flex space-x-4">
-          <a href="#" class="text-[#424242] hover:text-[#d5a300] transition-colors">
-            <i class="fab fa-facebook text-2xl"></i>
-          </a>
-          <a href="#" class="text-[#424242] hover:text-[#d5a300] transition-colors">
-            <i class="fab fa-instagram text-2xl"></i>
-          </a>
-          <a href="#" class="text-[#424242] hover:text-[#d5a300] transition-colors">
-            <i class="fab fa-twitter text-2xl"></i>
-          </a>
+          <a href="#" class="hover:text-[#d5a300] transition-colors"><i class="fab fa-facebook text-2xl"></i></a>
+          <a href="#" class="hover:text-[#d5a300] transition-colors"><i class="fab fa-instagram text-2xl"></i></a>
+          <a href="#" class="hover:text-[#d5a300] transition-colors"><i class="fab fa-twitter text-2xl"></i></a>
         </div>
       </div>
     </div>
   </footer>
 
   <!-- Scripts -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.js"></script>
   <script>
+    // Inicializar Slick Slider para el slider de producto
     $(document).ready(function(){
       $('.product-slider').slick({
         autoplay: false,
         arrows: true,
         dots: true
       });
+    });
+
+    // Inicializar AOS
+    AOS.init();
+
+    // Funcionalidad del Modal de Pedido
+    document.getElementById('buy-now-btn').addEventListener('click', function(){
+      document.getElementById('order-modal').style.display = 'flex';
+    });
+    document.getElementById('close-order-modal').addEventListener('click', function(){
+      document.getElementById('order-modal').style.display = 'none';
+    });
+
+    // Definir el precio del producto en una variable JavaScript
+    const productPrice = parseFloat("{{ product.precio }}");
+    document.getElementById('order-form').addEventListener('submit', function(e){
+      e.preventDefault();
+      const formData = new FormData(this);
+      const quantity = parseInt(formData.get('quantity'));
+      const email = formData.get('email');
+      const whatsapp = formData.get('whatsapp');
+      const total = productPrice * quantity;
+      console.log("Pedido creado:", {
+        producto: "{{ product.nombre }}",
+        cantidad: quantity,
+        email: email,
+        whatsapp: whatsapp,
+        total: total
+      });
+      alert("Pedido creado. Revisa tu correo o WhatsApp para más detalles.");
+      document.getElementById('order-modal').style.display = 'none';
     });
   </script>
 </body>

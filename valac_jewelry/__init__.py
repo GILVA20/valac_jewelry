@@ -1,4 +1,3 @@
-# valac_jewelry/__init__.py
 import os
 import logging
 from flask import Flask
@@ -26,14 +25,18 @@ def create_app():
     from .routes.main import main_bp
     app.register_blueprint(main_bp)
     
-    from .routes.collection import collection_bp  # Asegúrate de que en collection.py el blueprint se llame collections_bp
+    from .routes.collection import collection_bp  # Asegúrate de que en collection.py el blueprint se llame collection_bp
     app.register_blueprint(collection_bp, url_prefix='/collection')
     
     from .routes.products import products_bp
     app.register_blueprint(products_bp, url_prefix='/producto')
     
-    from .routes.cart import cart_bp  # Si tienes implementado el blueprint para el carrito
+    from .routes.cart import cart_bp  # Blueprint para el carrito
     app.register_blueprint(cart_bp, url_prefix='/cart')
+    
+    # Registrar blueprint de checkout
+    from .routes.checkout import checkout_bp
+    app.register_blueprint(checkout_bp)  # Opcional: puedes agregar url_prefix='/checkout' si lo deseas
     
     # Inicializa Flask-Admin con la vista personalizada para Supabase
     admin = Admin(app, name='VALAC Joyas Admin', template_mode='bootstrap3', url='/admin', endpoint='admin')

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout - VALAC Joyas</title>
+  <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+
+  <!-- Fuentes y estilos -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      color: #424242;
+      background-color: #f7f7f7;
+    }
+    h1, h2, h3, .font-playfair {
+      font-family: 'Playfair Display', serif;
+      font-weight: 600;
+    }
+    a {
+      font-family: 'Playfair Display', serif;
+      font-weight: 600;
+      color: #424242;
+      transition: color 0.3s;
+    }
+    a:hover {
+      color: #D4AF37;
+    }
+    header, footer {
+      background-color: #ffffff;
+    }
+    /* Estilos generales para formularios y secciones */
+    .form-section {
+      background-color: #fff;
+      padding: 1.5rem;
+      border-radius: 0.5rem;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+      margin-bottom: 1.5rem;
+    }
+    .form-section h2 {
+      margin-bottom: 1rem;
+      color: #333333;
+    }
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+    }
+    .form-group input, 
+    .form-group select {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid #d4d4d4;
+      border-radius: 0.375rem;
+      font-size: 1rem;
+    }
+    .checkout-btn {
+      background: linear-gradient(to right, #D4AF37, #C09330);
+      color: white;
+      padding: 1rem;
+      width: 100%;
+      border: none;
+      border-radius: 0.375rem;
+      font-size: 1.125rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .checkout-btn:hover {
+      background: linear-gradient(to right, #B38F00, #967700);
+    }
+    /* Resumen del pedido */
+    .order-summary {
+      background-color: #fdfdfd;
+      padding: 1rem;
+      border-top: 2px solid #D4AF37;
+      margin-bottom: 1rem;
+    }
+    .order-summary div {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+    }
+    /* Sección de confianza */
+    .trust-section {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    .trust-section img {
+      max-width: 150px;
+      margin-bottom: 0.5rem;
+    }
+    .trust-section p {
+      font-size: 0.9rem;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+  <!-- Header (similar al cart.html) -->
+  <header class="fixed top-0 left-0 right-0 z-50 shadow-md">
+    <div class="container mx-auto flex justify-between items-center p-6">
+      <div class="text-4xl font-playfair">
+        <a href="/" class="hover:text-[#D4AF37] transition-colors">VALAC Joyas</a>
+      </div>
+      <nav class="space-x-6">
+        <a href="/" class="text-xl hover:text-[#D4AF37] transition-colors">Inicio</a>
+        <a href="/collection" class="text-xl hover:text-[#D4AF37] transition-colors">Colección</a>
+        <a href="/about" class="text-xl hover:text-[#D4AF37] transition-colors">Sobre Nosotros</a>
+        <a href="/contact" class="text-xl hover:text-[#D4AF37] transition-colors">Contacto</a>
+        <a href="/cart" class="text-xl hover:text-[#D4AF37] transition-colors">
+          <i class="fas fa-shopping-cart"></i> Carrito
+        </a>
+      </nav>
+      <div class="space-x-4">
+        <a href="#" class="text-2xl hover:text-[#D4AF37] transition-colors"><i class="fab fa-facebook"></i></a>
+        <a href="#" class="text-2xl hover:text-[#D4AF37] transition-colors"><i class="fab fa-instagram"></i></a>
+        <a href="#" class="text-2xl hover:text-[#D4AF37] transition-colors"><i class="fab fa-twitter"></i></a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content: Checkout -->
+  <main class="pt-24 container mx-auto p-6">
+    <form id="checkout-form">
+      <!-- Sección de Datos de Envío y Facturación -->
+      <section class="form-section">
+        <h2>Datos de Envío y Facturación</h2>
+        <div class="form-group">
+          <label for="nombre">Nombre Completo</label>
+          <input type="text" id="nombre" name="nombre" placeholder="Tu nombre" required>
+        </div>
+        <div class="form-group">
+          <label for="direccion">Dirección</label>
+          <input type="text" id="direccion" name="direccion" placeholder="Calle, número, etc." required>
+        </div>
+        <div class="form-group">
+          <label for="ciudad">Ciudad</label>
+          <input type="text" id="ciudad" name="ciudad" placeholder="Ciudad" required>
+        </div>
+        <div class="form-group">
+          <label for="codigo_postal">Código Postal</label>
+          <input type="text" id="codigo_postal" name="codigo_postal" placeholder="Código Postal" required>
+        </div>
+        <div class="form-group">
+          <label for="telefono">Teléfono</label>
+          <input type="tel" id="telefono" name="telefono" placeholder="Número de contacto" required>
+        </div>
+        <div class="form-group">
+          <label for="email">Correo Electrónico</label>
+          <input type="email" id="email" name="email" placeholder="tu@correo.com" required>
+        </div>
+      </section>
+
+      <!-- Sección de Información de Pago -->
+      <section class="form-section">
+        <h2>Información de Pago</h2>
+        <div class="form-group">
+          <label for="metodo_pago">Método de Pago</label>
+          <select id="metodo_pago" name="metodo_pago">
+            <option value="tarjeta">Tarjeta de Crédito/Débito</option>
+            <option value="paypal">PayPal</option>
+          </select>
+        </div>
+        <!-- Campos para Tarjeta (se pueden mostrar/ocultar según la selección) -->
+        <div id="card-fields">
+          <div class="form-group">
+            <label for="card_number">Número de Tarjeta</label>
+            <input type="text" id="card_number" name="card_number" placeholder="XXXX-XXXX-XXXX-XXXX" required>
+          </div>
+          <div class="form-group">
+            <label for="card_expiration">Fecha de Expiración</label>
+            <input type="text" id="card_expiration" name="card_expiration" placeholder="MM/AA" required>
+          </div>
+          <div class="form-group">
+            <label for="card_cvc">CVC</label>
+            <input type="text" id="card_cvc" name="card_cvc" placeholder="CVC" required>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sección de Resumen del Pedido -->
+      <section class="form-section order-summary">
+        <h2>Resumen del Pedido</h2>
+        <div id="order-details">
+          <!-- Aquí se mostrará dinámicamente el resumen: items, subtotal, envío y total -->
+          <div>
+            <span>Subtotal:</span>
+            <span id="subtotal">$0.00</span>
+          </div>
+          <div>
+            <span>Envío:</span>
+            <span id="shipping">$50.00</span>
+          </div>
+          <div style="border-top: 1px solid #d4d4d4; padding-top: 0.5rem;">
+            <span>Total:</span>
+            <span id="total">$0.00</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Sección de Elementos de Confianza -->
+      <section class="trust-section">
+        <img src="{{ url_for('static', filename='images/sello_seguridad.png') }}" alt="Sello de Seguridad">
+        <p>Compra 100% segura con encriptación SSL</p>
+      </section>
+
+      <!-- Botón para Finalizar Compra -->
+      <button type="submit" class="checkout-btn">Finalizar Compra</button>
+    </form>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white text-[#333333] py-12 mt-8">
+    <div class="container mx-auto text-center">
+      <p>© {{ 2025 }} VALAC Joyas. Todos los derechos reservados. | <a href="/privacidad">Política de Privacidad</a> | <a href="/terminos">Términos de Servicio</a></p>
+    </div>
+  </footer>
+
+  <!-- Scripts para validaciones y dinámicas -->
+  <script>
+    // Actualización dinámica del resumen del pedido (puedes integrarlo con tus datos reales)
+    const cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
+    const calculateSubtotal = () => {
+      return cartItems.reduce((sum, item) => sum + item.precio * item.cantidad, 0);
+    };
+    const updateOrderSummary = () => {
+      const subtotal = calculateSubtotal();
+      const shipping = subtotal > 0 ? 50 : 0;
+      const total = subtotal + shipping;
+      document.getElementById('subtotal').textContent = `$${subtotal.toFixed(2)}`;
+      document.getElementById('shipping').textContent = `$${shipping.toFixed(2)}`;
+      document.getElementById('total').textContent = `$${total.toFixed(2)}`;
+    };
+    updateOrderSummary();
+
+    // Mostrar/Ocultar campos de tarjeta según el método de pago seleccionado
+    document.getElementById('metodo_pago').addEventListener('change', (e) => {
+      const cardFields = document.getElementById('card-fields');
+      if(e.target.value === "tarjeta") {
+        cardFields.style.display = 'block';
+      } else {
+        cardFields.style.display = 'none';
+      }
+    });
+
+    // Validación y simulación de envío del formulario
+    document.getElementById('checkout-form').addEventListener('submit', (e) => {
+      e.preventDefault();
+      // Aquí se pueden agregar validaciones adicionales en tiempo real
+      // Por ejemplo, validación de formatos de email, teléfono, tarjeta, etc.
+      
+      // Simulación de procesamiento de pago
+      alert("Pago procesado con éxito. Gracias por tu compra!");
+      // Aquí se puede redirigir a una página de confirmación o realizar la integración con el backend
+    });
+  </script>
+</body>
+</html>

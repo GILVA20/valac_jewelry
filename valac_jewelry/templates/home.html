@@ -6,9 +6,9 @@
   <!-- Sección: Banner y Slider de Banner -->
   <section class="relative mt-24">
     <div class="banner-slider">
-      <img src="{{ url_for('static', filename='images/sapphire-ring.jpg') }}" alt="Banner 1" class="w-full h-[600px] object-cover object-center">
-      <img src="{{ url_for('static', filename='images/mangoldchain.jpg') }}" alt="Banner 2" class="w-full h-[600px] object-cover object-center">
-      <img src="{{ url_for('static', filename='images/goldwomencollar.jpg') }}" alt="Banner 3" class="w-full h-[600px] object-cover object-center">
+      <img src="{{ SUPABASE_STORAGE_URL }}sapphire-ring.jpg" alt="Banner 1" class="w-full h-[600px] object-cover object-center">
+      <img src="{{ SUPABASE_STORAGE_URL }}mangoldchain.jpg" alt="Banner 2" class="w-full h-[600px] object-cover object-center">
+      <img src="{{ SUPABASE_STORAGE_URL }}goldwomencollar.jpg" alt="Banner 3" class="w-full h-[600px] object-cover object-center">
     </div>
     <div class="absolute inset-0 flex items-center justify-center" data-aos="fade-up" data-aos-duration="1000">
       <div class="text-center text-white bg-black bg-opacity-50 px-8 py-6 rounded-lg">
@@ -41,7 +41,7 @@
   <section class="py-12 bg-white text-gray-800">
     <div class="container mx-auto flex flex-col md:flex-row items-center">
       <div class="md:w-1/2" data-aos="fade-right" data-aos-duration="1000">
-        <img src="{{ url_for('static', filename='images/our-story.jpg') }}" alt="Nuestra Historia" class="rounded-lg shadow-lg">
+        <img src="{{ SUPABASE_STORAGE_URL }}our-story.jpg" alt="Nuestra Historia" class="rounded-lg shadow-lg">
       </div>
       <div class="md:w-1/2 md:pl-8 mt-6 md:mt-0" data-aos="fade-left" data-aos-duration="1000">
         <h2 class="text-3xl font-semibold mb-6">Nuestra Historia</h2>
@@ -55,7 +55,9 @@
   <!-- Sección Reseñas de Clientes -->
   <section class="bg-white py-12">
     <div class="container mx-auto text-center">
-      <h2 class="text-3xl font-semibold mb-8 text-gray-800" data-aos="fade-up" data-aos-duration="1000">Reseñas de Clientes</h2>
+      <h2 class="text-3xl font-semibold mb-8 text-gray-800" data-aos="fade-up" data-aos-duration="1000">
+        Reseñas de Clientes
+      </h2>
       <div class="review-slider">
         <div class="bg-white p-5 rounded-lg shadow-lg w-64 mx-4" data-aos="fade-up" data-aos-duration="1000">
           <p>"Estoy encantada con mi compra en VALAC Joyas. La calidad es insuperable y el servicio excepcional."</p>
@@ -134,7 +136,9 @@
         if (productGrid) {
           productGrid.innerHTML = "";
           top3.forEach((product, index) => {
-            const imageUrl = product.imagen && product.imagen !== 'undefined' ? product.imagen : '/static/images/placeholder.jpg';
+            // Si product.imagen existe, se asume que ya es la URL completa (desde Supabase Storage).
+            // De lo contrario, se utiliza un placeholder desde Supabase Storage.
+            const imageUrl = product.imagen && product.imagen !== 'undefined' ? product.imagen : `${SUPABASE_STORAGE_URL}placeholder.jpg`;
             productGrid.innerHTML += `
               <div class="bg-white p-5 rounded-lg shadow-md product-card" data-aos="fade-up" data-aos-delay="${index * 50}">
                 <img src="${imageUrl}" loading="lazy" alt="${product.nombre}" class="w-full h-64 object-cover mb-4 rounded">

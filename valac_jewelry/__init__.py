@@ -20,6 +20,11 @@ def create_app():
     supabase_url = app.config.get("SUPABASE_URL")
     supabase_key = app.config.get("SUPABASE_KEY")
     app.supabase = create_client(supabase_url, supabase_key)
+
+     # Inyecta la variable SUPABASE_STORAGE_URL en todas las plantillas
+    @app.context_processor
+    def inject_supabase_storage_url():
+        return dict(SUPABASE_STORAGE_URL=app.config.get("SUPABASE_STORAGE_URL"))
     
     # Registrar blueprints
     from .routes.main import main_bp

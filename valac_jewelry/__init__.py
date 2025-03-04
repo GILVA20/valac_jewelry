@@ -33,6 +33,10 @@ def create_app():
     
     from .routes.cart import cart_bp  # Blueprint para el carrito
     app.register_blueprint(cart_bp, url_prefix='/cart')
+
+     # Registrar blueprint de contact
+    from .routes.contact import contact_bp
+    app.register_blueprint(contact_bp)  # Esto registrará las rutas definidas en contact.py
     
     # Registrar blueprint de checkout
     from .routes.checkout import checkout_bp

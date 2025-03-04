@@ -1,301 +1,150 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Carrito - VALAC Joyas</title>
-  <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+{% extends "base.html" %}
 
-  <!-- Fuentes: Playfair Display para títulos, Roboto para cuerpo -->
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+{% block title %}
+  Carrito - VALAC Joyas
+{% endblock %}
 
-  <!-- TailwindCSS -->
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
-
-  <!-- FontAwesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-
-  <!-- Slick Slider CSS (opcional para secciones con sliders) -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick-theme.min.css">
-
-  <!-- AOS CSS para animaciones -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
-
-  <style>
-    /* Tipografía global y colores */
-    body {
-      font-family: 'Roboto', sans-serif;
-      color: #424242;
-      background-color: #f7f7f7;
-    }
-    h1, h2, h3, .font-playfair {
-      font-family: 'Playfair Display', serif;
-      font-weight: 600;
-    }
-    a {
-      font-family: 'Playfair Display', serif;
-      font-weight: 600;
-      color: #424242;
-      transition: color 0.3s;
-    }
-    a:hover {
-      color: #D4AF37;
-    }
-    
-    /* Header y Footer */
-    header, footer {
-      background-color: #ffffff;
-    }
-
-    /* Estilos para las "chips" (reutilizables en otras vistas) */
-    .chip-label {
-      display: block;
-      text-align: center;
-      padding: 0.25rem 0;
-      border: 1px solid #d4d4d4;
-      border-radius: 0.375rem;
-      font-size: 0.75rem;
-      transition: background-color 0.3s, color 0.3s, border-color 0.3s;
-    }
-    .chip-label:hover {
-      border-color: #d5a300;
-      background-color: #fff7e6;
-      cursor: pointer;
-    }
-    .chip-label.active {
-      background-color: #d5a300;
-      color: #fff;
-      border-color: #d5a300;
-    }
-    
-    /* Utilidades para el slider (si se usan en otras secciones) */
-    .slider {
-      -webkit-appearance: none;
-      width: 100%;
-      height: 6px;
-      background: #d4d4d4;
-      border-radius: 5px;
-      outline: none;
-      opacity: 0.7;
-      transition: opacity 0.2s;
-    }
-    .slider:hover { opacity: 1; }
-    .slider::-webkit-slider-thumb,
-    .slider::-moz-range-thumb {
-      -webkit-appearance: none;
-      width: 20px;
-      height: 20px;
-      background: #d5a300;
-      border-radius: 50%;
-      cursor: pointer;
-    }
-
-    /* Tarjetas de producto */
-    .product-card {
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
-    .product-card:hover {
-      transform: scale(1.03);
-      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
-    }
-
-    /* Resumen de compra y cupón */
-    .summary-box {
-      border-top: 2px solid #D4AF37;
-    }
-    .coupon-section {
-      margin-top: 1rem;
-    }
-    .coupon-input {
-      border: 1px solid #d4d4d4;
-      padding: 0.5rem;
-      border-radius: 0.375rem;
-      width: 100%;
-    }
-    .apply-coupon-btn {
-      background-color: #D4AF37;
-      color: white;
-      padding: 0.5rem 1rem;
-      border-radius: 0.375rem;
-      transition: background-color 0.3s;
-      width: 100%;
-      margin-top: 0.5rem;
-    }
-    .apply-coupon-btn:hover {
-      background-color: #B38F26;
-    }
-  </style>
-
-  <!-- jQuery, Slick Slider y AOS -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
-</head>
-<body class="bg-[#f7f7f7]">
-
-  <!-- Header -->
-  <header class="fixed top-0 left-0 right-0 z-50 shadow-md">
-    <div class="container mx-auto flex justify-between items-center p-6">
-      <div class="text-4xl font-playfair">
-        <a href="/" class="hover:text-[#D4AF37] transition-colors">VALAC Joyas</a>
-      </div>
-      <nav class="space-x-6">
-        <a href="/" class="text-xl hover:text-[#D4AF37] transition-colors">Inicio</a>
-        <a href="/collection" class="text-xl hover:text-[#D4AF37] transition-colors">Colección</a>
-        <a href="/about" class="text-xl hover:text-[#D4AF37] transition-colors">Sobre Nosotros</a>
-        <a href="/contact" class="text-xl hover:text-[#D4AF37] transition-colors">Contacto</a>
-        <a href="/cart" class="text-xl hover:text-[#D4AF37] transition-colors">
-          <i class="fas fa-shopping-cart"></i> Carrito
-        </a>
-      </nav>
-      <div class="space-x-4">
-        <a href="#" class="text-2xl hover:text-[#D4AF37] transition-colors"><i class="fab fa-facebook"></i></a>
-        <a href="#" class="text-2xl hover:text-[#D4AF37] transition-colors"><i class="fab fa-instagram"></i></a>
-        <a href="#" class="text-2xl hover:text-[#D4AF37] transition-colors"><i class="fab fa-twitter"></i></a>
-      </div>
-    </div>
-  </header>
-
-  <!-- Main Content -->
-  <main class="pt-24 container mx-auto p-6">
-    <div class="flex flex-col md:flex-row gap-8">
-      <!-- Columna Izquierda: Lista de productos en el carrito -->
-      <section class="w-full md:w-2/3">
-        <h1 class="text-3xl font-bold text-[#333333] mb-8 font-playfair">Tus Artículos</h1>
-        {% if products %}
-          <div class="space-y-6" id="cart-items">
-            {% for p in products %}
-            <div class="bg-white p-5 rounded-lg shadow-md flex flex-col product-card" data-product-id="{{ p.id }}">
-              <img src="{{ p.imagen or url_for('static', filename='images/placeholder.jpg') }}" alt="{{ p.nombre }}" class="w-full h-64 object-cover mb-4 rounded">
-              <h3 class="text-xl font-semibold text-[#333333] font-playfair">{{ p.nombre }}</h3>
-              <p class="text-gray-800 mt-2 font-bold">$ {{ p.precio }}</p>
-              <!-- Control de cantidad: En este caso se limita a 1 unidad por compra -->
-              <p class="mt-2 text-gray-600">Cantidad: 1</p>
-              <!-- Botón para eliminar producto -->
-              <button class="remove-item mt-4 bg-red-600 text-white px-4 py-2 rounded-full hover:bg-red-700 transition-colors" data-product-id="{{ p.id }}">
-                <i class="fas fa-trash"></i> Eliminar
-              </button>
-            </div>
-            {% endfor %}
+{% block content %}
+<main class="pt-24 container mx-auto p-6">
+  <div class="flex flex-col md:flex-row gap-8">
+    <!-- Columna Izquierda: Lista de productos en el carrito -->
+    <section class="w-full md:w-2/3">
+      <h1 class="text-3xl font-bold text-[#333333] mb-8 font-playfair">Tus Artículos</h1>
+      {% if products %}
+        <div class="space-y-6" id="cart-items">
+          {% for p in products %}
+          <div class="bg-white p-5 rounded-lg shadow-md flex flex-col product-card" data-product-id="{{ p.id }}">
+            <img src="{{ p.imagen or url_for('static', filename='images/placeholder.jpg') }}" alt="{{ p.nombre }}" class="w-full h-64 object-cover mb-4 rounded">
+            <h3 class="text-xl font-semibold text-[#333333] font-playfair">{{ p.nombre }}</h3>
+            <p class="text-gray-800 mt-2 font-bold">$ {{ p.precio }}</p>
+            <!-- Control de cantidad: En este caso se limita a 1 unidad por compra -->
+            <p class="mt-2 text-gray-600">Cantidad: 1</p>
+            <!-- Botón para eliminar producto -->
+            <button class="remove-item mt-4 bg-red-600 text-white px-4 py-2 rounded-full hover:bg-red-700 transition-colors" data-product-id="{{ p.id }}">
+              <i class="fas fa-trash"></i> Eliminar
+            </button>
           </div>
-        {% else %}
-          <p class="text-gray-600">No hay productos en el carrito.</p>
-        {% endif %}
-      </section>
-
-      <!-- Columna Derecha: Resumen de Compra y Cupón -->
-      <aside class="w-full md:w-1/3 bg-white p-6 rounded-lg shadow-md">
-        <h2 class="text-2xl font-bold font-playfair mb-4">Resumen de Compra</h2>
-        <div class="flex justify-between mb-2">
-          <span class="text-gray-700">Subtotal:</span>
-          <span id="subtotal" class="font-bold text-gray-900">$0.00</span>
+          {% endfor %}
         </div>
-        <div class="flex justify-between mb-2">
-          <span class="text-gray-700">Envío:</span>
-          <span id="shipping" class="font-bold text-gray-900">$50.00</span>
+      {% else %}
+        <p class="text-gray-600">No hay productos en el carrito.</p>
+      {% endif %}
+    </section>
+
+    <!-- Columna Derecha: Resumen de Compra y Cupón -->
+    <aside class="w-full md:w-1/3 bg-white p-6 rounded-lg shadow-md">
+      <h2 class="text-2xl font-bold font-playfair mb-4">Resumen de Compra</h2>
+      <div class="flex justify-between mb-2">
+        <span class="text-gray-700">Subtotal:</span>
+        <span id="subtotal" class="font-bold text-gray-900">$0.00</span>
+      </div>
+      <div class="flex justify-between mb-2">
+        <span class="text-gray-700">Envío:</span>
+        <span id="shipping" class="font-bold text-gray-900">$50.00</span>
+      </div>
+      <div class="flex justify-between mb-4 border-t pt-2">
+        <span class="text-gray-700">Total:</span>
+        <span id="total" class="font-bold text-gray-900">$0.00</span>
+      </div>
+      <!-- Sección para aplicar cupón -->
+      <div class="coupon-section" data-aos="fade-up" data-aos-duration="1000">
+        <label for="coupon" class="block text-gray-700 mb-2">Código de Cupón</label>
+        <input type="text" id="coupon" class="coupon-input" placeholder="Ingresa tu cupón">
+        <button id="apply-coupon-btn" class="apply-coupon-btn mt-2">Aplicar Cupón</button>
+        <!-- Mensaje animado para cupón aplicado -->
+        <div id="coupon-message" class="hidden text-green-600 font-semibold mt-2" data-aos="fade-in" data-aos-duration="500">
+          ¡Cupón aplicado con éxito!
         </div>
-        <div class="flex justify-between mb-4 border-t pt-2">
-          <span class="text-gray-700">Total:</span>
-          <span id="total" class="font-bold text-gray-900">$0.00</span>
-        </div>
-        <!-- Sección para aplicar cupón -->
-        <div class="coupon-section">
-          <label for="coupon" class="block text-gray-700 mb-2">Código de Cupón</label>
-          <input type="text" id="coupon" class="coupon-input" placeholder="Ingresa tu cupón">
-          <button id="apply-coupon-btn" class="apply-coupon-btn">Aplicar Cupón</button>
-        </div>
-        <!-- Botón para proceder al pago -->
-        <button id="checkout-btn" class="mt-6 w-full bg-gradient-to-r from-[#D4AF37] to-[#C09330] hover:from-[#B38F00] hover:to-[#967700] text-white px-6 py-3 rounded-full font-semibold transition-colors shadow-md">
-          Proceder al Pago
-        </button>
-      </aside>
-    </div>
-  </main>
+      </div>
+      <!-- Botón para proceder al pago -->
+      <button id="checkout-btn" class="mt-6 w-full bg-gradient-to-r from-[#D4AF37] to-[#C09330] hover:from-[#B38F00] hover:to-[#967700] text-white px-6 py-3 rounded-full font-semibold transition-colors shadow-md">
+        Proceder al Pago
+      </button>
+    </aside>
+  </div>
+</main>
+{% endblock %}
 
-  <!-- Footer -->
-  <footer class="bg-white text-[#333333] py-12 mt-8">
-    <div class="container mx-auto text-center">
-      <p>© {{ 2025 }} VALAC Joyas. Todos los derechos reservados.</p>
-    </div>
-  </footer>
+{% block scripts_extra %}
+<script>
+  // Simulación del carrito: en un entorno real, estos datos vendrían del backend o de localStorage.
+  let cartItems = [
+    {% for p in products %}
+    {
+      id: {{ p.id }},
+      nombre: "{{ p.nombre }}",
+      precio: {{ p.precio }},
+      cantidad: {{ p.cantidad or 1 }}
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ];
 
-  <!-- Scripts: Funcionalidades del Carrito -->
-  <script>
-    // Simulación del carrito: en un entorno real, estos datos vendrían del backend o de localStorage.
-    let cartItems = [
-      {% for p in products %}
-      {
-        id: {{ p.id }},
-        nombre: "{{ p.nombre }}",
-        precio: {{ p.precio }},
-        cantidad: {{ p.cantidad or 1 }}
-      }{% if not loop.last %},{% endif %}
-      {% endfor %}
-    ];
+  // Función para calcular el subtotal
+  const calculateSubtotal = () => {
+    return cartItems.reduce((sum, item) => sum + item.precio * item.cantidad, 0);
+  };
 
-    // Función para calcular el subtotal
-    const calculateSubtotal = () => {
-      return cartItems.reduce((sum, item) => sum + item.precio * item.cantidad, 0);
-    };
+  // Actualiza el resumen de la compra
+  const updateSummary = () => {
+    const subtotal = calculateSubtotal();
+    const shipping = subtotal > 0 ? 50 : 0;
+    const total = subtotal + shipping;
+    document.getElementById('subtotal').textContent = `$${subtotal.toFixed(2)}`;
+    document.getElementById('shipping').textContent = `$${shipping.toFixed(2)}`;
+    document.getElementById('total').textContent = `$${total.toFixed(2)}`;
+    // Persistencia en localStorage (opcional)
+    localStorage.setItem('cartItems', JSON.stringify(cartItems));
+  };
 
-    // Actualiza el resumen de la compra
-    const updateSummary = () => {
+  // Evento para eliminar producto del carrito
+  document.querySelectorAll('.remove-item').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = parseInt(btn.getAttribute('data-product-id'));
+      cartItems = cartItems.filter(item => item.id !== id);
+      // Remover el elemento del DOM
+      btn.closest('.product-card').remove();
+      updateSummary();
+    });
+  });
+
+  // Inicializar resumen al cargar la página
+  updateSummary();
+
+  // Evento para aplicar cupón: "DESCUENTO10" otorga 10% de descuento
+  document.getElementById('apply-coupon-btn').addEventListener('click', () => {
+    const couponCode = document.getElementById('coupon').value.trim();
+    const couponMsg = document.getElementById('coupon-message');
+    if (couponCode === "DESCUENTO10") {
       const subtotal = calculateSubtotal();
+      const discount = subtotal * 0.10;
       const shipping = subtotal > 0 ? 50 : 0;
-      const total = subtotal + shipping;
-      document.getElementById('subtotal').textContent = `$${subtotal.toFixed(2)}`;
-      document.getElementById('shipping').textContent = `$${shipping.toFixed(2)}`;
+      const total = subtotal + shipping - discount;
+      document.getElementById('subtotal').textContent = `$${(subtotal - discount).toFixed(2)}`;
       document.getElementById('total').textContent = `$${total.toFixed(2)}`;
-      // Persistencia en localStorage (opcional)
-      localStorage.setItem('cartItems', JSON.stringify(cartItems));
-    };
+      // Agregar animación al botón
+      document.getElementById('apply-coupon-btn').classList.add('animate-bounce');
+      // Mostrar mensaje de éxito
+      couponMsg.textContent = "¡Cupón aplicado con éxito!";
+      couponMsg.classList.remove('hidden');
+      // Ocultar mensaje y quitar animación después de 3 segundos
+      setTimeout(() => {
+        couponMsg.classList.add('hidden');
+        document.getElementById('apply-coupon-btn').classList.remove('animate-bounce');
+      }, 3000);
+    } else {
+      alert("Código de cupón inválido");
+    }
+  });
 
-    // Evento para eliminar producto del carrito
-    document.querySelectorAll('.remove-item').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const id = parseInt(btn.getAttribute('data-product-id'));
-        cartItems = cartItems.filter(item => item.id !== id);
-        // Remover el elemento del DOM
-        btn.closest('.product-card').remove();
-        updateSummary();
-      });
-    });
+  // Evento para proceder al pago (simulado)
+  document.getElementById('checkout-btn').addEventListener('click', () => {
+    alert("Redirigiendo a la página de pago...");
+    window.location.href = '/checkout';
+  });
 
-    // Inicializar resumen al cargar la página
-    updateSummary();
-
-    // Evento para aplicar cupón: "DESCUENTO10" otorga 10% de descuento
-    document.getElementById('apply-coupon-btn').addEventListener('click', () => {
-      const couponCode = document.getElementById('coupon').value.trim();
-      if (couponCode === "DESCUENTO10") {
-        const subtotal = calculateSubtotal();
-        const discount = subtotal * 0.10;
-        const shipping = subtotal > 0 ? 50 : 0;
-        const total = subtotal + shipping - discount;
-        document.getElementById('subtotal').textContent = `$${(subtotal - discount).toFixed(2)}`;
-        document.getElementById('total').textContent = `$${total.toFixed(2)}`;
-        alert("Cupón aplicado: 10% de descuento");
-      } else {
-        alert("Código de cupón inválido");
-      }
-    });
-
-    // Evento para proceder al pago (simulado)
-    document.getElementById('checkout-btn').addEventListener('click', () => {
-      alert("Redirigiendo a la página de pago...");
-      // Aquí se redirigiría o se procesaría el pago
-      // Evento para proceder al pago (redirigir a checkout.html)
-    document.getElementById('checkout-btn').addEventListener('click', () => {
-      window.location.href = '/checkout';
-    });
-
-    });
-
-    // Inicialización de AOS para animaciones
-    document.addEventListener("DOMContentLoaded", () => {
-      AOS.init();
-    });
-  </script>
-</body>
-</html>
+  // Inicialización de AOS para animaciones
+  document.addEventListener("DOMContentLoaded", () => {
+    AOS.init();
+  });
+</script>
+{% endblock %}

@@ -1,49 +1,86 @@
-<link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
-<img src="{{ url_for('static', filename='images/banner.jpg') }}" alt="Banner" class="w-full h-[450px] object-contain">
-
-
-
-<!-- Product Images -->
-<img src="{{ url_for('static', filename='images/sapphire-ring.jpg') }}" alt="Sapphire Gold Ring" class="w-full h-56 object-cover mb-4">
-<img src="{{ url_for('static', filename='images/diamond-earrings.jpg') }}" alt="Diamond Stud Earrings" class="w-full h-56 object-cover mb-4">
-<img src="{{ url_for('static', filename='images/silver-bracelet.jpg') }}" alt="Silver Bracelet" class="w-full h-56 object-cover mb-4">
-
+<!DOCTYPE html>
+<html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VALAC Joyas</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
-    <style>
-        /* Aplica la tipografía a todo el sitio */
-        body {
-            font-family: 'Playfair Display', serif;
-            font-weight: 400; /* Peso normal para el cuerpo */
-            color: #424242; /* Color de texto general */
-        }
-
-        /* Estilo de los títulos */
-        h1, h2, h3 {
-            font-family: 'Playfair Display', serif;
-            font-weight: 600; /* Negrita para los títulos */
-        }
-
-        /* Estilo para párrafos */
-        p {
-            font-family: 'Playfair Display', serif;
-            font-weight: 400; /* Peso normal para los párrafos */
-        }
-
-        /* Estilo para enlaces */
-        a {
-            font-family: 'Playfair Display', serif;
-            font-weight: 600; /* Un poco más audaz para los enlaces */
-            color: #424242; /* Color de enlace */
-        }
-
-        a:hover {
-            color: #d5a300; /* Color de enlace al pasar el mouse */
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- Título de la página (se puede sobrescribir en cada template) -->
+  <title>{% block title %}VALAC Joyas{% endblock %}</title>
+  <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
+  
+  <!-- Fuentes (Playfair Display y Roboto) -->
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+  
+  <!-- Hoja de estilos principal (TailwindCSS) -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
+  
+  <!-- FontAwesome para íconos -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  
+  <!-- Slick Slider CSS para carruseles -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick-theme.min.css">
+  
+  <!-- AOS CSS para animaciones -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
+  
+  <!-- Estilos globales de tipografía y colores -->
+  <style>
+    /* Aplica la tipografía a todo el sitio */
+    body {
+      font-family: 'Playfair Display', serif;
+      font-weight: 400;
+      color: #424242;
+      background-color: #f7f7f7;
+    }
+    /* Estilos para títulos */
+    h1, h2, h3 {
+      font-family: 'Playfair Display', serif;
+      font-weight: 600;
+    }
+    /* Estilos para párrafos */
+    p {
+      font-family: 'Playfair Display', serif;
+      font-weight: 400;
+    }
+    /* Estilos para enlaces */
+    a {
+      font-family: 'Playfair Display', serif;
+      font-weight: 600;
+      color: #424242;
+      transition: color 0.3s;
+    }
+    a:hover {
+      color: #d5a300;
+    }
+  </style>
+  
+  {% block head_extra %}{% endblock %}
 </head>
-
+<body>
+  
+  <!-- Header común (se carga desde un archivo parcial) -->
+  {% include 'partials/header.html' %}
+  
+  <!-- Bloque para contenido específico de cada página -->
+  {% block content %}{% endblock %}
+  
+  <!-- Footer común (se carga desde un archivo parcial) -->
+  {% include 'partials/footer.html' %}
+  
+  <!-- Carga global de scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+  
+  <!-- Inicialización global de AOS y otros scripts comunes -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function(){
+      AOS.init();
+      console.log("AOS inicializado globalmente.");
+      // Aquí puedes agregar más inicializaciones globales (por ejemplo, conexión a Supabase si se requiere en el frontend)
+    });
+  </script>
+  
+  {% block scripts_extra %}{% endblock %}
+</body>
+</html>

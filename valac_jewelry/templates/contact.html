@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+
+{% block title %}
+  Contacto - VALAC Joyas
+{% endblock %}
+
+{% block content %}
+  <main class="pt-24">
+    <!-- Sección: Contáctanos -->
+    <section class="py-12 bg-white">
+      <div class="container mx-auto px-4">
+        <h2 class="section-title text-center" data-aos="fade-up" data-aos-duration="1000">Contáctanos</h2>
+        <div class="max-w-3xl mx-auto text-center">
+          <p class="section-content" data-aos="fade-up" data-aos-duration="1200">
+            ¿Tienes alguna pregunta o comentario? ¡Nos encantaría saber de ti! Puedes ponerte en contacto con nosotros a través del formulario o por nuestros datos de contacto.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sección: Formulario de Contacto -->
+    <section class="py-12 bg-gray-100">
+      <div class="container mx-auto px-4">
+        <div class="max-w-xl mx-auto">
+          <form action="{{ url_for('contact.send') }}" method="POST" class="bg-white p-8 rounded shadow">
+            <div class="mb-4">
+              <label for="nombre" class="block text-gray-700 font-semibold mb-2">Nombre Completo</label>
+              <input type="text" id="nombre" name="nombre" placeholder="Tu nombre" class="w-full border border-gray-300 p-2 rounded" required>
+            </div>
+            <div class="mb-4">
+              <label for="email" class="block text-gray-700 font-semibold mb-2">Correo Electrónico</label>
+              <input type="email" id="email" name="email" placeholder="tu@correo.com" class="w-full border border-gray-300 p-2 rounded" required>
+            </div>
+            <div class="mb-4">
+              <label for="mensaje" class="block text-gray-700 font-semibold mb-2">Mensaje</label>
+              <textarea id="mensaje" name="mensaje" rows="5" placeholder="Tu mensaje" class="w-full border border-gray-300 p-2 rounded" required></textarea>
+            </div>
+            <button type="submit" class="w-full bg-[#d5a300] text-white py-3 rounded hover:bg-[#b38f00] transition-colors">
+              Enviar Mensaje
+            </button>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sección: Nuestros Datos de Contacto -->
+    <section class="py-12 bg-white">
+      <div class="container mx-auto px-4">
+        <div class="max-w-3xl mx-auto text-center">
+          <h2 class="section-title" data-aos="fade-up" data-aos-duration="1000">Nuestros Datos de Contacto</h2>
+          <p class="section-content" data-aos="fade-up" data-aos-duration="1200">
+            También puedes comunicarte con nosotros a través de los siguientes medios:
+          </p>
+          <ul class="mt-6 space-y-4">
+            <li data-aos="fade-up" data-aos-duration="1300">
+              <i class="fas fa-phone-alt text-[#d5a300]"></i>
+              Teléfono: <a href="tel:{{ telefono }}" class="hover:text-[#d5a300] transition-colors">{{ telefono }}</a>
+            </li>
+            <li data-aos="fade-up" data-aos-duration="1400">
+              <i class="fas fa-envelope text-[#d5a300]"></i>
+              Email: <a href="mailto:{{ email_contacto }}" class="hover:text-[#d5a300] transition-colors">{{ email_contacto }}</a>
+            </li>
+            <li data-aos="fade-up" data-aos-duration="1500">
+              <i class="fas fa-map-marker-alt text-[#d5a300]"></i>
+              Dirección: {{ direccion }}
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- Sección: Síguenos en Redes Sociales -->
+    <section class="py-12 bg-gray-100">
+      <div class="container mx-auto px-4 text-center">
+        <h2 class="section-title" data-aos="fade-up" data-aos-duration="1000">Síguenos en Redes Sociales</h2>
+        <div class="flex justify-center space-x-6 mt-6" data-aos="fade-up" data-aos-duration="1200">
+          <a href="{{ facebook_link }}" class="text-3xl hover:text-[#d5a300] transition-colors"><i class="fab fa-facebook"></i></a>
+          <a href="{{ instagram_link }}" class="text-3xl hover:text-[#d5a300] transition-colors"><i class="fab fa-instagram"></i></a>
+          <a href="{{ twitter_link }}" class="text-3xl hover:text-[#d5a300] transition-colors"><i class="fab fa-twitter"></i></a>
+        </div>
+      </div>
+    </section>
+  </main>
+{% endblock %}
+
+{% block scripts_extra %}
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      AOS.init();
+    });
+  </script>
+{% endblock %}

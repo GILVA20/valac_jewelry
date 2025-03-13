@@ -6,34 +6,64 @@
 
 {% block content %}
 <main class="pt-24 container mx-auto p-6">
+  <!-- Mensajes Flash para Accesibilidad -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="mb-4" role="alert" aria-live="assertive">
+        {% for category, message in messages %}
+          <div class="p-2 rounded mb-2 text-white
+                      {% if category == 'success' %}bg-green-600{% elif category == 'error' %}bg-red-600{% elif category == 'warning' %}bg-yellow-500{% elif category == 'info' %}bg-blue-600{% endif %}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <!-- Si el servidor indica que no hay productos, se limpia localStorage -->
+  {% if not products %}
+    <script>
+      console.log("DEBUG: No hay productos en el carrito. Limpiando localStorage.");
+      localStorage.removeItem('cartItems');
+    </script>
+  {% endif %}
+
   <div class="flex flex-col md:flex-row gap-8">
-    <!-- Columna Izquierda: Lista de productos en el carrito -->
+    <!-- Lista de Productos del Carrito -->
     <section class="w-full md:w-2/3">
-      <h1 class="text-3xl font-bold text-[#333333] mb-8 font-playfair">Tus Artículos</h1>
+      <h1 class="text-3xl md:text-4xl font-bold text-[#333333] mb-8 font-playfair">Tus Artículos</h1>
       {% if products %}
         <div class="space-y-6" id="cart-items">
           {% for p in products %}
           <div class="bg-white p-5 rounded-lg shadow-md flex flex-col product-card" data-product-id="{{ p.id }}">
             <img src="{{ p.imagen or url_for('static', filename='images/placeholder.jpg') }}" alt="{{ p.nombre }}" class="w-full h-64 object-cover mb-4 rounded">
-            <h3 class="text-xl font-semibold text-[#333333] font-playfair">{{ p.nombre }}</h3>
+            <h3 class="text-xl md:text-2xl font-semibold text-[#333333] font-playfair">{{ p.nombre }}</h3>
             <p class="text-gray-800 mt-2 font-bold">$ {{ p.precio }}</p>
-            <!-- Control de cantidad: En este caso se limita a 1 unidad por compra -->
-            <p class="mt-2 text-gray-600">Cantidad: 1</p>
-            <!-- Botón para eliminar producto -->
-            <button class="remove-item mt-4 bg-red-600 text-white px-4 py-2 rounded-full hover:bg-red-700 transition-colors" data-product-id="{{ p.id }}">
-              <i class="fas fa-trash"></i> Eliminar
-            </button>
+            <!-- Mostrar y permitir actualizar la cantidad -->
+            <div class="mt-2">
+              <label for="quantity-{{ p.id }}" class="text-gray-600">Cantidad:</label>
+              <form action="{{ url_for('cart.update_quantity', product_id=p.id) }}" method="POST" class="inline-block ml-2">
+                <input type="number" id="quantity-{{ p.id }}" name="quantity" min="0" value="{{ p.cantidad }}" class="w-16 border rounded p-1" aria-label="Cantidad de {{ p.nombre }}">
+                <button type="submit" class="ml-2 bg-blue-600 text-white px-2 py-1 rounded hover:bg-blue-700 transition-colors" aria-label="Actualizar cantidad de {{ p.nombre }}">Actualizar</button>
+              </form>
+            </div>
+            <!-- Botón para eliminar el producto (envía POST a /remove) -->
+            <form method="POST" action="{{ url_for('cart.remove_from_cart', product_id=p.id) }}" class="mt-4">
+              <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded-full hover:bg-red-700 transition-colors" aria-label="Eliminar producto {{ p.nombre }}">
+                <i class="fas fa-trash"></i> Eliminar
+              </button>
+            </form>
           </div>
           {% endfor %}
         </div>
       {% else %}
-        <p class="text-gray-600">No hay productos en el carrito.</p>
+        <p class="text-gray-600 text-center">No hay productos en el carrito.</p>
       {% endif %}
     </section>
 
-    <!-- Columna Derecha: Resumen de Compra y Cupón -->
+    <!-- Resumen de Compra y Aplicación de Cupón -->
     <aside class="w-full md:w-1/3 bg-white p-6 rounded-lg shadow-md">
-      <h2 class="text-2xl font-bold font-playfair mb-4">Resumen de Compra</h2>
+      <h2 class="text-2xl md:text-3xl font-bold font-playfair mb-4">Resumen de Compra</h2>
       <div class="flex justify-between mb-2">
         <span class="text-gray-700">Subtotal:</span>
         <span id="subtotal" class="font-bold text-gray-900">$0.00</span>
@@ -46,18 +76,18 @@
         <span class="text-gray-700">Total:</span>
         <span id="total" class="font-bold text-gray-900">$0.00</span>
       </div>
-      <!-- Sección para aplicar cupón -->
+      <!-- Sección de Cupón -->
       <div class="coupon-section" data-aos="fade-up" data-aos-duration="1000">
-        <label for="coupon" class="block text-gray-700 mb-2">Código de Cupón</label>
-        <input type="text" id="coupon" class="coupon-input" placeholder="Ingresa tu cupón">
-        <button id="apply-coupon-btn" class="apply-coupon-btn mt-2">Aplicar Cupón</button>
-        <!-- Mensaje animado para cupón aplicado -->
-        <div id="coupon-message" class="hidden text-green-600 font-semibold mt-2" data-aos="fade-in" data-aos-duration="500">
+        <label for="coupon" class="block text-gray-700 mb-2 text-lg">Código de Cupón</label>
+        <input type="text" id="coupon" class="coupon-input border border-gray-300 p-2 rounded w-full" placeholder="Ingresa tu cupón" aria-label="Código de Cupón">
+        <button id="apply-coupon-btn" class="apply-coupon-btn mt-2 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors" aria-label="Aplicar Cupón">Aplicar Cupón</button>
+        <!-- Mensaje animado para cupón -->
+        <div id="coupon-message" class="hidden text-green-600 font-semibold mt-2" data-aos="fade-in" data-aos-duration="500" role="status" aria-live="polite">
           ¡Cupón aplicado con éxito!
         </div>
       </div>
       <!-- Botón para proceder al pago -->
-      <button id="checkout-btn" class="mt-6 w-full bg-gradient-to-r from-[#D4AF37] to-[#C09330] hover:from-[#B38F00] hover:to-[#967700] text-white px-6 py-3 rounded-full font-semibold transition-colors shadow-md">
+      <button id="checkout-btn" class="mt-6 w-full bg-gradient-to-r from-[#D4AF37] to-[#C09330] hover:from-[#B38F00] hover:to-[#967700] text-white px-6 py-3 rounded-full font-semibold transition-colors shadow-md" aria-label="Proceder al Pago">
         Proceder al Pago
       </button>
     </aside>
@@ -67,7 +97,7 @@
 
 {% block scripts_extra %}
 <script>
-  // Simulación del carrito: en un entorno real, estos datos vendrían del backend o de localStorage.
+  // Inicializar cartItems desde los datos del servidor (no desde localStorage)
   let cartItems = [
     {% for p in products %}
     {
@@ -78,13 +108,14 @@
     }{% if not loop.last %},{% endif %}
     {% endfor %}
   ];
+  console.log("DEBUG: Cart items inicializados:", cartItems);
 
   // Función para calcular el subtotal
   const calculateSubtotal = () => {
     return cartItems.reduce((sum, item) => sum + item.precio * item.cantidad, 0);
   };
 
-  // Actualiza el resumen de la compra
+  // Actualiza el resumen de la compra y sincroniza con localStorage
   const updateSummary = () => {
     const subtotal = calculateSubtotal();
     const shipping = subtotal > 0 ? 50 : 0;
@@ -92,28 +123,40 @@
     document.getElementById('subtotal').textContent = `$${subtotal.toFixed(2)}`;
     document.getElementById('shipping').textContent = `$${shipping.toFixed(2)}`;
     document.getElementById('total').textContent = `$${total.toFixed(2)}`;
-    // Persistencia en localStorage (opcional)
-    localStorage.setItem('cartItems', JSON.stringify(cartItems));
+    if (cartItems.length === 0) {
+      console.log("DEBUG: El carrito está vacío. Eliminando cartItems de localStorage.");
+      localStorage.removeItem('cartItems');
+    } else {
+      console.log("DEBUG: Actualizando localStorage con cartItems:", cartItems);
+      localStorage.setItem('cartItems', JSON.stringify(cartItems));
+    }
   };
 
-  // Evento para eliminar producto del carrito
+  // Confirmación para eliminar producto (para carrito)
   document.querySelectorAll('.remove-item').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const id = parseInt(btn.getAttribute('data-product-id'));
-      cartItems = cartItems.filter(item => item.id !== id);
-      // Remover el elemento del DOM
-      btn.closest('.product-card').remove();
-      updateSummary();
+    btn.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (confirm("¿Estás seguro que deseas eliminar este producto?")) {
+        const id = parseInt(btn.getAttribute('data-product-id'));
+        console.log("DEBUG: Eliminando producto con ID:", id);
+        cartItems = cartItems.filter(item => item.id !== id);
+        // Remover el producto del DOM
+        btn.closest('.product-card').remove();
+        updateSummary();
+      } else {
+        console.log("DEBUG: Eliminación cancelada para producto con ID:", btn.getAttribute('data-product-id'));
+      }
     });
   });
 
-  // Inicializar resumen al cargar la página
+  // Actualizar resumen al cargar la página
   updateSummary();
 
   // Evento para aplicar cupón: "DESCUENTO10" otorga 10% de descuento
   document.getElementById('apply-coupon-btn').addEventListener('click', () => {
     const couponCode = document.getElementById('coupon').value.trim();
     const couponMsg = document.getElementById('coupon-message');
+    console.log("DEBUG: Aplicando cupón, código ingresado:", couponCode);
     if (couponCode === "DESCUENTO10") {
       const subtotal = calculateSubtotal();
       const discount = subtotal * 0.10;
@@ -121,30 +164,31 @@
       const total = subtotal + shipping - discount;
       document.getElementById('subtotal').textContent = `$${(subtotal - discount).toFixed(2)}`;
       document.getElementById('total').textContent = `$${total.toFixed(2)}`;
-      // Agregar animación al botón
       document.getElementById('apply-coupon-btn').classList.add('animate-bounce');
-      // Mostrar mensaje de éxito
       couponMsg.textContent = "¡Cupón aplicado con éxito!";
       couponMsg.classList.remove('hidden');
-      // Ocultar mensaje y quitar animación después de 3 segundos
+      console.log("DEBUG: Cupón aplicado. Nuevo subtotal:", subtotal - discount, "Nuevo total:", total);
       setTimeout(() => {
         couponMsg.classList.add('hidden');
         document.getElementById('apply-coupon-btn').classList.remove('animate-bounce');
       }, 3000);
     } else {
+      console.log("DEBUG: Código de cupón inválido:", couponCode);
       alert("Código de cupón inválido");
     }
   });
 
   // Evento para proceder al pago (simulado)
   document.getElementById('checkout-btn').addEventListener('click', () => {
+    console.log("DEBUG: Procediendo al pago con cartItems:", cartItems);
     alert("Redirigiendo a la página de pago...");
     window.location.href = '/checkout';
   });
 
-  // Inicialización de AOS para animaciones
+  // Inicialización de AOS para animaciones y log de inicio
   document.addEventListener("DOMContentLoaded", () => {
     AOS.init();
+    console.log("DEBUG: AOS inicializado.");
   });
 </script>
 {% endblock %}

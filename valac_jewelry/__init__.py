@@ -4,6 +4,7 @@ from flask import Flask
 from flask_admin import Admin
 from supabase import create_client
 from dotenv import load_dotenv
+from flask_login import LoginManager
 
 # Cargar variables de entorno desde el archivo .env
 load_dotenv()
@@ -23,7 +24,6 @@ def create_app():
     if os.getenv("FLASK_ENV", "development").lower() == "production":
         app.config.from_object(ProductionConfig)
         logging.debug("Cargando configuración de producción")
-        
     else:
         app.config.from_object(DevelopmentConfig)
         logging.debug("Cargando configuración de desarrollo")
@@ -31,18 +31,36 @@ def create_app():
     print("SUPABASE_URL:", os.getenv("SUPABASE_URL"))
     print("FLASK_ENV:", os.getenv("FLASK_ENV"))
 
-    
     # Inicializa el cliente de Supabase y lo asigna a la app
     supabase_url = app.config.get("SUPABASE_URL")
     supabase_key = app.config.get("SUPABASE_KEY")
     app.supabase = create_client(supabase_url, supabase_key)
 
-     # Inyecta la variable SUPABASE_STORAGE_URL en todas las plantillas
+    # Inyecta la variable SUPABASE_STORAGE_URL en todas las plantillas
     @app.context_processor
     def inject_supabase_storage_url():
         return dict(SUPABASE_STORAGE_URL=app.config.get("SUPABASE_STORAGE_URL"))
     
-    # Registrar blueprints
+    # Inicializar Flask-Login
+    login_manager = LoginManager()
+    login_manager.init_app(app)
+    login_manager.login_view = 'auth.login'  # Esta vista se definirá en el blueprint de autenticación
+
+    @login_manager.user_loader
+    def load_user(user_id):
+        # Para este ejemplo, asumimos que solo hay un usuario administrador.
+        # Importamos la clase AdminUser definida en auth.py
+        from .auth import AdminUser
+        # Si el user_id es "1", retornamos el AdminUser utilizando el nombre del entorno.
+        if user_id == "1":
+            return AdminUser(1, os.getenv("ADMIN_USERNAME"))
+        return None
+
+    # Registrar blueprint de autenticación
+    from .auth import auth_bp
+    app.register_blueprint(auth_bp)
+
+    # Registrar blueprints de la aplicación
     from .routes.main import main_bp
     app.register_blueprint(main_bp)
     

@@ -1,8 +1,17 @@
 from flask import request, redirect, url_for, flash, current_app
 from flask_admin import BaseView, expose
+from flask_login import current_user
 import logging
 
+# Vista existente para productos
 class SupabaseProductAdmin(BaseView):
+    def is_accessible(self):
+        return current_user.is_authenticated and getattr(current_user, 'is_admin', False)
+
+    def inaccessible_callback(self, name, **kwargs):
+        flash("Debes iniciar sesión como administrador para acceder a esta sección.", "error")
+        return redirect(url_for('auth.login', next=request.url))
+
     @expose('/')
     def index(self):
         supabase = self.admin.app.supabase
@@ -104,10 +113,66 @@ class SupabaseProductAdmin(BaseView):
             flash("Imagen eliminada exitosamente.", "success")
         return redirect(url_for('.edit_product', id=request.form.get('product_id')))
 
-    # Agrega el endpoint "gallery"
     @expose('/gallery')
     def gallery(self):
         supabase = self.admin.app.supabase
         response = supabase.table("products").select("id, nombre, imagen").execute()
         media_items = response.data if response.data else []
         return self.render('admin/supabase_gallery.html', media_items=media_items)
+
+# Nueva vista para Ventas
+class SalesAdmin(BaseView):
+    def is_accessible(self):
+        return current_user.is_authenticated and getattr(current_user, 'is_admin', False)
+    
+    def inaccessible_callback(self, name, **kwargs):
+        flash("Debes iniciar sesión como administrador para acceder a esta sección.", "error")
+        return redirect(url_for('auth.login', next=request.url))
+    
+    @expose('/')
+    def index(self):
+        # Aquí iría la lógica para listar ventas
+        # Por ejemplo, consultar la base de datos de ventas
+        sales = []  # Simulación de datos de ventas
+        logging.info("Ventas obtenidas: %s", sales)
+        return self.render('admin/sales.html', sales=sales)
+
+# Nueva vista para Pagos/Cobranza
+class PaymentsAdmin(BaseView):
+    def is_accessible(self):
+        return current_user.is_authenticated and getattr(current_user, 'is_admin', False)
+    
+    def inaccessible_callback(self, name, **kwargs):
+        flash("Debes iniciar sesión como administrador para acceder a esta sección.", "error")
+        return redirect(url_for('auth.login', next=request.url))
+    
+    @expose('/', methods=['GET', 'POST'])
+    def index(self):
+        if request.method == 'POST':
+            # Procesar el registro de un nuevo pago (obtención y validación de datos del formulario)
+            # Por ejemplo: monto, fecha, método de pago, etc.
+            flash("Pago registrado exitosamente.", "success")
+            return redirect(url_for('.index'))
+        payments = []  # Simulación de datos de pagos
+        logging.info("Pagos obtenidos: %s", payments)
+        return self.render('admin/payments.html', payments=payments)
+
+# Nueva vista para Reportes
+class ReportsAdmin(BaseView):
+    def is_accessible(self):
+        return current_user.is_authenticated and getattr(current_user, 'is_admin', False)
+    
+    def inaccessible_callback(self, name, **kwargs):
+        flash("Debes iniciar sesión como administrador para acceder a esta sección.", "error")
+        return redirect(url_for('auth.login', next=request.url))
+    
+    @expose('/')
+    def index(self):
+        # Generar reportes; por ejemplo, total de ventas, pagos, productos, etc.
+        report_data = {
+            "total_sales": 100,
+            "total_payments": 50,
+            "inventory_count": 200
+        }
+        logging.info("Reportes generados: %s", report_data)
+        return self.render('admin/reports.html', report_data=report_data)

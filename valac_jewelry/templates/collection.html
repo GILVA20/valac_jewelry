@@ -3,424 +3,467 @@
 {% block title %}Colección - VALAC Joyas{% endblock %}
 
 {% block content %}
-  <!-- Estilos adicionales para chips activos y inputs de rango -->
-  <style>
-    .chip-label {
-      border: 1px solid #d5a300;
-      border-radius: 0.375rem;
-      padding: 0.5rem;
-      text-align: center;
-      transition: background-color 0.2s ease, color 0.2s ease;
+<style>
+  /* Estilos para chips e inputs */
+  .chip-label {
+    border: 1px solid #d5a300;
+    border-radius: 0.375rem;
+    padding: 0.5rem;
+    text-align: center;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+  .chip-label.active {
+    background-color: #d5a300;
+    color: #fff;
+    border-color: #d5a300;
+  }
+  .price-input {
+    width: 4rem;
+    border: 1px solid #d4d4d4;
+    border-radius: 0.375rem;
+    padding: 0.25rem;
+    text-align: center;
+  }
+  /* Spinner */
+  #loading-spinner {
+    display: none;
+    text-align: center;
+    margin: 20px;
+  }
+  /* Grid: 2 columnas en móvil, luego más columnas en pantallas mayores */
+  #product-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+  @media (min-width: 640px) {
+    #product-grid {
+      grid-template-columns: repeat(2, 1fr);
     }
-    .chip-label.active {
-      background-color: #d5a300;
-      color: #fff;
-      border-color: #d5a300;
+  }
+  @media (min-width: 768px) {
+    #product-grid {
+      grid-template-columns: repeat(3, 1fr);
     }
-    /* Estilos para los inputs numéricos del rango */
-    .price-input {
-      width: 4rem;
-      border: 1px solid #d4d4d4;
-      border-radius: 0.375rem;
-      padding: 0.25rem;
-      text-align: center;
+  }
+  @media (min-width: 1024px) {
+    #product-grid {
+      grid-template-columns: repeat(4, 1fr);
     }
-  </style>
+  }
+  .stock-status {
+    font-size: 0.9rem;
+    font-weight: bold;
+    color: red;
+    position: absolute;
+    top: 0.5rem;
+    left: 0.5rem;
+    background: #fff;
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+  }
+  .rating-stars {
+    color: #ffc107;
+  }
 
-  <!-- Contenido Principal -->
-  <main class="pt-24">
-    <div class="container mx-auto px-4">
-      <!-- Botón para alternar visibilidad de filtros -->
-      <div class="mb-4 text-right">
-        <button id="toggle-filters" aria-expanded="true" class="bg-[#d5a300] text-white px-4 py-2 rounded hover:bg-[#b38f00] transition-colors focus:outline-none focus:ring-2 focus:ring-[#d5a300]">
-          Ocultar filtros
-        </button>
-      </div>
-      <!-- Contenedor principal: layout flexible -->
-      <div id="main-container" class="flex flex-col md:flex-row gap-8">
-        <!-- Panel de Filtros -->
-        <aside id="filters-panel" class="filters-panel border border-gray-200 rounded-md p-6 sidebar-sticky bg-white transition-all duration-300 ease-in-out">
-          <h3 class="text-lg font-semibold mb-4">Filtrar por</h3>
-          <form id="filters-form" action="" method="GET" class="space-y-6" aria-label="Formulario de filtros">
-            <!-- Categoría -->
-            <div>
-              <label class="block font-semibold mb-2">Categoría</label>
-              <div class="grid grid-cols-2 gap-2">
-                <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if not request.args.get('category') %}active{% endif %}" data-group="category">
-                  <input type="radio" name="category" value="" class="hidden" {% if not request.args.get('category') %}checked{% endif %} aria-label="Todas">
-                  Todas
-                </label>
-                <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if request.args.get('category') == 'anillos' %}active{% endif %}" data-group="category">
-                  <input type="radio" name="category" value="anillos" class="hidden" {% if request.args.get('category') == 'anillos' %}checked{% endif %} aria-label="Anillos">
-                  Anillos
-                </label>
-                <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if request.args.get('category') == 'aretes' %}active{% endif %}" data-group="category">
-                  <input type="radio" name="category" value="aretes" class="hidden" {% if request.args.get('category') == 'aretes' %}checked{% endif %} aria-label="Aretes">
-                  Aretes
-                </label>
-                <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if request.args.get('category') == 'pulsos' %}active{% endif %}" data-group="category">
-                  <input type="radio" name="category" value="pulsos" class="hidden" {% if request.args.get('category') == 'pulsos' %}checked{% endif %} aria-label="Pulsos">
-                  Pulsos
-                </label>
-                <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if request.args.get('category') == 'cadenas' %}active{% endif %}" data-group="category">
-                  <input type="radio" name="category" value="cadenas" class="hidden" {% if request.args.get('category') == 'cadenas' %}checked{% endif %} aria-label="Cadenas">
-                  Cadenas
-                </label>
-                <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if request.args.get('category') == 'dijes' %}active{% endif %}" data-group="category">
-                  <input type="radio" name="category" value="dijes" class="hidden" {% if request.args.get('category') == 'dijes' %}checked{% endif %} aria-label="Dijes">
-                  Dijes
-                </label>
-              </div>
-            </div>
-            <!-- Tipo de Oro -->
-            <div>
-              <label class="block font-semibold mb-2">Tipo de Oro</label>
-              <div class="grid grid-cols-2 gap-2">
-                <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if not request.args.get('type_oro') %}active{% endif %}" data-group="type_oro">
-                  <input type="radio" name="type_oro" value="" class="hidden" {% if not request.args.get('type_oro') %}checked{% endif %} aria-label="Todos">
-                  Todos
-                </label>
-                <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if request.args.get('type_oro') == '10k' %}active{% endif %}" data-group="type_oro">
-                  <input type="radio" name="type_oro" value="10k" class="hidden" {% if request.args.get('type_oro') == '10k' %}checked{% endif %} aria-label="10k">
-                  10k
-                </label>
-                <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if request.args.get('type_oro') == '14k' %}active{% endif %}" data-group="type_oro">
-                  <input type="radio" name="type_oro" value="14k" class="hidden" {% if request.args.get('type_oro') == '14k' %}checked{% endif %} aria-label="14k">
-                  14k
-                </label>
-              </div>
-            </div>
-            <!-- Género -->
-            <div>
-              <label class="block font-semibold mb-2">Género</label>
-              <div class="grid grid-cols-2 gap-2">
-                <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if not request.args.get('genero') %}active{% endif %}" data-group="genero">
-                  <input type="radio" name="genero" value="" class="hidden" {% if not request.args.get('genero') %}checked{% endif %} aria-label="Todos">
-                  Todos
-                </label>
-                <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if request.args.get('genero') == 'Hombre' %}active{% endif %}" data-group="genero">
-                  <input type="radio" name="genero" value="Hombre" class="hidden" {% if request.args.get('genero') == 'Hombre' %}checked{% endif %} aria-label="Hombre">
-                  Hombre
-                </label>
-                <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if request.args.get('genero') == 'Mujer' %}active{% endif %}" data-group="genero">
-                  <input type="radio" name="genero" value="Mujer" class="hidden" {% if request.args.get('genero') == 'Mujer' %}checked{% endif %} aria-label="Mujer">
-                  Mujer
-                </label>
-                <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if request.args.get('genero') == 'Unisex' %}active{% endif %}" data-group="genero">
-                  <input type="radio" name="genero" value="Unisex" class="hidden" {% if request.args.get('genero') == 'Unisex' %}checked{% endif %} aria-label="Unisex">
-                  Unisex
-                </label>
-              </div>
-            </div>
-            <!-- Rango de Precios con sliders e inputs numéricos -->
-            <div>
-              <label class="block font-semibold mb-2">Rango de Precios</label>
-              <div class="flex flex-col sm:flex-row gap-4 items-center">
-                <!-- Mínimo -->
-                <div class="flex-1">
-                  <label class="block text-sm mb-1">Mínimo</label>
-                  <input type="range" name="price_min" min="0" max="250000" value="{{ request.args.get('price_min', 0) }}" class="slider w-full" id="priceMin" aria-label="Precio mínimo">
-                  <div class="mt-1 flex items-center gap-2">
-                    <span class="text-sm">Valor:</span>
-                    <input type="number" id="priceMinNumber" class="price-input" value="{{ request.args.get('price_min', 0) }}" min="0" max="250000">
-                  </div>
-                </div>
-                <!-- Máximo -->
-                <div class="flex-1">
-                  <label class="block text-sm mb-1">Máximo</label>
-                  <input type="range" name="price_max" min="0" max="250000" value="{{ request.args.get('price_max', 250000) }}" class="slider w-full" id="priceMax" aria-label="Precio máximo">
-                  <div class="mt-1 flex items-center gap-2">
-                    <span class="text-sm">Valor:</span>
-                    <input type="number" id="priceMaxNumber" class="price-input" value="{{ request.args.get('price_max', 250000) }}" min="0" max="250000">
-                  </div>
-                </div>
-              </div>
-              <!-- Mensaje de validación (oculto por defecto) -->
-              <p id="priceError" class="text-sm text-red-500 mt-1 hidden">El precio máximo debe ser mayor o igual al mínimo.</p>
-            </div>
-            <!-- Botones para aplicar y resetear filtros -->
-            <div class="flex gap-4">
-              <button type="submit" class="bg-[#d5a300] text-white w-full py-2 rounded hover:bg-[#b38f00] transition-colors focus:outline-none focus:ring-2 focus:ring-[#d5a300]">
-                Aplicar
-              </button>
-              <button type="reset" id="reset-filters" class="bg-gray-300 text-gray-800 w-full py-2 rounded hover:bg-gray-400 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400">
-                Resetear
-              </button>
-            </div>
-          </form>
-        </aside>
-        
-        <!-- Sección de Productos -->
-        <section id="products-section" class="flex-1 border border-gray-200 rounded-md p-6 bg-white">
-          <h1 class="text-3xl font-semibold mb-8 text-[#424242]">Colección de Joyas</h1>
-          <p class="mb-4 text-gray-600">Mostrando {{ products|length }} producto(s).</p>
-          <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-            <!-- Los productos se cargarán dinámicamente -->
-          </div>
-        </section>
-      </div>
-    </div>
-  </main>
-  
-  <!-- Modal para Detalle del Producto (opcional) -->
-  <div id="product-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-white p-8 rounded-lg w-11/12 max-w-3xl relative">
-      <button id="close-modal" class="absolute top-4 right-4 text-gray-700 hover:text-[#d5a300] focus:outline-none focus:ring-2 focus:ring-[#d5a300]">
-        <i class="fas fa-times text-2xl"></i>
+  /* Botón Ver detalles con estilo stroke gris y esquinas redondeadas */
+  .btn-detalles {
+    border: 2px solid #6c757d;
+    color: #6c757d;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.375rem;
+    text-decoration: none;
+    display: inline-block;
+    transition: background-color 0.3s, color 0.3s;
+  }
+  .btn-detalles:hover {
+    background-color: #6c757d;
+    color: #fff;
+  }
+</style>
+
+<main class="pt-24">
+  <div class="container mx-auto px-4">
+    <!-- Botón para alternar visibilidad de filtros (ocultos por defecto) -->
+    <div class="mb-4 text-right">
+      <button id="toggle-filters" aria-expanded="false" class="bg-[#d5a300] text-white px-4 py-2 rounded hover:bg-[#b38f00] transition-colors focus:outline-none focus:ring-2 focus:ring-[#d5a300]">
+        Mostrar filtros
       </button>
-      <div id="modal-content" class="flex flex-col md:flex-row gap-8">
-        <!-- Contenido dinámico del producto -->
-      </div>
+    </div>
+    <div id="main-container" class="flex flex-col md:flex-row gap-8">
+      <!-- Panel de Filtros (oculto inicialmente) -->
+      <aside id="filters-panel" class="filters-panel hidden border border-gray-200 rounded-md p-6 sidebar-sticky bg-white transition-all duration-300 ease-in-out">
+        <h3 class="text-lg font-semibold mb-4">Filtrar por</h3>
+        <form id="filters-form" action="" method="GET" class="space-y-6" aria-label="Formulario de filtros">
+          <!-- Bloque de filtros para categoría, tipo_oro, género y rango de precios -->
+          <!-- Categoría -->
+          <div>
+            <label class="block font-semibold mb-2">Categoría</label>
+            <div class="grid grid-cols-2 gap-2">
+              <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if not request.args.get('category') %}active{% endif %}" data-group="category">
+                <input type="radio" name="category" value="" class="hidden" {% if not request.args.get('category') %}checked{% endif %} aria-label="Todas">
+                Todas
+              </label>
+              <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if request.args.get('category') == 'anillos' %}active{% endif %}" data-group="category">
+                <input type="radio" name="category" value="anillos" class="hidden" {% if request.args.get('category') == 'anillos' %}checked{% endif %} aria-label="Anillos">
+                Anillos
+              </label>
+              <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if request.args.get('category') == 'aretes' %}active{% endif %}" data-group="category">
+                <input type="radio" name="category" value="aretes" class="hidden" {% if request.args.get('category') == 'aretes' %}checked{% endif %} aria-label="Aretes">
+                Aretes
+              </label>
+              <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if request.args.get('category') == 'pulsos' %}active{% endif %}" data-group="category">
+                <input type="radio" name="category" value="pulsos" class="hidden" {% if request.args.get('category') == 'pulsos' %}checked{% endif %} aria-label="Pulsos">
+                Pulsos
+              </label>
+              <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if request.args.get('category') == 'cadenas' %}active{% endif %}" data-group="category">
+                <input type="radio" name="category" value="cadenas" class="hidden" {% if request.args.get('category') == 'cadenas' %}checked{% endif %} aria-label="Cadenas">
+                Cadenas
+              </label>
+              <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if request.args.get('category') == 'dijes' %}active{% endif %}" data-group="category">
+                <input type="radio" name="category" value="dijes" class="hidden" {% if request.args.get('category') == 'dijes' %}checked{% endif %} aria-label="Dijes">
+                Dijes
+              </label>
+            </div>
+          </div>
+          <!-- Tipo de Oro -->
+          <div>
+            <label class="block font-semibold mb-2">Tipo de Oro</label>
+            <div class="grid grid-cols-2 gap-2">
+              <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if not request.args.get('type_oro') %}active{% endif %}" data-group="type_oro">
+                <input type="radio" name="type_oro" value="" class="hidden" {% if not request.args.get('type_oro') %}checked{% endif %} aria-label="Todos">
+                Todos
+              </label>
+              <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if request.args.get('type_oro') == '10k' %}active{% endif %}" data-group="type_oro">
+                <input type="radio" name="type_oro" value="10k" class="hidden" {% if request.args.get('type_oro') == '10k' %}checked{% endif %} aria-label="10k">
+                10k
+              </label>
+              <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if request.args.get('type_oro') == '14k' %}active{% endif %}" data-group="type_oro">
+                <input type="radio" name="type_oro" value="14k" class="hidden" {% if request.args.get('type_oro') == '14k' %}checked{% endif %} aria-label="14k">
+                14k
+              </label>
+            </div>
+          </div>
+          <!-- Género -->
+          <div>
+            <label class="block font-semibold mb-2">Género</label>
+            <div class="grid grid-cols-2 gap-2">
+              <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if not request.args.get('genero') %}active{% endif %}" data-group="genero">
+                <input type="radio" name="genero" value="" class="hidden" {% if not request.args.get('genero') %}checked{% endif %} aria-label="Todos">
+                Todos
+              </label>
+              <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if request.args.get('genero') == 'Hombre' %}active{% endif %}" data-group="genero">
+                <input type="radio" name="genero" value="Hombre" class="hidden" {% if request.args.get('genero') == 'Hombre' %}checked{% endif %} aria-label="Hombre">
+                Hombre
+              </label>
+              <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if request.args.get('genero') == 'Mujer' %}active{% endif %}" data-group="genero">
+                <input type="radio" name="genero" value="Mujer" class="hidden" {% if request.args.get('genero') == 'Mujer' %}checked{% endif %} aria-label="Mujer">
+                Mujer
+              </label>
+              <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if request.args.get('genero') == 'Unisex' %}active{% endif %}" data-group="genero">
+                <input type="radio" name="genero" value="Unisex" class="hidden" {% if request.args.get('genero') == 'Unisex' %}checked{% endif %} aria-label="Unisex">
+                Unisex
+              </label>
+            </div>
+          </div>
+          <!-- Rango de Precios -->
+          <div>
+            <label class="block font-semibold mb-2">Rango de Precios</label>
+            <div class="flex flex-col sm:flex-row gap-4 items-center">
+              <div class="flex-1">
+                <label class="block text-sm mb-1">Mínimo</label>
+                <input type="range" name="price_min" min="0" max="250000" value="{{ request.args.get('price_min', 0) }}" class="slider w-full" id="priceMin" aria-label="Precio mínimo">
+                <div class="mt-1 flex items-center gap-2">
+                  <span class="text-sm">Valor:</span>
+                  <input type="number" id="priceMinNumber" class="price-input" value="{{ request.args.get('price_min', 0) }}" min="0" max="250000">
+                </div>
+              </div>
+              <div class="flex-1">
+                <label class="block text-sm mb-1">Máximo</label>
+                <input type="range" name="price_max" min="0" max="250000" value="{{ request.args.get('price_max', 250000) }}" class="slider w-full" id="priceMax" aria-label="Precio máximo">
+                <div class="mt-1 flex items-center gap-2">
+                  <span class="text-sm">Valor:</span>
+                  <input type="number" id="priceMaxNumber" class="price-input" value="{{ request.args.get('price_max', 250000) }}" min="0" max="250000">
+                </div>
+              </div>
+            </div>
+            <p id="priceError" class="text-sm text-red-500 mt-1 hidden">El precio máximo debe ser mayor o igual al mínimo.</p>
+          </div>
+          <!-- Botones para aplicar y resetear filtros -->
+          <div class="flex gap-4">
+            <button type="submit" class="bg-[#d5a300] text-white w-full py-2 rounded hover:bg-[#b38f00] transition-colors focus:outline-none focus:ring-2 focus:ring-[#d5a300]">
+              Aplicar
+            </button>
+            <button type="reset" id="reset-filters" class="bg-gray-300 text-gray-800 w-full py-2 rounded hover:bg-gray-400 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400">
+              Resetear
+            </button>
+          </div>
+        </form>
+      </aside>
+      
+      <!-- Sección de Productos -->
+      <section id="products-section" class="flex-1 border border-gray-200 rounded-md p-6 bg-white">
+        <h1 class="text-3xl font-semibold mb-8 text-[#424242]">Colección de Joyas</h1>
+        <p class="mb-4 text-gray-600">Mostrando {{ products|length }} producto(s).</p>
+        <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+          <!-- Los productos se cargarán dinámicamente -->
+        </div>
+      </section>
     </div>
   </div>
+</main>
+
+<!-- Modal para Detalle del Producto (opcional) -->
+<div id="product-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+  <div class="bg-white p-8 rounded-lg w-11/12 max-w-3xl relative">
+    <button id="close-modal" class="absolute top-4 right-4 text-gray-700 hover:text-[#d5a300] focus:outline-none focus:ring-2 focus:ring-[#d5a300]">
+      <i class="fas fa-times text-2xl"></i>
+    </button>
+    <div id="modal-content" class="flex flex-col md:flex-row gap-8">
+      <!-- Contenido dinámico del producto -->
+    </div>
+  </div>
+</div>
 {% endblock %}
 
 {% block scripts_extra %}
-  <script type="module">
-    const $ = window.jQuery;
-    let loadProducts; // Declaramos en ámbito superior para que sea accesible en otros callbacks
-    
-    document.addEventListener("DOMContentLoaded", async function(){
-      console.log("DEBUG: DOM fully loaded, starting initialization for collection.html...");
+<script type="module">
+  const $ = window.jQuery;
+  let loadProducts;
+  let currentPage = {{ page|default(1) }};
 
-      // Inicializar AOS
-      AOS.init();
-      console.log("DEBUG: AOS initialized in collection.html.");
+  document.addEventListener("DOMContentLoaded", async function(){
+    console.log("DEBUG: DOM fully loaded, starting initialization for collection.html...");
+    AOS.init();
+    console.log("DEBUG: AOS initialized in collection.html.");
 
-      // Inicializar Slick Slider (para banner y reseñas, si corresponde)
-      if (typeof $ !== "undefined" && $.fn.slick) {
-        console.log("DEBUG: Slick Slider is available in collection.html.");
-      } else {
-        console.error("DEBUG: Slick Slider not found in collection.html.");
-      }
+    // Funciones para mostrar/ocultar spinner
+    function showSpinner() {
+      const spinner = document.getElementById('loading-spinner');
+      if (spinner) { spinner.style.display = 'block'; }
+    }
+    function hideSpinner() {
+      const spinner = document.getElementById('loading-spinner');
+      if (spinner) { spinner.style.display = 'none'; }
+    }
 
-      try {
-        const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm");
-        const SUPABASE_URL = "{{ config['SUPABASE_URL'] }}";
-        const SUPABASE_KEY = "{{ config['SUPABASE_KEY'] }}";
-        console.log("DEBUG: Initializing Supabase with URL:", SUPABASE_URL);
-        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
-        console.log("DEBUG: Supabase initialized in collection.html:", supabaseClient);
+    try {
+      const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm");
+      const SUPABASE_URL = "{{ config['SUPABASE_URL'] }}";
+      const SUPABASE_KEY = "{{ config['SUPABASE_KEY'] }}";
+      console.log("DEBUG: Initializing Supabase with URL:", SUPABASE_URL);
+      const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+      console.log("DEBUG: Supabase initialized in collection.html:", supabaseClient);
 
-        const urlParams = new URLSearchParams(window.location.search);
-        const category = urlParams.get('category') || '';
-        const type_oro = urlParams.get('type_oro') || '';
-        const genero = urlParams.get('genero') || '';
-        const price_min = urlParams.get('price_min') || 0;
-        const price_max = urlParams.get('price_max') || 250000;
-        const search = urlParams.get('search') || '';
-        const sort = urlParams.get('sort') || '';
-        console.log("DEBUG: Filter parameters:", { category, type_oro, genero, price_min, price_max, search, sort });
+      const urlParams = new URLSearchParams(window.location.search);
+      const category = urlParams.get('category') || '';
+      const type_oro = urlParams.get('type_oro') || '';
+      const genero = urlParams.get('genero') || '';
+      const price_min = urlParams.get('price_min') || 0;
+      const price_max = urlParams.get('price_max') || 250000;
+      const search = urlParams.get('search') || '';
+      const sort = urlParams.get('sort') || '';
+      console.log("DEBUG: Filter parameters:", { category, type_oro, genero, price_min, price_max, search, sort });
 
-        // Declaramos la función loadProducts para recargar la grilla de productos
-        loadProducts = async function(){
-          // Eliminamos la referencia a "gallery" de la consulta
-          let query = supabaseClient
-            .from('products')
-            .select('id, nombre, descripcion, precio, tipo_producto, genero, tipo_oro, imagen, created_at');
+      loadProducts = async function(){
+        showSpinner();
+        let query = supabaseClient
+          .from('products')
+          .select('id, nombre, descripcion, precio, tipo_producto, genero, tipo_oro, imagen, created_at')
+          .gte('precio', parseInt(price_min))
+          .lte('precio', parseInt(price_max));
 
-          if (category) {
-            query = query.eq('tipo_producto', category);
-            console.log("DEBUG: Filtering by category:", category);
-          }
-          if (type_oro) {
-            query = query.eq('tipo_oro', type_oro);
-            console.log("DEBUG: Filtering by type of gold:", type_oro);
-          }
-          if (genero) {
-            query = query.eq('genero', genero);
-            console.log("DEBUG: Filtering by gender:", genero);
-          }
-          query = query.gte('precio', parseInt(price_min)).lte('precio', parseInt(price_max));
-          console.log("DEBUG: Filtering by price range:", price_min, price_max);
+        if (category) {
+          query = query.eq('tipo_producto', category);
+          console.log("DEBUG: Filtering by category:", category);
+        }
+        if (type_oro) {
+          query = query.eq('tipo_oro', type_oro);
+          console.log("DEBUG: Filtering by type of gold:", type_oro);
+        }
+        if (genero) {
+          query = query.eq('genero', genero);
+          console.log("DEBUG: Filtering by gender:", genero);
+        }
+        console.log("DEBUG: Filtering by price range:", price_min, price_max);
 
-          const { data: products, error } = await query;
-          if (error) {
-            console.error("DEBUG: Error loading products from Supabase:", error);
-            return;
-          }
-          console.log("DEBUG: Products loaded:", products);
+        const { data: products, error } = await query;
+        if (error) {
+          console.error("DEBUG: Error loading products from Supabase:", error);
+          return;
+        }
+        console.log("DEBUG: Products loaded:", products);
 
-          let filteredProducts = products;
-          if (search) {
-            filteredProducts = products.filter(product => {
-              const combinedText = (product.nombre + ' ' + product.descripcion).toLowerCase();
-              return combinedText.includes(search.toLowerCase());
-            });
-            console.log("DEBUG: Products filtered by search:", filteredProducts);
-          }
+        let filteredProducts = products;
+        if (search) {
+          filteredProducts = products.filter(product => {
+            const combinedText = (product.nombre + ' ' + product.descripcion).toLowerCase();
+            return combinedText.includes(search.toLowerCase());
+          });
+          console.log("DEBUG: Products filtered by search:", filteredProducts);
+        }
 
-          if (sort === 'precio_asc') {
-            filteredProducts.sort((a, b) => a.precio - b.precio);
-            console.log("DEBUG: Products sorted by ascending price");
-          } else if (sort === 'precio_desc') {
-            filteredProducts.sort((a, b) => b.precio - a.precio);
-            console.log("DEBUG: Products sorted by descending price");
-          } else if (sort === 'novedades') {
-            filteredProducts.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-            console.log("DEBUG: Products sorted by newest");
-          }
+        if (sort === 'precio_asc') {
+          filteredProducts.sort((a, b) => a.precio - b.precio);
+          console.log("DEBUG: Products sorted by ascending price");
+        } else if (sort === 'precio_desc') {
+          filteredProducts.sort((a, b) => b.precio - a.precio);
+          console.log("DEBUG: Products sorted by descending price");
+        } else if (sort === 'novedades') {
+          filteredProducts.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+          console.log("DEBUG: Products sorted by newest");
+        }
 
-          console.log("DEBUG: Final products to render:", filteredProducts);
+        console.log("DEBUG: Final products to render:", filteredProducts);
 
-          const productGrid = document.getElementById('product-grid');
-          if (productGrid) {
-            productGrid.innerHTML = "";
-            filteredProducts.forEach((product, index) => {
-              // Usamos únicamente la imagen principal
-              const imageUrl = product.imagen && product.imagen !== 'undefined' ? product.imagen : '/static/images/placeholder.jpg';
-              productGrid.innerHTML += `
-                <div class="bg-white p-5 rounded-lg shadow-md product-card" data-aos="fade-up" data-aos-delay="${index * 50}">
-                  <img src="${imageUrl}" loading="lazy" alt="${product.nombre}" class="w-full h-64 object-cover mb-4 rounded">
-                  <h3 class="text-xl font-semibold text-[#424242]">${product.nombre}</h3>
-                  <p class="text-gray-800 mt-2 font-playfair">$${product.precio}</p>
-                  <p class="text-gray-600 mt-1 text-sm">Oro: ${product.tipo_oro} | Género: ${product.genero}</p>
-                  <a href="/producto/${product.id}" class="mt-4 inline-block bg-[#d5a300] text-white px-4 py-2 rounded hover:bg-[#b38f00] transition-colors">
+        const productGrid = document.getElementById('product-grid');
+        if (productGrid) {
+          productGrid.innerHTML = "";
+          filteredProducts.forEach((product, index) => {
+            const imageUrl = (product.imagen && product.imagen !== 'undefined') ? product.imagen : '/static/images/placeholder.jpg';
+            productGrid.innerHTML += `
+              <div class="bg-white p-5 rounded-lg shadow-md product-card" data-aos="fade-up" data-aos-delay="${index * 50}">
+                <img src="${imageUrl}" loading="lazy" alt="${product.nombre}" class="w-full h-64 object-cover mb-4 rounded">
+                <h3 class="text-xl font-semibold text-[#424242]">${product.nombre}</h3>
+                <p class="text-gray-800 mt-2 font-playfair">$${product.precio}</p>
+                <p class="text-gray-600 mt-1 text-sm">Oro: ${product.tipo_oro} | Género: ${product.genero}</p>
+                <div class="mt-4">
+                  <a href="/producto/${product.id}" class="btn-detalles">
                     Ver detalles
                   </a>
                 </div>
-              `;
-            });
-            console.log("DEBUG: Products rendered in collection.html.");
-            AOS.refresh();
-            console.log("DEBUG: AOS refreshed after rendering products.");
-          } else {
-            console.error("DEBUG: Product grid container not found in collection.html.");
-          }
-        };
-
-        loadProducts();
-
-        document.querySelectorAll('#filters-form input').forEach(input => {
-          input.addEventListener('change', () => {
-            console.log("DEBUG: Filter change detected, reloading products.");
-            loadProducts();
+              </div>
+            `;
           });
-        });
-
-      } catch (err) {
-        console.error("DEBUG: Error importing Supabase in collection.html:", err);
-      }
-
-      // Sincronización y validación de los sliders y campos numéricos de rango
-      const priceMinInput = document.getElementById('priceMin');
-      const priceMaxInput = document.getElementById('priceMax');
-      const priceMinNumber = document.getElementById('priceMinNumber');
-      const priceMaxNumber = document.getElementById('priceMaxNumber');
-      const priceMinOutput = document.getElementById('priceMinOutput');
-      const priceMaxOutput = document.getElementById('priceMaxOutput');
-      const priceError = document.getElementById('priceError');
-
-      function validatePriceRange() {
-        const minVal = parseInt(priceMinInput.value);
-        const maxVal = parseInt(priceMaxInput.value);
-        if (minVal > maxVal) {
-          priceError.classList.remove('hidden');
-          return false;
+          console.log("DEBUG: Products rendered in collection.html.");
+          AOS.refresh();
+          console.log("DEBUG: AOS refreshed after rendering products.");
         } else {
-          priceError.classList.add('hidden');
-          return true;
+          console.error("DEBUG: Product grid container not found in collection.html.");
         }
-      }
+        hideSpinner();
+      };
 
-      if (priceMinInput && priceMinOutput && priceMinNumber) {
-        priceMinInput.addEventListener('input', () => {
-          priceMinOutput.value = priceMinInput.value;
-          priceMinNumber.value = priceMinInput.value;
-          validatePriceRange();
-        });
-        priceMinNumber.addEventListener('change', () => {
-          let val = parseInt(priceMinNumber.value);
-          if (isNaN(val) || val < 0) { val = 0; }
-          if (val > 250000) { val = 250000; }
-          priceMinInput.value = val;
-          priceMinOutput.value = val;
-          validatePriceRange();
-        });
-      } else {
-        console.error("DEBUG: Price min slider/inputs not found in collection.html.");
-      }
+      loadProducts();
 
-      if (priceMaxInput && priceMaxOutput && priceMaxNumber) {
-        priceMaxInput.addEventListener('input', () => {
-          priceMaxOutput.value = priceMaxInput.value;
-          priceMaxNumber.value = priceMaxInput.value;
-          validatePriceRange();
-        });
-        priceMaxNumber.addEventListener('change', () => {
-          let val = parseInt(priceMaxNumber.value);
-          if (isNaN(val) || val < 0) { val = 0; }
-          if (val > 250000) { val = 250000; }
-          priceMaxInput.value = val;
-          priceMaxOutput.value = val;
-          validatePriceRange();
-        });
-      } else {
-        console.error("DEBUG: Price max slider/inputs not found in collection.html.");
-      }
-
-      // Evento para activar la clase 'active' en chips de filtros
-      document.querySelectorAll('.chip-label input[type="radio"]').forEach(input => {
+      document.querySelectorAll('#filters-form input').forEach(input => {
         input.addEventListener('change', () => {
-          const group = input.closest('.chip-label').getAttribute('data-group');
-          document.querySelectorAll(`[data-group="${group}"]`).forEach(label => label.classList.remove('active'));
-          input.closest('.chip-label').classList.add('active');
-          console.log("DEBUG: Chip selected for group", group, ":", input.closest('.chip-label').textContent.trim());
-        });
-      });
-
-      // Cerrar modal
-      const closeModalBtn = document.getElementById('close-modal');
-      if (closeModalBtn) {
-        closeModalBtn.addEventListener('click', () => {
-          const modal = document.getElementById('product-modal');
-          if (modal) {
-            modal.classList.add('hidden');
-            console.log("DEBUG: Modal closed in collection.html.");
-          }
-        });
-      }
-
-      // Evento para resetear filtros
-      const resetFiltersBtn = document.getElementById('reset-filters');
-      if (resetFiltersBtn) {
-        resetFiltersBtn.addEventListener('click', () => {
-          // Reiniciar sliders e inputs numéricos a los valores por defecto
-          priceMinInput.value = 0;
-          priceMinOutput.value = 0;
-          priceMinNumber.value = 0;
-          priceMaxInput.value = 250000;
-          priceMaxOutput.value = 250000;
-          priceMaxNumber.value = 250000;
-          priceError.classList.add('hidden');
-          // Quitar la clase 'active' de todos los chips y activar la opción "Todos"
-          document.querySelectorAll('.chip-label').forEach(label => label.classList.remove('active'));
-          document.querySelectorAll('.chip-label').forEach(label => {
-            if (label.textContent.trim() === 'Todos') {
-              label.classList.add('active');
-              label.querySelector('input').checked = true;
-            }
-          });
-          console.log("DEBUG: Filtros reseteados.");
+          console.log("DEBUG: Filter change detected, reloading products.");
           loadProducts();
         });
-      }
+      });
+    } catch (err) {
+      console.error("DEBUG: Error importing Supabase in collection.html:", err);
+    }
 
-      // Toggle de panel de filtros para móviles
-      const toggleFiltersBtn = document.getElementById('toggle-filters');
-      const filtersPanel = document.getElementById('filters-panel');
-      toggleFiltersBtn.addEventListener('click', () => {
-        if (filtersPanel.classList.contains('hidden')) {
-          filtersPanel.classList.remove('hidden');
-          toggleFiltersBtn.textContent = "Ocultar filtros";
-          toggleFiltersBtn.setAttribute('aria-expanded', 'true');
-        } else {
-          filtersPanel.classList.add('hidden');
-          toggleFiltersBtn.textContent = "Mostrar filtros";
-          toggleFiltersBtn.setAttribute('aria-expanded', 'false');
+    // Sincronización y validación de los sliders y campos numéricos de rango
+    const priceMinInput = document.getElementById('priceMin');
+    const priceMaxInput = document.getElementById('priceMax');
+    const priceMinNumber = document.getElementById('priceMinNumber');
+    const priceMaxNumber = document.getElementById('priceMaxNumber');
+    const priceError = document.getElementById('priceError');
+
+    function validatePriceRange() {
+      const minVal = parseInt(priceMinInput.value);
+      const maxVal = parseInt(priceMaxInput.value);
+      if (minVal > maxVal) {
+        priceError.classList.remove('hidden');
+        return false;
+      } else {
+        priceError.classList.add('hidden');
+        return true;
+      }
+    }
+
+    if (priceMinInput) {
+      priceMinInput.addEventListener('input', () => {
+        priceMinNumber.value = priceMinInput.value;
+        validatePriceRange();
+      });
+      priceMinNumber.addEventListener('change', () => {
+        let val = parseInt(priceMinNumber.value);
+        if (isNaN(val) || val < 0) { val = 0; }
+        if (val > 250000) { val = 250000; }
+        priceMinInput.value = val;
+        validatePriceRange();
+      });
+    }
+
+    if (priceMaxInput) {
+      priceMaxInput.addEventListener('input', () => {
+        priceMaxNumber.value = priceMaxInput.value;
+        validatePriceRange();
+      });
+      priceMaxNumber.addEventListener('change', () => {
+        let val = parseInt(priceMaxNumber.value);
+        if (isNaN(val) || val < 0) { val = 0; }
+        if (val > 250000) { val = 250000; }
+        priceMaxInput.value = val;
+        validatePriceRange();
+      });
+    }
+
+    // Activar clase 'active' en chips de filtros
+    document.querySelectorAll('.chip-label input[type="radio"]').forEach(input => {
+      input.addEventListener('change', () => {
+        const group = input.closest('.chip-label').getAttribute('data-group');
+        document.querySelectorAll(`[data-group="${group}"]`).forEach(label => label.classList.remove('active'));
+        input.closest('.chip-label').classList.add('active');
+        console.log("DEBUG: Chip selected for group", group, ":", input.closest('.chip-label').textContent.trim());
+      });
+    });
+
+    // Confirmación para resetear filtros
+    const resetFiltersBtn = document.getElementById('reset-filters');
+    if (resetFiltersBtn) {
+      resetFiltersBtn.addEventListener('click', () => {
+        if (!confirm("¿Estás seguro de resetear los filtros?")) {
+          return false;
+        }
+        priceMinInput.value = 0;
+        priceMinNumber.value = 0;
+        priceMaxInput.value = 250000;
+        priceMaxNumber.value = 250000;
+        priceError.classList.add('hidden');
+        document.querySelectorAll('.chip-label').forEach(label => label.classList.remove('active'));
+        document.querySelectorAll('.chip-label').forEach(label => {
+          if (label.textContent.trim() === 'Todos') {
+            label.classList.add('active');
+            label.querySelector('input').checked = true;
+          }
+        });
+        console.log("DEBUG: Filtros reseteados.");
+        loadProducts();
+      });
+    }
+
+    // Toggle del panel de filtros para móviles
+    const toggleFiltersBtn = document.getElementById('toggle-filters');
+    const filtersPanel = document.getElementById('filters-panel');
+    toggleFiltersBtn.addEventListener('click', () => {
+      if (filtersPanel.classList.contains('hidden')) {
+        filtersPanel.classList.remove('hidden');
+        toggleFiltersBtn.textContent = "Ocultar filtros";
+        toggleFiltersBtn.setAttribute('aria-expanded', 'true');
+      } else {
+        filtersPanel.classList.add('hidden');
+        toggleFiltersBtn.textContent = "Mostrar filtros";
+        toggleFiltersBtn.setAttribute('aria-expanded', 'false');
+      }
+    });
+
+    // Se removió el evento click anterior para "Agregar al Carrito"
+    // ya que ahora se utiliza un formulario que redirige a cart.html
+    const closeModalBtn = document.getElementById('close-modal');
+    if (closeModalBtn) {
+      closeModalBtn.addEventListener('click', () => {
+        const modal = document.getElementById('product-modal');
+        if (modal) {
+          modal.classList.add('hidden');
+          console.log("DEBUG: Modal closed in collection.html.");
         }
       });
-      
-    });
-  </script>
+    }
+  });
+</script>
 {% endblock %}

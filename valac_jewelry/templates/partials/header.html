@@ -1,14 +1,16 @@
 <header class="fixed top-0 left-0 right-0 z-50 shadow-md bg-white">
   <div class="container mx-auto flex justify-between items-center p-4 md:p-6">
-    <!-- Logo de Joyas con tipografía en negrita y tamaño responsivo -->
-    <div class="text-2xl sm:text-3xl md:text-4xl font-playfair">
+    <!-- Logo (sin negritas) -->
+    <div class="text-2xl sm:text-3xl md:text-4xl">
       <a href="/" class="hover:text-[#D4AF37] transition-colors">VALAC Joyas</a>
     </div>
-    <!-- Botón de menú hamburguesa (visible en móviles y tabletas) -->
-    <button id="menu-toggle" class="text-2xl block lg:hidden">
+
+    <!-- Botón menú hamburguesa (móviles y tabletas) -->
+    <button id="menu-toggle" class="lg:hidden text-3xl focus:outline-none" aria-label="Abrir menú">
       <i class="fas fa-bars"></i>
     </button>
-    <!-- Menú de navegación (visible en pantallas grandes) -->
+
+    <!-- Menú de navegación (pantallas grandes) -->
     <nav class="hidden lg:flex space-x-4 lg:space-x-6">
       <a href="/" class="text-lg lg:text-xl hover:text-[#D4AF37] transition-colors">Inicio</a>
       <a href="/collection" class="text-lg lg:text-xl hover:text-[#D4AF37] transition-colors">Colección</a>
@@ -18,7 +20,8 @@
         <i class="fas fa-shopping-cart"></i> Carrito
       </a>
     </nav>
-    <!-- Íconos de redes sociales (solo en pantallas grandes) -->
+
+    <!-- Íconos de redes sociales (pantallas grandes) -->
     <div class="hidden lg:flex space-x-2 lg:space-x-4">
       <a href="#" class="text-xl lg:text-2xl hover:text-[#D4AF37] transition-colors"><i class="fab fa-facebook"></i></a>
       <a href="#" class="text-xl lg:text-2xl hover:text-[#D4AF37] transition-colors"><i class="fab fa-instagram"></i></a>
@@ -27,14 +30,13 @@
   </div>
 </header>
 
-<!-- Sidebar (menú lateral) -->
-<aside id="sidebar" class="fixed top-0 left-0 h-full w-64 bg-white shadow-lg transform -translate-x-full transition-transform duration-300 z-50">
+<!-- Sidebar (menú lateral para móviles) -->
+<aside id="sidebar" class="fixed top-0 left-0 h-full w-64 bg-white shadow-lg transform -translate-x-full transition-transform ease-in-out duration-300 z-50">
   <div class="p-6">
     <!-- Botón para cerrar el sidebar -->
-    <button id="close-sidebar" class="text-2xl mb-6">
+    <button id="close-sidebar" class="text-3xl mb-6 focus:outline-none" aria-label="Cerrar menú">
       <i class="fas fa-times"></i>
     </button>
-    <!-- Menú de navegación -->
     <nav class="space-y-4">
       <a href="/" class="block text-lg hover:text-[#D4AF37] transition-colors">Inicio</a>
       <a href="/collection" class="block text-lg hover:text-[#D4AF37] transition-colors">Colección</a>
@@ -50,8 +52,9 @@
 <!-- Overlay para fondo oscuro al abrir el sidebar -->
 <div id="overlay" class="fixed inset-0 bg-black bg-opacity-50 hidden z-40"></div>
 
-<!-- CSS adicional para activar la sidebar -->
+<!-- CSS adicional -->
 <style>
+  /* Clase para activar el sidebar */
   .sidebar-open {
     transform: translateX(0) !important;
   }
@@ -65,26 +68,20 @@
   const overlay = document.getElementById('overlay');
 
   // Abrir sidebar en móviles y tabletas
-  if (menuToggle) {
-    menuToggle.addEventListener('click', () => {
-      sidebar.classList.add('sidebar-open');
-      overlay.classList.remove('hidden');
-    });
-  }
+  menuToggle.addEventListener('click', () => {
+    sidebar.classList.add('sidebar-open');
+    overlay.classList.remove('hidden');
+  });
 
   // Cerrar sidebar
-  if (closeSidebar) {
-    closeSidebar.addEventListener('click', () => {
-      sidebar.classList.remove('sidebar-open');
-      overlay.classList.add('hidden');
-    });
-  }
+  closeSidebar.addEventListener('click', () => {
+    sidebar.classList.remove('sidebar-open');
+    overlay.classList.add('hidden');
+  });
 
   // Cerrar sidebar al hacer clic en el overlay
-  if (overlay) {
-    overlay.addEventListener('click', () => {
-      sidebar.classList.remove('sidebar-open');
-      overlay.classList.add('hidden');
-    });
-  }
+  overlay.addEventListener('click', () => {
+    sidebar.classList.remove('sidebar-open');
+    overlay.classList.add('hidden');
+  });
 </script>

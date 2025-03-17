@@ -5,6 +5,9 @@ class Config:
     SUPABASE_URL = os.environ.get('SUPABASE_URL')
     SUPABASE_KEY = os.environ.get('SUPABASE_KEY')
     SUPABASE_STORAGE_URL = os.environ.get('SUPABASE_STORAGE_URL')
+    MP_ACCESS_TOKEN = os.environ.get('MP_ACCESS_TOKEN')
+    MP_PUBLIC_KEY = os.environ.get('MP_PUBLIC_KEY')
+    MP_MAX_INSTALLMENTS = os.environ.get('MP_MAX_INSTALLMENTS')
 
 class DevelopmentConfig(Config):
     DEBUG = True

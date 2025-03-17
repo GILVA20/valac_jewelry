@@ -6,17 +6,17 @@
 
 {% block content %}
 <main class="pt-24 container mx-auto p-6">
-  <form id="checkout-form">
-    <!-- Estilos adicionales específicos para este formulario -->
+  <form id="checkout-form" method="POST" action="{{ url_for('checkout.checkout') }}">
+    <!-- Se incluyen todos los estilos y campos que ya tenías -->
     <style>
-      /* Etiquetas: mayor tamaño de fuente y espaciado */
+      /* Estilos generales para el formulario */
+      body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
       .form-group label {
         display: block;
         margin-bottom: 0.5rem;
         font-size: 1.1rem;
         color: #333;
       }
-      /* Inputs: borde sutil, padding, sombra y efecto hover */
       .form-group input,
       .form-group select {
         width: 100%;
@@ -34,7 +34,6 @@
         border-color: #d5a300;
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
       }
-      /* Contenedores de íconos e inputs */
       .input-icon {
         position: relative;
       }
@@ -48,7 +47,6 @@
       .input-icon input {
         padding-left: 2.5rem;
       }
-      /* Mensajes de validación */
       .validation-message {
         font-size: 0.9rem;
         color: #e3342f;
@@ -62,12 +60,11 @@
       .validation-message.error {
         display: block;
       }
-      /* Separación visual para secciones */
       .form-section {
         border-top: 2px solid #eee;
         padding-top: 1.5rem;
+        margin-bottom: 1.5rem;
       }
-      /* Botón de Finalizar Compra: animación suave al hacer submit */
       #finalize-btn {
         transition: background-color 0.5s, transform 0.3s, box-shadow 0.3s;
         font-size: 1.2rem;
@@ -75,6 +72,7 @@
         padding: 1rem;
         border-radius: 0.5rem;
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+        width: 100%;
       }
       #finalize-btn.loading {
         background-color: #967700;
@@ -84,7 +82,6 @@
       #finalize-btn:hover {
         box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
       }
-      /* Spinner simulado */
       .spinner {
         border: 2px solid #f3f3f3;
         border-top: 2px solid #fff;
@@ -100,14 +97,22 @@
         0% { transform: rotate(0deg); }
         100% { transform: rotate(360deg); }
       }
+      /* Estilos para el contenedor de MercadoPago */
+      #mp-wallet-container {
+        margin-top: 1rem;
+      }
+      /* Contenedor para mostrar errores de MercadoPago */
+      #mp-error {
+        color: red;
+        margin-top: 1rem;
+        display: none;
+      }
     </style>
 
-    <!-- Distribución en grid para Datos de Envío y Pago -->
+    <!-- Sección de Datos de Envío y Facturación -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <!-- Sección de Datos de Envío y Facturación -->
       <section class="form-section" data-aos="fade-up" data-aos-duration="1000">
         <h2 class="mb-4 text-xl font-bold">Datos de Envío y Facturación</h2>
-        <!-- Campo Nombre con ícono -->
         <div class="form-group">
           <label for="nombre"><i class="fas fa-user mr-2"></i>Nombre Completo</label>
           <div class="input-icon">
@@ -116,7 +121,6 @@
           </div>
           <span id="nombre-msg" class="validation-message"></span>
         </div>
-        <!-- Campo Dirección con ícono -->
         <div class="form-group">
           <label for="direccion"><i class="fas fa-map-marker-alt mr-2"></i>Dirección</label>
           <div class="input-icon">
@@ -152,13 +156,16 @@
         <h2 class="mb-4 text-xl font-bold">Información de Pago</h2>
         <div class="form-group">
           <label for="metodo_pago"><i class="fas fa-credit-card mr-2"></i>Método de Pago</label>
-          <select id="metodo_pago" name="metodo_pago">
-            <option value="tarjeta">Tarjeta de Crédito/Débito</option>
-            <option value="paypal">PayPal</option>
+          <select id="metodo_pago" name="metodo_pago" required>
+            <option value="" disabled selected>-- Elige una opción --</option>
+            <option value="mercadopago">MercadoPago</option>
+            <option value="aplazo">Aplazo</option>
           </select>
         </div>
-        <!-- Campos para Tarjeta (se muestran/ocultan según la selección) -->
-        <div id="card-fields" class="mt-4">
+        <!-- Contenedor para el componente Wallet de MercadoPago -->
+        <div id="mp-wallet-container" style="display: none;"></div>
+        <!-- Contenedor para campos de tarjeta (solo para Aplazo) -->
+        <div id="card-fields" style="display: none;">
           <div class="form-group">
             <label for="card_number"><i class="fas fa-credit-card mr-2"></i>Número de Tarjeta</label>
             <input type="text" id="card_number" name="card_number" placeholder="XXXX-XXXX-XXXX-XXXX" required>
@@ -179,7 +186,7 @@
     </div>
 
     <!-- Sección de Resumen del Pedido -->
-    <section class="form-section order-summary mt-6" data-aos="fade-up" data-aos-duration="1400">
+    <section class="form-section order-summary" data-aos="fade-up" data-aos-duration="1400">
       <h2 class="mb-4 text-xl font-bold">Resumen del Pedido</h2>
       <div id="order-details">
         <div class="flex justify-between mb-2">
@@ -188,7 +195,7 @@
         </div>
         <div class="flex justify-between mb-2">
           <span>Envío:</span>
-          <span id="shipping">$50.00</span>
+          <span id="shipping">$0.00</span>
         </div>
         <div class="flex justify-between" style="border-top: 1px solid #d4d4d4; padding-top: 0.5rem;">
           <span>Total:</span>
@@ -198,7 +205,7 @@
     </section>
 
     <!-- Sección de Elementos de Confianza -->
-    <section class="trust-section mt-6" data-aos="fade-up" data-aos-duration="1600">
+    <section class="trust-section" data-aos="fade-up" data-aos-duration="1600">
       <img src="{{ url_for('static', filename='images/sello_seguridad.png') }}" alt="Sello de Seguridad">
       <p>Compra 100% segura con encriptación SSL</p>
     </section>
@@ -206,7 +213,6 @@
     <!-- Botón para Finalizar Compra -->
     <button type="submit" id="finalize-btn" class="checkout-btn mt-6 w-full" data-aos="fade-up" data-aos-duration="1800">
       Finalizar Compra
-      <!-- Spinner oculto inicialmente -->
       <span id="spinner" class="spinner hidden"></span>
     </button>
   </form>
@@ -215,133 +221,171 @@
 
 {% block scripts_extra %}
 <script>
-  // Funciones de validación
-  function validateEmail(email) {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(email);
+  // Función para cargar el SDK de MercadoPago de manera asíncrona
+  function loadMercadoPagoSDK() {
+    return new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'https://sdk.mercadopago.com/js/v2';
+      script.onload = () => resolve();
+      script.onerror = () => reject(new Error('Error al cargar el SDK de MercadoPago'));
+      document.head.appendChild(script);
+    });
   }
-  
-  function validatePhone(phone) {
-    const re = /^\+?\d{8,}$/;
-    return re.test(phone);
-  }
-  
-  function validateCardNumber(number) {
-    const cleaned = number.replace(/[\s-]/g, '');
-    const re = /^\d{16}$/;
-    return re.test(cleaned);
-  }
-  
-  function validateCardExpiration(expiration) {
-    const re = /^(0[1-9]|1[0-2])\/\d{2}$/;
-    return re.test(expiration);
-  }
-  
-  function validateCardCVC(cvc) {
-    const re = /^\d{3,4}$/;
-    return re.test(cvc);
-  }
-  
-  // Actualización dinámica del resumen del pedido
-  const cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
-  const calculateSubtotal = () => cartItems.reduce((sum, item) => sum + item.precio * item.cantidad, 0);
-  const updateOrderSummary = () => {
-    const subtotal = calculateSubtotal();
-    const shipping = subtotal > 0 ? 50 : 0;
-    const total = subtotal + shipping;
-    document.getElementById('subtotal').textContent = `$${subtotal.toFixed(2)}`;
-    document.getElementById('shipping').textContent = `$${shipping.toFixed(2)}`;
-    document.getElementById('total').textContent = `$${total.toFixed(2)}`;
-  };
-  updateOrderSummary();
 
-  // Mostrar/Ocultar campos de tarjeta según el método de pago seleccionado
-  document.getElementById('metodo_pago').addEventListener('change', (e) => {
-    const cardFields = document.getElementById('card-fields');
-    cardFields.style.display = (e.target.value === "tarjeta") ? 'block' : 'none';
-  });
-
-  // Validación en tiempo real para email y teléfono
-  document.getElementById('email').addEventListener('input', (e) => {
-    const msg = document.getElementById('email-msg');
-    if(validateEmail(e.target.value.trim())){
-      msg.textContent = "Correo válido";
-      msg.classList.remove('error');
-      msg.classList.add('valid');
-    } else {
-      msg.textContent = "Correo inválido";
-      msg.classList.remove('valid');
-      msg.classList.add('error');
-    }
-    msg.style.display = 'block';
-  });
-
-  document.getElementById('telefono').addEventListener('input', (e) => {
-    const msg = document.getElementById('telefono-msg');
-    if(validatePhone(e.target.value.trim())){
-      msg.textContent = "Número válido";
-      msg.classList.remove('error');
-      msg.classList.add('valid');
-    } else {
-      msg.textContent = "Número inválido";
-      msg.classList.remove('valid');
-      msg.classList.add('error');
-    }
-    msg.style.display = 'block';
-  });
-
-  // Validación y simulación de envío del formulario
-  document.getElementById('checkout-form').addEventListener('submit', (e) => {
-    e.preventDefault();
-    
-    // Validar datos generales
-    const email = document.getElementById('email').value.trim();
-    const telefono = document.getElementById('telefono').value.trim();
-    if (!validateEmail(email)) {
-      alert("Por favor, ingresa un correo electrónico válido.");
-      return;
-    }
-    if (!validatePhone(telefono)) {
-      alert("Por favor, ingresa un número de teléfono válido.");
-      return;
-    }
-    
-    // Validar datos de tarjeta si el método es "tarjeta"
-    const metodoPago = document.getElementById('metodo_pago').value;
-    if (metodoPago === "tarjeta") {
-      const cardNumber = document.getElementById('card_number').value.trim();
-      const cardExpiration = document.getElementById('card_expiration').value.trim();
-      const cardCVC = document.getElementById('card_cvc').value.trim();
-      if (!validateCardNumber(cardNumber)) {
-        alert("Por favor, ingresa un número de tarjeta válido (16 dígitos).");
-        return;
-      }
-      if (!validateCardExpiration(cardExpiration)) {
-        alert("Por favor, ingresa una fecha de expiración válida (MM/AA).");
-        return;
-      }
-      if (!validateCardCVC(cardCVC)) {
-        alert("Por favor, ingresa un CVC válido (3 o 4 dígitos).");
-        return;
-      }
-    }
-    
-    // Agregar animación y simular carga en el botón de Finalizar Compra
-    const finalizeBtn = document.getElementById('finalize-btn');
-    finalizeBtn.classList.add('loading');
-    document.getElementById('spinner').classList.remove('hidden');
-    
-    setTimeout(() => {
-      alert("Pago procesado con éxito. Gracias por tu compra!");
-      // Aquí se puede redirigir o integrar con el backend
-      finalizeBtn.classList.remove('loading');
-      document.getElementById('spinner').classList.add('hidden');
-    }, 1500);
-  });
-
-  // Inicialización de AOS para animaciones
-  document.addEventListener("DOMContentLoaded", () => {
+  // Esperar a que se cargue todo (ventana completa)
+  window.onload = async function() {
+    console.log("Window fully loaded in checkout.");
     AOS.init();
-  });
+    console.log("AOS initialized globally.");
+
+    // Cargar el SDK de MercadoPago
+    try {
+      await loadMercadoPagoSDK();
+      console.log("SDK de MercadoPago cargado correctamente.");
+    } catch (error) {
+      console.error("Error al cargar el SDK de MercadoPago:", error);
+      alert("Error al cargar el SDK de MercadoPago. Por favor, recarga la página.");
+      return;
+    }
+
+    // Funciones de validación
+    function validateEmail(email) {
+      const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return re.test(email);
+    }
+    function validatePhone(phone) {
+      const re = /^\+?\d{8,}$/;
+      return re.test(phone);
+    }
+    function validateCardNumber(number) {
+      const cleaned = number.replace(/[\s-]/g, '');
+      const re = /^\d{16}$/;
+      return re.test(cleaned);
+    }
+    function validateCardExpiration(expiration) {
+      const re = /^(0[1-9]|1[0-2])\/\d{2}$/;
+      return re.test(expiration);
+    }
+    function validateCardCVC(cvc) {
+      const re = /^\d{3,4}$/;
+      return re.test(cvc);
+    }
+
+    // Actualización dinámica del resumen del pedido
+    const cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
+    const calculateSubtotal = () => cartItems.reduce((sum, item) => sum + item.precio * item.cantidad, 0);
+    const updateOrderSummary = () => {
+      const subtotal = calculateSubtotal();
+      const shipping = subtotal >= 6000 ? 0 : (subtotal > 0 ? 250 : 0);
+      const total = subtotal + shipping;
+      document.getElementById('subtotal').textContent = `$${subtotal.toFixed(2)}`;
+      document.getElementById('shipping').textContent = `$${shipping.toFixed(2)}`;
+      document.getElementById('total').textContent = `$${total.toFixed(2)}`;
+    };
+    updateOrderSummary();
+
+    // Manejo de visualización según el método de pago seleccionado
+    document.getElementById('metodo_pago').addEventListener('change', async (e) => {
+      const selected = e.target.value;
+      console.log("Método de pago seleccionado:", selected);
+      const cardFields = document.getElementById('card-fields');
+      const mpContainer = document.getElementById('mp-wallet-container');
+
+      if (selected === "mercadopago") {
+        cardFields.style.display = 'none';
+        mpContainer.style.display = 'block';
+
+        // Verificar si el SDK de MercadoPago está cargado
+        if (typeof MercadoPago === "undefined") {
+          console.error("Error: El SDK de MercadoPago no está definido.");
+          alert("Error: El SDK de MercadoPago no está disponible. Por favor, recarga la página.");
+          return;
+        }
+
+        try {
+          // Llamada AJAX para crear la preferencia de pago
+          console.log("Realizando llamada AJAX para crear la preferencia...");
+          const response = await fetch("{{ url_for('mp_checkout.create_preference') }}", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              items: [{
+                title: "Orden de Compra VALAC Joyas",
+                //unit_price: parseFloat(document.getElementById('total').textContent.replace('$','')) || 0,
+                unit_price: 10,
+                quantity: 1
+              }]
+            })
+          });
+          const data = await response.json();
+          console.log("Respuesta de preferencia:", data);
+          if (data.id) {
+            console.log("Preference ID recibido:", data.id);
+            // Verificar que MP_PUBLIC_KEY esté definida
+            const mpPublicKey = "{{ config['MP_PUBLIC_KEY'] }}";
+            if (!mpPublicKey || mpPublicKey.trim() === "") {
+              console.error("Error: La clave pública MP_PUBLIC_KEY no está definida.");
+              alert("Error: La clave pública MP_PUBLIC_KEY no está configurada en el entorno.");
+              return;
+            }
+            // Inicializa MercadoPago y renderiza el componente "wallet"
+            const mp = new MercadoPago(mpPublicKey, { locale: "es-MX" });
+            mp.bricks().create("wallet", "mp-wallet-container", {
+              initialization: { preferenceId: data.id },
+              customization: { texts: { valueProp: 'smart_option' } }
+            });
+            console.log("Componente Wallet renderizado correctamente.");
+          } else {
+            console.error("Error al crear la preferencia:", data);
+            alert("Error al crear la preferencia de pago.");
+          }
+        } catch (error) {
+          console.error("Error en la llamada AJAX:", error);
+          alert("Error en la conexión con el servidor.");
+        }
+      } else if (selected === "aplazo") {
+        cardFields.style.display = 'block';
+        mpContainer.style.display = 'none';
+      } else {
+        cardFields.style.display = 'none';
+        mpContainer.style.display = 'none';
+      }
+    });
+
+    // Validación en tiempo real para email y teléfono
+    document.getElementById('email').addEventListener('input', (e) => {
+      const msg = document.getElementById('email-msg');
+      if (validateEmail(e.target.value.trim())) {
+        msg.textContent = "Correo válido";
+        msg.classList.remove('error');
+        msg.classList.add('valid');
+      } else {
+        msg.textContent = "Correo inválido";
+        msg.classList.remove('valid');
+        msg.classList.add('error');
+      }
+      msg.style.display = 'block';
+    });
+    document.getElementById('telefono').addEventListener('input', (e) => {
+      const msg = document.getElementById('telefono-msg');
+      if (validatePhone(e.target.value.trim())) {
+        msg.textContent = "Número válido";
+        msg.classList.remove('error');
+        msg.classList.add('valid');
+      } else {
+        msg.textContent = "Número inválido";
+        msg.classList.remove('valid');
+        msg.classList.add('error');
+      }
+      msg.style.display = 'block';
+    });
+
+    // Animación de carga en el botón de Finalizar Compra (envío real se procesa en el backend)
+    document.getElementById('checkout-form').addEventListener('submit', (e) => {
+      const finalizeBtn = document.getElementById('finalize-btn');
+      finalizeBtn.classList.add('loading');
+      document.getElementById('spinner').classList.remove('hidden');
+    });
+  };
 </script>
 {% endblock %}

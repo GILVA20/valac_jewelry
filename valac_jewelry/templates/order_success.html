@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Compra Exitosa - VALAC Joyas{% endblock %}
+{% block content %}
+<main class="container mx-auto p-6 text-center">
+  <h1 class="text-2xl font-bold mb-4">¡Compra Exitosa!</h1>
+  <p class="mb-4">Número de orden: <strong>{{ order_id }}</strong></p>
+  <p class="mb-4">Nombre: <strong>{{ order_data.nombre }}</strong></p>
+  <div class="order-summary">
+    <h2 class="font-bold mb-2">Resumen del Pedido:</h2>
+    <p>Subtotal: ${{ order_data.subtotal }}</p>
+    <p>Costo de Envío: ${{ order_data.costo_envío }}</p>
+    <p>Total: ${{ order_data.total }}</p>
+  </div>
+  <a href="{{ url_for('home') }}" class="btn btn-primary mt-6">Volver a la tienda</a>
+</main>
+{% endblock %}

@@ -1,21 +1,24 @@
+import os
 from flask import Blueprint, request, jsonify
 import mercadopago
-import os
+from supabase import create_client, Client  # Asegúrate de tener instalado supabase-py
 
-# Configuración de Mercado Pago
+# Configuración de MercadoPago
 MP_ACCESS_TOKEN = os.getenv("MP_ACCESS_TOKEN")
-# Inicializamos el SDK de Mercado Pago con el access token configurado
 mp = mercadopago.SDK(MP_ACCESS_TOKEN)
 
-# Es importante que el nombre del blueprint coincida con el que luego importas en __init__.py.
+# Configuración Supabase (las variables SUPABASE_URL y SUPABASE_KEY deben estar definidas)
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("SUPABASE_KEY")
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
 mp_checkout_bp = Blueprint('mp_checkout', __name__)
 
 @mp_checkout_bp.route('/create_preference', methods=['POST'])
 def create_preference():
     """
     Endpoint para crear una preferencia de pago.
-    Se espera recibir en el body un JSON con la llave "items",
-    que es una lista de objetos con: title, unit_price y quantity.
+    Se espera recibir un JSON con la llave "items", que es una lista de objetos con: title, unit_price y quantity.
     """
     try:
         data = request.get_json()
@@ -27,7 +30,7 @@ def create_preference():
         preference_data = {
             "items": items,
             "back_urls": {
-                "success": "https://valacjoyas.com/success/{order.id}",
+                "success": "https://valacjoyas.com/success",
                 "failure": "https://valacjoyas.com/failure",
                 "pending": "https://valacjoyas.com/pending"
             },
@@ -43,21 +46,33 @@ def create_preference():
 
 @mp_checkout_bp.route('/webhook', methods=['POST'])
 def webhook():
-    """
-    Endpoint para recibir notificaciones (webhook) de Mercado Pago.
-    Se espera que el cuerpo de la notificación contenga información del pago.
-    Aquí se debe validar la notificación (firma, etc.) y actualizar el estado del
-    pago en la base de datos según la respuesta.
-    """
-    try:
-        data = request.get_json()
-        if data.get("type") == "payment":
-            payment_id = data.get("data", {}).get("id")
-            payment_response = mp.payment().get(payment_id)
-            payment = payment_response["response"]
-            # Aquí actualizas el estado del pago en tu base de datos
-            # Ejemplo: si payment["status"] es "approved", marcar el pedido como pagado.
-            print(f"Pago {payment_id} recibido con estado: {payment.get('status')}")
-        return "", 200
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
+    data = request.get_json()
+    payment_status = data.get("status")
+    order_id = data.get("external_reference")  # Debe coincidir con lo enviado en external_reference
+    transaction_id = data.get("id")  # Id de la transacción de MercadoPago
+
+    if order_id and payment_status:
+        if payment_status == "approved":
+            new_status = "Completado"
+        elif payment_status == "rejected":
+            new_status = "Rechazado"
+        elif payment_status == "pending":
+            new_status = "Pendiente"
+        else:
+            new_status = "Pendiente"
+
+        data_update = {
+            "estado_pago": new_status,
+            "fecha_actualizacion": "now()"
+        }
+        if transaction_id:
+            data_update["transaction_id"] = transaction_id
+
+        response = supabase.table("orders").update(data_update).eq("id", order_id).execute()
+        if response.error:
+            print("Error actualizando la orden:", response.error)
+            return "Error actualizando la orden", 500
+        print(f"Orden {order_id} actualizada a {new_status}")
+        return "OK", 200
+    else:
+        return "Datos insuficientes", 400

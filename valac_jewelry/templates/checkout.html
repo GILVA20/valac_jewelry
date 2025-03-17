@@ -107,6 +107,13 @@
         margin-top: 1rem;
         display: none;
       }
+      /* Estilo para mensaje de Aplazo no disponible */
+      #aplazo-message {
+        color: #e3342f;
+        font-size: 1rem;
+        margin-top: 1rem;
+        display: none;
+      }
     </style>
 
     <!-- Sección de Datos de Envío y Facturación -->
@@ -128,6 +135,17 @@
             <input type="text" id="direccion" name="direccion" placeholder="Calle, número, etc." required>
           </div>
           <span id="direccion-msg" class="validation-message"></span>
+        </div>
+        <!-- Nuevos campos: Estado y Colonia -->
+        <div class="form-group">
+          <label for="estado"><i class="fas fa-flag mr-2"></i>Estado</label>
+          <input type="text" id="estado" name="estado" placeholder="Estado" required>
+          <span id="estado-msg" class="validation-message"></span>
+        </div>
+        <div class="form-group">
+          <label for="colonia"><i class="fas fa-map mr-2"></i>Colonia</label>
+          <input type="text" id="colonia" name="colonia" placeholder="Colonia" required>
+          <span id="colonia-msg" class="validation-message"></span>
         </div>
         <div class="form-group">
           <label for="ciudad"><i class="fas fa-city mr-2"></i>Ciudad</label>
@@ -164,7 +182,7 @@
         </div>
         <!-- Contenedor para el componente Wallet de MercadoPago -->
         <div id="mp-wallet-container" style="display: none;"></div>
-        <!-- Contenedor para campos de tarjeta (solo para Aplazo) -->
+        <!-- Contenedor para campos de tarjeta (solo para Aplazo, aunque se usará para mostrar mensaje de no disponibilidad) -->
         <div id="card-fields" style="display: none;">
           <div class="form-group">
             <label for="card_number"><i class="fas fa-credit-card mr-2"></i>Número de Tarjeta</label>
@@ -182,6 +200,8 @@
             <span id="card_cvc-msg" class="validation-message"></span>
           </div>
         </div>
+        <!-- Contenedor para mensaje de Aplazo no disponible -->
+        <div id="aplazo-message">Aplazo no está disponible por el momento.</div>
       </section>
     </div>
 
@@ -221,6 +241,7 @@
 
 {% block scripts_extra %}
 <script>
+  // NOTA: Se recomienda en el futuro extraer esta lógica a un archivo JS externo para mejorar la mantenibilidad.
   // Función para cargar el SDK de MercadoPago de manera asíncrona
   function loadMercadoPagoSDK() {
     return new Promise((resolve, reject) => {
@@ -257,6 +278,9 @@
       const re = /^\+?\d{8,}$/;
       return re.test(phone);
     }
+    function validateNotEmpty(value) {
+      return value.trim() !== "";
+    }
     function validateCardNumber(number) {
       const cleaned = number.replace(/[\s-]/g, '');
       const re = /^\d{16}$/;
@@ -278,9 +302,9 @@
       const subtotal = calculateSubtotal();
       const shipping = subtotal >= 6000 ? 0 : (subtotal > 0 ? 250 : 0);
       const total = subtotal + shipping;
-      document.getElementById('subtotal').textContent = `$${subtotal.toFixed(2)}`;
-      document.getElementById('shipping').textContent = `$${shipping.toFixed(2)}`;
-      document.getElementById('total').textContent = `$${total.toFixed(2)}`;
+      document.getElementById('subtotal').textContent = "$" + subtotal.toFixed(2);
+      document.getElementById('shipping').textContent = "$" + shipping.toFixed(2);
+      document.getElementById('total').textContent = "$" + total.toFixed(2);
     };
     updateOrderSummary();
 
@@ -290,9 +314,11 @@
       console.log("Método de pago seleccionado:", selected);
       const cardFields = document.getElementById('card-fields');
       const mpContainer = document.getElementById('mp-wallet-container');
+      const aplazoMessage = document.getElementById('aplazo-message');
 
       if (selected === "mercadopago") {
         cardFields.style.display = 'none';
+        aplazoMessage.style.display = 'none';
         mpContainer.style.display = 'block';
 
         // Verificar si el SDK de MercadoPago está cargado
@@ -303,7 +329,6 @@
         }
 
         try {
-          // Llamada AJAX para crear la preferencia de pago
           console.log("Realizando llamada AJAX para crear la preferencia...");
           const response = await fetch("{{ url_for('mp_checkout.create_preference') }}", {
             method: "POST",
@@ -311,7 +336,7 @@
             body: JSON.stringify({
               items: [{
                 title: "Orden de Compra VALAC Joyas",
-                //unit_price: parseFloat(document.getElementById('total').textContent.replace('$','')) || 0,
+                // Para fines de prueba se usa un precio fijo; en producción se utilizaría el total calculado
                 unit_price: 10,
                 quantity: 1
               }]
@@ -321,14 +346,12 @@
           console.log("Respuesta de preferencia:", data);
           if (data.id) {
             console.log("Preference ID recibido:", data.id);
-            // Verificar que MP_PUBLIC_KEY esté definida
             const mpPublicKey = "{{ config['MP_PUBLIC_KEY'] }}";
             if (!mpPublicKey || mpPublicKey.trim() === "") {
               console.error("Error: La clave pública MP_PUBLIC_KEY no está definida.");
               alert("Error: La clave pública MP_PUBLIC_KEY no está configurada en el entorno.");
               return;
             }
-            // Inicializa MercadoPago y renderiza el componente "wallet"
             const mp = new MercadoPago(mpPublicKey, { locale: "es-MX" });
             mp.bricks().create("wallet", "mp-wallet-container", {
               initialization: { preferenceId: data.id },
@@ -344,15 +367,19 @@
           alert("Error en la conexión con el servidor.");
         }
       } else if (selected === "aplazo") {
-        cardFields.style.display = 'block';
         mpContainer.style.display = 'none';
+        // Mostrar mensaje de que Aplazo no está disponible por el momento
+        aplazoMessage.style.display = 'block';
+        cardFields.style.display = 'none';
+        console.log("Método Aplazo seleccionado: mostrando mensaje de no disponibilidad.");
       } else {
         cardFields.style.display = 'none';
         mpContainer.style.display = 'none';
+        aplazoMessage.style.display = 'none';
       }
     });
 
-    // Validación en tiempo real para email y teléfono
+    // Validación en tiempo real para email, teléfono, estado y colonia
     document.getElementById('email').addEventListener('input', (e) => {
       const msg = document.getElementById('email-msg');
       if (validateEmail(e.target.value.trim())) {
@@ -379,8 +406,36 @@
       }
       msg.style.display = 'block';
     });
+    // Validación para Estado
+    document.getElementById('estado').addEventListener('input', (e) => {
+      const msg = document.getElementById('estado-msg');
+      if (validateNotEmpty(e.target.value)) {
+        msg.textContent = "Estado ingresado";
+        msg.classList.remove('error');
+        msg.classList.add('valid');
+      } else {
+        msg.textContent = "El estado es obligatorio";
+        msg.classList.remove('valid');
+        msg.classList.add('error');
+      }
+      msg.style.display = 'block';
+    });
+    // Validación para Colonia
+    document.getElementById('colonia').addEventListener('input', (e) => {
+      const msg = document.getElementById('colonia-msg');
+      if (validateNotEmpty(e.target.value)) {
+        msg.textContent = "Colonia ingresada";
+        msg.classList.remove('error');
+        msg.classList.add('valid');
+      } else {
+        msg.textContent = "La colonia es obligatoria";
+        msg.classList.remove('valid');
+        msg.classList.add('error');
+      }
+      msg.style.display = 'block';
+    });
 
-    // Animación de carga en el botón de Finalizar Compra (envío real se procesa en el backend)
+    // Animación de carga en el botón de Finalizar Compra
     document.getElementById('checkout-form').addEventListener('submit', (e) => {
       const finalizeBtn = document.getElementById('finalize-btn');
       finalizeBtn.classList.add('loading');

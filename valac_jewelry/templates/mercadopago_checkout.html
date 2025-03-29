@@ -69,6 +69,10 @@
         return;
       }
 
+      // ✨ ADDITIONS ✨: Debug: Rendering MercadoPago checkout page with preference ID.
+      console.log("DEBUG: Preference ID: ", "{{ preference_id }}");
+      console.log("DEBUG: MP_PUBLIC_KEY: ", "{{ config['MP_PUBLIC_KEY'] }}");
+
       // Intentar renderizar el componente "wallet"
       try {
         console.log("Intentando renderizar el componente Wallet...");

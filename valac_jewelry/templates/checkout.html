@@ -55,6 +55,7 @@
         padding-top: 1.5rem;
         margin-bottom: 1.5rem;
       }
+      /* Botón Finalizar (se muestra solo si no se selecciona MercadoPago) */
       #finalize-btn {
         transition: background-color 0.5s, transform 0.3s, box-shadow 0.3s;
         font-size: 1.2rem;
@@ -82,8 +83,21 @@
         margin-left: 0.5rem;
       }
       @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-      /* Contenedor del componente de MercadoPago */
-      #mp-wallet-container { margin-top: 1rem; }
+      /* Banner de Confirmación para MercadoPago */
+      #mp-confirm-banner {
+        margin-top: 1rem;
+        padding: 0.75rem;
+        background-color: #e6f4ea;
+        border: 1px solid #38c172;
+        color: #38c172;
+        font-size: 1rem;
+        display: none;
+      }
+      /* Contenedor para el botón de MercadoPago (se mostrará debajo del resumen) */
+      #mp-button-container {
+        margin-top: 1rem;
+        display: none;
+      }
       /* Mensaje para Aplazo no disponible */
       #aplazo-message {
         color: #e3342f;
@@ -97,7 +111,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
       <section class="form-section" data-aos="fade-up" data-aos-duration="1000">
         <h2 class="mb-4 text-xl font-bold">Datos de Envío y Facturación</h2>
-        <!-- Nombre -->
+        <!-- Campo Nombre -->
         <div class="form-group">
           <label for="nombre"><i class="fas fa-user mr-2"></i>Nombre Completo</label>
           <div class="input-icon">
@@ -106,7 +120,7 @@
           </div>
           <span id="nombre-msg" class="validation-message"></span>
         </div>
-        <!-- Dirección -->
+        <!-- Campo Dirección -->
         <div class="form-group">
           <label for="direccion"><i class="fas fa-map-marker-alt mr-2"></i>Dirección</label>
           <div class="input-icon">
@@ -115,37 +129,37 @@
           </div>
           <span id="direccion-msg" class="validation-message"></span>
         </div>
-        <!-- Estado -->
+        <!-- Campo Estado -->
         <div class="form-group">
           <label for="estado"><i class="fas fa-flag mr-2"></i>Estado</label>
           <input type="text" id="estado" name="estado" placeholder="Estado" required>
           <span id="estado-msg" class="validation-message"></span>
         </div>
-        <!-- Colonia -->
+        <!-- Campo Colonia -->
         <div class="form-group">
           <label for="colonia"><i class="fas fa-map mr-2"></i>Colonia</label>
           <input type="text" id="colonia" name="colonia" placeholder="Colonia" required>
           <span id="colonia-msg" class="validation-message"></span>
         </div>
-        <!-- Ciudad -->
+        <!-- Campo Ciudad -->
         <div class="form-group">
           <label for="ciudad"><i class="fas fa-city mr-2"></i>Ciudad</label>
           <input type="text" id="ciudad" name="ciudad" placeholder="Ciudad" required>
           <span id="ciudad-msg" class="validation-message"></span>
         </div>
-        <!-- Código Postal -->
+        <!-- Campo Código Postal -->
         <div class="form-group">
           <label for="codigo_postal"><i class="fas fa-mail-bulk mr-2"></i>Código Postal</label>
           <input type="text" id="codigo_postal" name="codigo_postal" placeholder="Código Postal" required>
           <span id="codigo_msg" class="validation-message"></span>
         </div>
-        <!-- Teléfono -->
+        <!-- Campo Teléfono -->
         <div class="form-group">
           <label for="telefono"><i class="fas fa-phone mr-2"></i>Teléfono</label>
           <input type="tel" id="telefono" name="telefono" placeholder="Ej. +521234567890" required>
           <span id="telefono-msg" class="validation-message"></span>
         </div>
-        <!-- Correo -->
+        <!-- Campo Correo -->
         <div class="form-group">
           <label for="email"><i class="fas fa-envelope mr-2"></i>Correo Electrónico</label>
           <input type="email" id="email" name="email" placeholder="tu@correo.com" required>
@@ -164,27 +178,9 @@
             <option value="aplazo">Aplazo</option>
           </select>
         </div>
-        <!-- Componente de MercadoPago -->
-        <div id="mp-wallet-container" style="display: none;"></div>
-        <!-- Campos de tarjeta para Aplazo (en este flujo se muestra solo un mensaje) -->
-        <div id="card-fields" style="display: none;">
-          <div class="form-group">
-            <label for="card_number"><i class="fas fa-credit-card mr-2"></i>Número de Tarjeta</label>
-            <input type="text" id="card_number" name="card_number" placeholder="XXXX-XXXX-XXXX-XXXX" required>
-            <span id="card_number-msg" class="validation-message"></span>
-          </div>
-          <div class="form-group">
-            <label for="card_expiration"><i class="fas fa-calendar-alt mr-2"></i>Fecha de Expiración</label>
-            <input type="text" id="card_expiration" name="card_expiration" placeholder="MM/AA" required>
-            <span id="card_expiration-msg" class="validation-message"></span>
-          </div>
-          <div class="form-group">
-            <label for="card_cvc"><i class="fas fa-lock mr-2"></i>CVC</label>
-            <input type="text" id="card_cvc" name="card_cvc" placeholder="CVC" required>
-            <span id="card_cvc-msg" class="validation-message"></span>
-          </div>
-        </div>
-        <!-- Mensaje para Aplazo (en este flujo se redirige el usuario a MercadoPago, por lo que solo se muestra este mensaje si se selecciona Aplazo) -->
+        <!-- Banner de Confirmación para MercadoPago -->
+        <div id="mp-confirm-banner">Método de pago seleccionado correctamente: MercadoPago</div>
+        <!-- Mensaje para Aplazo -->
         <div id="aplazo-message">Aplazo no está disponible por el momento.</div>
       </section>
     </div>
@@ -208,13 +204,16 @@
       </div>
     </section>
 
+    <!-- Contenedor para el botón de MercadoPago (se mostrará debajo del resumen) -->
+    <div id="mp-button-container"></div>
+
     <!-- Elementos de Confianza -->
     <section class="trust-section" data-aos="fade-up" data-aos-duration="1600">
       <img src="{{ url_for('static', filename='images/sello_seguridad.png') }}" alt="Sello de Seguridad">
       <p>Compra 100% segura con encriptación SSL</p>
     </section>
 
-    <!-- Botón de Finalización -->
+    <!-- Botón de Finalizar Compra (se muestra solo si no se selecciona MercadoPago) -->
     <button type="submit" id="finalize-btn" class="checkout-btn mt-6 w-full" data-aos="fade-up" data-aos-duration="1800">
       Finalizar Compra
       <span id="spinner" class="spinner hidden"></span>
@@ -274,12 +273,12 @@
       return re.test(cvc);
     }
 
-    // Actualizar el resumen del pedido basado en el carrito almacenado
+    // Actualizar el resumen del pedido según el carrito almacenado
     const cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
     const calculateSubtotal = () => cartItems.reduce((sum, item) => sum + item.precio * item.cantidad, 0);
     const updateOrderSummary = () => {
       const subtotal = calculateSubtotal();
-      const shipping = subtotal >= 6000 ? 0 : (subtotal > 0 ? 250 : 0);
+      const shipping = subtotal >= 6000 ? 0 : (subtotal > 0 ? 1 : 0);
       const total = subtotal + shipping;
       document.getElementById('subtotal').textContent = "$" + subtotal.toFixed(2);
       document.getElementById('shipping').textContent = "$" + shipping.toFixed(2);
@@ -287,20 +286,27 @@
     };
     updateOrderSummary();
 
-    // Cambiar el texto del botón y gestionar la visualización según el método de pago
+    // Gestionar cambio en el selector de método de pago
     document.getElementById('metodo_pago').addEventListener('change', async (e) => {
       const selected = e.target.value;
       console.log("Método de pago seleccionado:", selected);
       const finalizeBtn = document.getElementById('finalize-btn');
       const cardFields = document.getElementById('card-fields');
       const mpContainer = document.getElementById('mp-wallet-container');
+      const mpButtonContainer = document.getElementById('mp-button-container');
       const aplazoMessage = document.getElementById('aplazo-message');
+      const mpConfirmBanner = document.getElementById('mp-confirm-banner');
 
       if (selected === "mercadopago") {
-        finalizeBtn.textContent = "Pagar con MercadoPago";
-        cardFields.style.display = 'none';
-        aplazoMessage.style.display = 'none';
-        mpContainer.style.display = 'block';
+        if (mpConfirmBanner) {
+          mpConfirmBanner.style.display = 'block';
+          mpConfirmBanner.textContent = "Método de pago seleccionado correctamente: MercadoPago";
+        }
+        if (finalizeBtn) finalizeBtn.style.display = 'none';
+        if (cardFields) cardFields.style.display = 'none';
+        if (aplazoMessage) aplazoMessage.style.display = 'none';
+        if (mpContainer) mpContainer.style.display = 'none';
+        if (mpButtonContainer) mpButtonContainer.style.display = 'block';
 
         if (typeof MercadoPago === "undefined") {
           console.error("Error: El SDK de MercadoPago no está definido.");
@@ -316,8 +322,9 @@
             body: JSON.stringify({
               items: [{
                 title: "Orden de Compra VALAC Joyas",
-                // En producción se usaría el total calculado
-                unit_price: 10,
+                // En producción se usaría el total calculado; descomenta la siguiente línea:
+                unit_price: parseFloat(document.getElementById('total').textContent.replace('$','')),
+                // unit_price: 10,
                 quantity: 1
               }]
             })
@@ -333,7 +340,7 @@
               return;
             }
             const mp = new MercadoPago(mpPublicKey, { locale: "es-MX" });
-            mp.bricks().create("wallet", "mp-wallet-container", {
+            mp.bricks().create("wallet", "mp-button-container", {
               initialization: { preferenceId: data.id },
               customization: { texts: { valueProp: 'smart_option' } }
             });
@@ -347,16 +354,24 @@
           alert("Error en la conexión con el servidor.");
         }
       } else if (selected === "aplazo") {
-        finalizeBtn.textContent = "Finalizar Compra";
-        mpContainer.style.display = 'none';
-        aplazoMessage.style.display = 'block';
-        cardFields.style.display = 'none';
+        if (finalizeBtn) {
+          finalizeBtn.style.display = 'block';
+          finalizeBtn.textContent = "Finalizar Compra";
+        }
+        if (mpButtonContainer) mpButtonContainer.style.display = 'none';
+        if (mpConfirmBanner) mpConfirmBanner.style.display = 'none';
+        if (cardFields) cardFields.style.display = 'none';
+        if (aplazoMessage) aplazoMessage.style.display = 'block';
         console.log("Método Aplazo seleccionado: mostrando mensaje de no disponibilidad.");
       } else {
-        finalizeBtn.textContent = "Finalizar Compra";
-        cardFields.style.display = 'none';
-        mpContainer.style.display = 'none';
-        aplazoMessage.style.display = 'none';
+        if (finalizeBtn) {
+          finalizeBtn.style.display = 'block';
+          finalizeBtn.textContent = "Finalizar Compra";
+        }
+        if (mpButtonContainer) mpButtonContainer.style.display = 'none';
+        if (mpConfirmBanner) mpConfirmBanner.style.display = 'none';
+        if (cardFields) cardFields.style.display = 'none';
+        if (aplazoMessage) aplazoMessage.style.display = 'none';
       }
     });
 

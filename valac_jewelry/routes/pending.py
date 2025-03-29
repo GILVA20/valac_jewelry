@@ -1,15 +1,13 @@
-import os
 from datetime import datetime
 from flask import Blueprint, render_template, session, flash, redirect, url_for, current_app
 
-success_bp = Blueprint('success', __name__)
+pending_bp = Blueprint('pending', __name__)
 
-@success_bp.route('/success')
-def success():
+@pending_bp.route('/pending')
+def pending():
     """
-    Se invoca cuando MercadoPago redirige al usuario tras un pago aprobado.
-    Extrae los datos de la orden e ítems desde la sesión, registra la orden en la BD
-    y renderiza el resumen de la compra.
+    Se invoca cuando el pago está en proceso.
+    Se registra la orden con estado de pago 'Pendiente' y se muestra una página informativa.
     """
     order_data = session.get("order_data")
     order_items = session.get("order_items")
@@ -18,8 +16,10 @@ def success():
         flash("No se encontraron datos de la orden. Por favor, completa el proceso de compra nuevamente.", "error")
         return redirect(url_for('checkout.checkout'))
     
+    # Actualizamos la fecha del pedido y establecemos estado de pago "Pendiente"
     order_data["fecha_pedido"] = datetime.utcnow().isoformat()
-    # Registrar la orden en la BD
+    order_data["estado_pago"] = "Pendiente"
+    
     orders_response = current_app.supabase.table("orders").insert(order_data).execute()
     if orders_response.error:
         flash("Error al registrar la orden en la base de datos.", "error")
@@ -27,16 +27,13 @@ def success():
     
     order_id = orders_response.data[0]["id"]
     
-    # Registrar cada ítem en order_items
     for item in order_items:
         item["order_id"] = order_id
         response_item = current_app.supabase.table("order_items").insert(item).execute()
         if response_item.error:
             flash("Error al registrar algunos ítems de la orden.", "error")
-            # Aquí podrías implementar lógica de rollback o notificación
     
     session.pop("order_data", None)
     session.pop("order_items", None)
     
-    # Renderiza la plantilla de resumen (por ejemplo, order_summary.html o order_success.html)
-    return render_template("order_summary.html", order=order_data, order_items=order_items, order_id=order_id)
+    return render_template("pago_en_proceso.html", order_data=order_data, order_id=order_id)

@@ -5,11 +5,10 @@ from flask_admin import Admin
 from supabase import create_client
 from dotenv import load_dotenv
 from flask_login import LoginManager
-# La segunda importación de Flask ya no es necesaria, se puede omitir
 
 # Cargar variables de entorno desde el archivo .env
-load_dotenv()
-
+load_dotenv(override=True)
+print(f"DEBUG:valac_jewelry:FLASK_ENV: {os.getenv('FLASK_ENV')}") #para verificar el valor cargado.
 logging.basicConfig(level=logging.DEBUG)
 
 def create_app():
@@ -23,12 +22,9 @@ def create_app():
     # Redirigir HTTP a HTTPS y 'valacjoyas.com' a 'www.valacjoyas.com'
     @app.before_request
     def enforce_https_and_www():
-        # Redirigir HTTP a HTTPS
         if request.headers.get('X-Forwarded-Proto') == 'http':
             url = request.url.replace('http://', 'https://', 1)
             return redirect(url, code=301)
-        
-        # Redirigir 'valacjoyas.com' a 'www.valacjoyas.com'
         if request.host == 'valacjoyas.com':
             url = request.url.replace('valacjoyas.com', 'www.valacjoyas.com', 1)
             return redirect(url, code=301)
@@ -42,9 +38,15 @@ def create_app():
         app.config.from_object(DevelopmentConfig)
         logging.debug("Cargando configuración de desarrollo")
     
-    # Registrar todas las variables de entorno en el logger (no se imprimen directamente en consola)
+    # Registrar todas las variables de entorno en el logger
     for key, value in os.environ.items():
         app.logger.debug(f"{key} = {value}")
+    
+    # Debug: imprimir credenciales de MercadoPago y el valor de SIMULAR_PAGO
+    app.logger.debug("FLASK_ENV: %s", os.getenv("FLASK_ENV"))
+    app.logger.debug("SIMULAR_PAGO: %s", app.config.get("SIMULAR_PAGO"))
+    app.logger.debug("MP_ACCESS_TOKEN: %s", app.config.get("MP_ACCESS_TOKEN"))
+    app.logger.debug("MP_PUBLIC_KEY: %s", app.config.get("MP_PUBLIC_KEY"))
     
     # Inicializa el cliente de Supabase y lo asigna a la app
     supabase_url = app.config.get("SUPABASE_URL")
@@ -59,8 +61,7 @@ def create_app():
     # Inicializar Flask-Login
     login_manager = LoginManager()
     login_manager.init_app(app)
-    login_manager.login_view = 'auth.login'  # Vista de login en el blueprint de autenticación
-
+    login_manager.login_view = 'auth.login'
     @login_manager.user_loader
     def load_user(user_id):
         from .auth import AdminUser
@@ -88,7 +89,12 @@ def create_app():
     from .routes.success import success_bp
     app.register_blueprint(success_bp)
 
-    
+    from .routes.failure import failure_bp
+    app.register_blueprint(failure_bp)
+
+    from .routes.pending import pending_bp
+    app.register_blueprint(pending_bp)
+
     from .routes.contact import contact_bp
     app.register_blueprint(contact_bp)
     
@@ -108,5 +114,4 @@ def create_app():
 
 if __name__ == '__main__':
     app = create_app()
-    # Nota: en producción usa Gunicorn u otro servidor WSGI
     app.run(debug=True)

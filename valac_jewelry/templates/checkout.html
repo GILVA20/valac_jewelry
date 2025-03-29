@@ -438,6 +438,10 @@
       finalizeBtn.classList.add('loading');
       document.getElementById('spinner').classList.remove('hidden');
     });
+    
+    // ✨ ADDITIONS ✨: Debug: Environment mode and MP public key (test/prod)
+    console.log("DEBUG: Environment mode (backend flag 'sandbox'): ", "{{ sandbox if sandbox is defined else 'prod' }}");
+    console.log("DEBUG: MP_PUBLIC_KEY used: ", "{{ config['MP_PUBLIC_KEY'] }}");
   };
 </script>
 {% endblock %}

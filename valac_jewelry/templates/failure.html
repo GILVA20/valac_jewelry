@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}
+  Pago Rechazado - VALAC Joyas
+{% endblock %}
+
+{% block content %}
+<main class="container mx-auto p-6">
+  <h1 class="text-3xl font-bold mb-4">Pago Rechazado</h1>
+  <p>Lo sentimos, tu pago ha sido rechazado. Por favor, revisa los datos y vuelve a intentarlo.</p>
+  <a href="{{ url_for('cart.view_cart') }}" class="mt-6 inline-block bg-red-600 text-white px-4 py-2 rounded">
+    Regresar al Carrito
+  </a>
+</main>
+{% endblock %}

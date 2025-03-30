@@ -1,4 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, session, current_app
+
 mock_checkout_bp = Blueprint('mock_checkout', __name__, url_prefix='/mock-checkout')
 
 @mock_checkout_bp.route('/', methods=['GET'])
@@ -70,15 +71,23 @@ def simulate():
             return redirect(url_for("checkout.checkout"))
     
     flash("Simulación de pago procesada.", "success")
-    current_app.logger.debug("MOCK_CHECKOUT SIMULATE: Preparando redirección a success.")
-    
-    # Diagnóstico: loguear la URL generada para la redirección
-    target_url = url_for("success.success", _external=True)
+    current_app.logger.debug("MOCK_CHECKOUT SIMULATE: Preparando redirección según status: %s", status)
+
+    # Seleccionar la ruta de destino según el estado simulado
+    if status == "success":
+        target_endpoint = "success.success"
+    elif status == "pending":
+        target_endpoint = "pending.pending"
+    elif status == "failure":
+        target_endpoint = "failure.failure"
+    else:
+        target_endpoint = "main.home"
+
+    target_url = url_for(target_endpoint, _external=True)
     current_app.logger.debug("MOCK_CHECKOUT SIMULATE: URL generada para redirección: %s", target_url)
-    
-    # Chequeo de existencia de la ruta generada
+
     if not target_url:
-        current_app.logger.error("La ruta 'success.success' no existe. Redirigiendo a home.")
+        current_app.logger.error("La ruta %s no existe. Redirigiendo a home.", target_endpoint)
         return redirect(url_for("main.home"))
-    
+
     return redirect(target_url)

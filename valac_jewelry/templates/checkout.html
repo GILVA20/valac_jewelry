@@ -176,6 +176,7 @@
             <option value="" disabled selected>-- Elige una opción --</option>
             <option value="mercadopago">MercadoPago</option>
             <option value="aplazo">Aplazo</option>
+            <option value="mock_gateway">Pago Simulado</option>
           </select>
         </div>
         <!-- Banner de Confirmación para MercadoPago -->
@@ -286,94 +287,136 @@
     };
     updateOrderSummary();
 
-    // Gestionar cambio en el selector de método de pago
-    document.getElementById('metodo_pago').addEventListener('change', async (e) => {
-      const selected = e.target.value;
-      console.log("Método de pago seleccionado:", selected);
-      const finalizeBtn = document.getElementById('finalize-btn');
-      const cardFields = document.getElementById('card-fields');
-      const mpContainer = document.getElementById('mp-wallet-container');
-      const mpButtonContainer = document.getElementById('mp-button-container');
-      const aplazoMessage = document.getElementById('aplazo-message');
-      const mpConfirmBanner = document.getElementById('mp-confirm-banner');
+    // --- INTEGRACIÓN DEL AUTORELLENADO SIMULADO ---
+    (function() {
+      // Solo se ejecuta si SIMULAR_PAGO está activado en el entorno (SIMULAR_PAGO=true)
+      var simularPago = "{{ config['SIMULAR_PAGO'] }}" === "true";
 
-      if (selected === "mercadopago") {
-        if (mpConfirmBanner) {
-          mpConfirmBanner.style.display = 'block';
-          mpConfirmBanner.textContent = "Método de pago seleccionado correctamente: MercadoPago";
-        }
-        if (finalizeBtn) finalizeBtn.style.display = 'none';
-        if (cardFields) cardFields.style.display = 'none';
-        if (aplazoMessage) aplazoMessage.style.display = 'none';
-        if (mpContainer) mpContainer.style.display = 'none';
-        if (mpButtonContainer) mpButtonContainer.style.display = 'block';
-
-        if (typeof MercadoPago === "undefined") {
-          console.error("Error: El SDK de MercadoPago no está definido.");
-          alert("Error: El SDK de MercadoPago no está disponible. Por favor, recarga la página.");
-          return;
-        }
-
-        try {
-          console.log("Realizando llamada AJAX para crear la preferencia...");
-          const response = await fetch("{{ url_for('mp_checkout.create_preference') }}", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              items: [{
-                title: "Orden de Compra VALAC Joyas",
-                // En producción se usaría el total calculado; descomenta la siguiente línea:
-                unit_price: parseFloat(document.getElementById('total').textContent.replace('$','')),
-                // unit_price: 10,
-                quantity: 1
-              }]
-            })
-          });
-          const data = await response.json();
-          console.log("Respuesta de preferencia:", data);
-          if (data.id) {
-            console.log("Preference ID recibido:", data.id);
-            const mpPublicKey = "{{ config['MP_PUBLIC_KEY'] }}";
-            if (!mpPublicKey || mpPublicKey.trim() === "") {
-              console.error("Error: La clave pública MP_PUBLIC_KEY no está definida.");
-              alert("Error: La clave pública MP_PUBLIC_KEY no está configurada en el entorno.");
-              return;
-            }
-            const mp = new MercadoPago(mpPublicKey, { locale: "es-MX" });
-            mp.bricks().create("wallet", "mp-button-container", {
-              initialization: { preferenceId: data.id },
-              customization: { texts: { valueProp: 'smart_option' } }
-            });
-            console.log("Componente Wallet renderizado correctamente.");
-          } else {
-            console.error("Error al crear la preferencia:", data);
-            alert("Error al crear la preferencia de pago.");
-          }
-        } catch (error) {
-          console.error("Error en la llamada AJAX:", error);
-          alert("Error en la conexión con el servidor.");
-        }
-      } else if (selected === "aplazo") {
-        if (finalizeBtn) {
-          finalizeBtn.style.display = 'block';
-          finalizeBtn.textContent = "Finalizar Compra";
-        }
-        if (mpButtonContainer) mpButtonContainer.style.display = 'none';
-        if (mpConfirmBanner) mpConfirmBanner.style.display = 'none';
-        if (cardFields) cardFields.style.display = 'none';
-        if (aplazoMessage) aplazoMessage.style.display = 'block';
-        console.log("Método Aplazo seleccionado: mostrando mensaje de no disponibilidad.");
-      } else {
-        if (finalizeBtn) {
-          finalizeBtn.style.display = 'block';
-          finalizeBtn.textContent = "Finalizar Compra";
-        }
-        if (mpButtonContainer) mpButtonContainer.style.display = 'none';
-        if (mpConfirmBanner) mpConfirmBanner.style.display = 'none';
-        if (cardFields) cardFields.style.display = 'none';
-        if (aplazoMessage) aplazoMessage.style.display = 'none';
+      // Comprueba si el formulario está vacío (no sobrescribir datos existentes)
+      function formularioVacio() {
+        var campos = ['nombre', 'direccion', 'estado', 'colonia', 'ciudad', 'codigo_postal', 'telefono', 'email'];
+        return campos.every(function(id) {
+          var campo = document.getElementById(id);
+          return campo && campo.value.trim() === "";
+        });
       }
-    });
+
+      function randomElement(arr) {
+        return arr[Math.floor(Math.random() * arr.length)];
+      }
+
+      function randomInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+      }
+
+      // Generar un código postal válido según el estado
+      function generarCodigoPostal(estado) {
+        var rangos = {
+          "CDMX": { min: 1000, max: 16999 },
+          "Jalisco": { min: 44100, max: 44999 },
+          "Nuevo León": { min: 64000, max: 64999 }
+        };
+        if (rangos[estado]) {
+          return String(randomInt(rangos[estado].min, rangos[estado].max)).padStart(5, '0');
+        } else {
+          return String(randomInt(10000, 99999));
+        }
+      }
+
+      // Generar teléfono en formato +52 y 10 dígitos
+      function generarTelefono() {
+        var digitos = String(randomInt(1,9));
+        for (var i = 0; i < 9; i++) {
+          digitos += String(randomInt(0,9));
+        }
+        return "+52" + digitos;
+      }
+
+      // Generar email a partir del nombre
+      function generarEmail(nombre) {
+        var sinAcentos = nombre.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        var partes = sinAcentos.toLowerCase().split(" ");
+        var base = partes.join(".");
+        var dominios = ["gmail.com", "hotmail.com", "outlook.com"];
+        return base + "@" + randomElement(dominios);
+      }
+
+      function rellenarDatosSimulados() {
+        // Datos demográficos reales de México
+        var estados = {
+          "CDMX": ["Cuauhtémoc", "Benito Juárez", "Miguel Hidalgo"],
+          "Jalisco": ["Guadalajara", "Zapopan", "Tlaquepaque"],
+          "Nuevo León": ["Monterrey", "San Nicolás", "Guadalupe"]
+        };
+
+        // Generar nombre realista
+        var nombres = ["Juan", "María", "Carlos", "Ana", "Luis", "Sofía", "José"];
+        var apellidos = ["García", "Rodríguez", "Hernández", "López", "Martínez", "González"];
+        var nombreCompleto = randomElement(nombres) + " " + randomElement(apellidos) + " " + randomElement(apellidos);
+
+        // Seleccionar estado y colonia coherente
+        var estadosKeys = Object.keys(estados);
+        var estadoSeleccionado = randomElement(estadosKeys);
+        var coloniaSeleccionada = randomElement(estados[estadoSeleccionado]);
+        
+        // Generar dirección en formato "Calle [número] Colonia [nombre]"
+        var numeroCalle = randomInt(1, 200);
+        var direccionGenerada = "Calle " + numeroCalle + " Colonia " + coloniaSeleccionada;
+        
+        // Generar código postal válido
+        var codigoPostalGenerado = generarCodigoPostal(estadoSeleccionado);
+        
+        // Generar teléfono
+        var telefonoGenerado = generarTelefono();
+        
+        // Generar email
+        var emailGenerado = generarEmail(nombreCompleto);
+        
+        // Rellenar los campos
+        document.getElementById('nombre').value = nombreCompleto;
+        document.getElementById('direccion').value = direccionGenerada;
+        document.getElementById('estado').value = estadoSeleccionado;
+        document.getElementById('colonia').value = coloniaSeleccionada;
+        var ciudadesPorEstado = {
+          "CDMX": "Ciudad de México",
+          "Jalisco": "Guadalajara",
+          "Nuevo León": "Monterrey"
+        };
+        document.getElementById('ciudad').value = ciudadesPorEstado[estadoSeleccionado] || "Ciudad";
+        document.getElementById('codigo_postal').value = codigoPostalGenerado;
+        document.getElementById('telefono').value = telefonoGenerado;
+        document.getElementById('email').value = emailGenerado;
+        
+        // Disparar eventos 'input' para activar validaciones visuales
+        var campos = ['nombre', 'direccion', 'estado', 'colonia', 'ciudad', 'codigo_postal', 'telefono', 'email'];
+        campos.forEach(function(id) {
+          var evt = new Event('input', { bubbles: true });
+          document.getElementById(id).dispatchEvent(evt);
+        });
+        
+        console.log("Datos simulados generados:", {
+          nombre: nombreCompleto,
+          direccion: direccionGenerada,
+          estado: estadoSeleccionado,
+          colonia: coloniaSeleccionada,
+          ciudad: document.getElementById('ciudad').value,
+          codigo_postal: codigoPostalGenerado,
+          telefono: telefonoGenerado,
+          email: emailGenerado
+        });
+      }
+
+      function activarRellenoSimulado() {
+        var metodoPago = document.getElementById('metodo_pago').value;
+        if (metodoPago === "mock_gateway" && formularioVacio()) {
+          console.log("Ejecutando relleno de datos simulados para 'Pago Simulado'.");
+          rellenarDatosSimulados();
+        }
+      }
+      document.getElementById('metodo_pago').addEventListener('change', activarRellenoSimulado);
+      setTimeout(activarRellenoSimulado, 500);
+    })();
+    // --- FIN AUTORELLENADO SIMULADO ---
 
     // Validación en tiempo real de Email
     document.getElementById('email').addEventListener('input', (e) => {

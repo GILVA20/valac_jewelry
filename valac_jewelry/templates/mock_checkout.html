@@ -1,0 +1,18 @@
+<!-- templates/mock_checkout.html -->
+{% extends "base.html" %}
+
+{% block title %}Simular Pago - VALAC Joyas{% endblock %}
+
+{% block content %}
+<main class="container mx-auto p-6 pt-24">
+  <h1 class="text-2xl font-bold mb-4">Simulación de Pago</h1>
+  <p>Orden ID: {{ order_id }}</p>
+  <p>Selecciona el resultado de la simulación:</p>
+  <form action="{{ url_for('mock_checkout.simulate') }}" method="POST">
+    <input type="hidden" name="order_id" value="{{ order_id }}">
+    <button type="submit" name="status" value="success" class="bg-green-500 text-white p-2 m-2 rounded">✅ Simular Éxito</button>
+    <button type="submit" name="status" value="pending" class="bg-yellow-500 text-white p-2 m-2 rounded">🔄 Simular Pendiente</button>
+    <button type="submit" name="status" value="failure" class="bg-red-500 text-white p-2 m-2 rounded">❌ Simular Fallo</button>
+  </form>
+</main>
+{% endblock %}

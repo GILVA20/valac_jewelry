@@ -1,14 +1,47 @@
 {% extends "base.html" %}
 {% block title %}
-  Pago Rechazado - VALAC Joyas
+  Pago Fallido - VALAC Joyas
 {% endblock %}
 
 {% block content %}
-<main class="container mx-auto p-6">
-  <h1 class="text-3xl font-bold mb-4">Pago Rechazado</h1>
-  <p>Lo sentimos, tu pago ha sido rechazado. Por favor, revisa los datos y vuelve a intentarlo.</p>
-  <a href="{{ url_for('cart.view_cart') }}" class="mt-6 inline-block bg-red-600 text-white px-4 py-2 rounded">
-    Regresar al Carrito
-  </a>
+<main class="container mx-auto p-6 pt-24">
+  <div class="bg-white shadow-md rounded p-6 text-center">
+    <!-- Icono de error (Font Awesome) -->
+    <div class="text-red-500 mb-4">
+      <i class="fas fa-times-circle fa-4x"></i>
+    </div>
+    
+    <h1 class="text-3xl font-bold mb-4">Pago No Procesado</h1>
+    <p class="mb-6">Hubo un problema al procesar tu pago. Por favor, intenta nuevamente.</p>
+    
+    <!-- Resumen Básico -->
+    <div class="border-t pt-4 mb-6 text-left">
+      <h2 class="text-xl font-semibold mb-2">Detalles del Error</h2>
+      <p><strong>ID de Orden:</strong> {{ order.id }}</p>
+      <p><strong>Motivo:</strong> Pago rechazado por el procesador</p>
+      <p><strong>Método de Pago:</strong> {{ order.método_pago }}</p>
+      <p><strong>Total:</strong> ${{ order.total }}</p>
+    </div>
+
+    <!-- Soluciones -->
+    <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 text-left">
+      <p class="font-semibold">¿Cómo resolverlo?</p>
+      <ul class="list-disc pl-5 mt-2">
+        <li>Verifica los datos de tu método de pago.</li>
+        <li>Intenta con otra tarjeta o método de pago.</li>
+        <li>Contacta a tu banco si el problema persiste.</li>
+      </ul>
+    </div>
+
+    <!-- Botones -->
+    <div class="flex flex-col sm:flex-row justify-center gap-4 mt-8">
+      <a href="{{ url_for('main.home') }}" class="bg-gray-600 text-white px-6 py-3 rounded hover:bg-gray-700 transition">
+        Volver al Inicio
+      </a>
+      <a href="{{ url_for('checkout.checkout') }}" class="bg-yellow-600 text-white px-6 py-3 rounded hover:bg-yellow-700 transition">
+        Reintentar Pago
+      </a>
+    </div>
+  </div>
 </main>
 {% endblock %}

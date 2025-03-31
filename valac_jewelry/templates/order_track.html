@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+
+{% block title %}
+  Seguimiento de Pedido - VALAC Joyas
+{% endblock %}
+
+{% block content %}
+<main class="container mx-auto p-6 pt-24">
+  <h1 class="text-3xl font-bold mb-4">Seguimiento de Pedido</h1>
+  <div class="border p-4 rounded mb-6">
+    <ul class="list-disc pl-6">
+      <li><strong>ID de Orden:</strong> {{ order.id }}</li>
+      <li><strong>Nombre:</strong> {{ order.nombre }}</li>
+      <li><strong>Estado de Pago:</strong> {{ order.estado_pago }}</li>
+      <li><strong>Dirección de Envío:</strong> {{ order.dirección_envío }}</li>
+      <li><strong>Colonia:</strong> {{ order.colonia }}</li>
+      <li><strong>Ciudad:</strong> {{ order.ciudad }}</li>
+      <li><strong>Código Postal:</strong> {{ order.codigo_postal }}</li>
+      <li><strong>Teléfono:</strong> {{ order.telefono }}</li>
+      <li><strong>Email:</strong> {{ order.email }}</li>
+      <li><strong>Total:</strong> ${{ order.total }}</li>
+    </ul>
+  </div>
+  <a href="{{ url_for('main.home') }}" class="bg-blue-600 text-white px-6 py-3 rounded hover:bg-blue-700 transition">
+    Volver al Inicio
+  </a>
+</main>
+{% endblock %}

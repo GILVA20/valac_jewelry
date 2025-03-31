@@ -6,6 +6,38 @@
 
 {% block content %}
 <main class="pt-24 container mx-auto p-6">
+  <!-- Breadcrumb para el proceso de checkout -->
+  <nav class="mb-6 text-sm text-gray-600" aria-label="Breadcrumb">
+    <ol class="list-reset flex">
+      <li><a href="{{ url_for('cart.view_cart') }}" class="text-blue-600 hover:underline">Carrito</a></li>
+      <li><span class="mx-2">></span></li>
+      <li><a href="{{ url_for('checkout.checkout') }}" class="text-blue-600 hover:underline">Datos</a></li>
+      <li><span class="mx-2">></span></li>
+      <li class="text-gray-500">Pago</li>
+      <li><span class="mx-2">></span></li>
+      <li class="text-gray-500">Confirmación</li>
+    </ol>
+  </nav>
+
+  <!-- Resumen del Pedido y mensaje para revisar antes de pagar -->
+  <section class="mb-8 p-4 bg-gray-100 rounded-md">
+    <h2 class="text-lg font-bold mb-2">Revise su pedido antes de pagar</h2>
+    <div id="order-details">
+      <div class="flex justify-between mb-1">
+        <span>Subtotal:</span>
+        <span id="subtotal">$0.00</span>
+      </div>
+      <div class="flex justify-between mb-1">
+        <span>Envío:</span>
+        <span id="shipping">$0.00</span>
+      </div>
+      <div class="flex justify-between font-bold border-t pt-1">
+        <span>Total:</span>
+        <span id="total">$0.00</span>
+      </div>
+    </div>
+  </section>
+
   <form id="checkout-form" method="POST" action="{{ url_for('checkout.checkout') }}">
     <!-- Estilos generales y específicos para el formulario -->
     <style>
@@ -55,7 +87,7 @@
         padding-top: 1.5rem;
         margin-bottom: 1.5rem;
       }
-      /* Botón Finalizar (se muestra solo si no se selecciona MercadoPago) */
+      /* Botón Finalizar: se muestra si no se usa el brick de MercadoPago */
       #finalize-btn {
         transition: background-color 0.5s, transform 0.3s, box-shadow 0.3s;
         font-size: 1.2rem;
@@ -64,13 +96,18 @@
         border-radius: 0.5rem;
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
         width: 100%;
+        background-color: #d5a300;  /* color primario (amarillo) */
+        color: #333;
       }
       #finalize-btn.loading {
         background-color: #967700;
         cursor: not-allowed;
         transform: scale(0.98);
       }
-      #finalize-btn:hover { box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2); }
+      #finalize-btn:hover { 
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);
+        transform: scale(1.02);
+      }
       .spinner {
         border: 2px solid #f3f3f3;
         border-top: 2px solid #fff;
@@ -93,10 +130,16 @@
         font-size: 1rem;
         display: none;
       }
-      /* Contenedor para el botón de MercadoPago (se mostrará debajo del resumen) */
+      /* Contenedor para el botón de MercadoPago */
       #mp-button-container {
-        margin-top: 1rem;
-        display: none;
+        margin-top: 20vh;  /* Ubica el botón a 20% de la altura del viewport */
+        display: flex;
+        justify-content: center;
+      }
+      @media (max-width: 768px) {
+        #mp-button-container {
+          margin-top: 15vh; /* Ajuste para móviles */
+        }
       }
       /* Mensaje para Aplazo no disponible */
       #aplazo-message {
@@ -186,37 +229,19 @@
       </section>
     </div>
 
-    <!-- Resumen del Pedido -->
-    <section class="form-section order-summary" data-aos="fade-up" data-aos-duration="1400">
-      <h2 class="mb-4 text-xl font-bold">Resumen del Pedido</h2>
-      <div id="order-details">
-        <div class="flex justify-between mb-2">
-          <span>Subtotal:</span>
-          <span id="subtotal">$0.00</span>
-        </div>
-        <div class="flex justify-between mb-2">
-          <span>Envío:</span>
-          <span id="shipping">$0.00</span>
-        </div>
-        <div class="flex justify-between" style="border-top: 1px solid #d4d4d4; padding-top: 0.5rem;">
-          <span>Total:</span>
-          <span id="total">$0.00</span>
-        </div>
-      </div>
-    </section>
-
-    <!-- Contenedor para el botón de MercadoPago (se mostrará debajo del resumen) -->
+    <!-- Contenedor para el botón de MercadoPago (este se usará en vez del botón final si se activa MercadoPago) -->
     <div id="mp-button-container"></div>
 
-    <!-- Elementos de Confianza -->
-    <section class="trust-section" data-aos="fade-up" data-aos-duration="1600">
-      <img src="{{ url_for('static', filename='images/sello_seguridad.png') }}" alt="Sello de Seguridad">
-      <p>Compra 100% segura con encriptación SSL</p>
+    <!-- Elementos de Confianza: Aquí se incluye un sello de seguridad y se podría agregar un testimonio o mini-carrito -->
+    <section class="trust-section text-center mt-8" data-aos="fade-up" data-aos-duration="1600">
+      <img src="{{ url_for('static', filename='images/sello_seguridad.png') }}" alt="Sello de Seguridad" class="mx-auto mb-2" style="max-width: 100px;">
+      <p class="text-sm text-gray-600">Compra 100% segura con encriptación SSL</p>
+      <p class="mt-2 italic text-sm text-gray-700">"¡Más de 10,000 pagos procesados con seguridad!"</p>
     </section>
 
-    <!-- Botón de Finalizar Compra (se muestra solo si no se selecciona MercadoPago) -->
+    <!-- Botón de Finalizar Compra (si no se usa el brick de MercadoPago) -->
     <button type="submit" id="finalize-btn" class="checkout-btn mt-6 w-full" data-aos="fade-up" data-aos-duration="1800">
-      Finalizar Compra
+      Finalizar compra (MercadoPago)
       <span id="spinner" class="spinner hidden"></span>
     </button>
   </form>
@@ -289,10 +314,8 @@
 
     // --- INTEGRACIÓN DEL AUTORELLENADO SIMULADO ---
     (function() {
-      // Solo se ejecuta si SIMULAR_PAGO está activado en el entorno (SIMULAR_PAGO=true)
       var simularPago = "{{ config['SIMULAR_PAGO'] }}" === "true";
 
-      // Comprueba si el formulario está vacío (no sobrescribir datos existentes)
       function formularioVacio() {
         var campos = ['nombre', 'direccion', 'estado', 'colonia', 'ciudad', 'codigo_postal', 'telefono', 'email'];
         return campos.every(function(id) {
@@ -309,7 +332,6 @@
         return Math.floor(Math.random() * (max - min + 1)) + min;
       }
 
-      // Generar un código postal válido según el estado
       function generarCodigoPostal(estado) {
         var rangos = {
           "CDMX": { min: 1000, max: 16999 },
@@ -323,7 +345,6 @@
         }
       }
 
-      // Generar teléfono en formato +52 y 10 dígitos
       function generarTelefono() {
         var digitos = String(randomInt(1,9));
         for (var i = 0; i < 9; i++) {
@@ -332,7 +353,6 @@
         return "+52" + digitos;
       }
 
-      // Generar email a partir del nombre
       function generarEmail(nombre) {
         var sinAcentos = nombre.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
         var partes = sinAcentos.toLowerCase().split(" ");
@@ -342,37 +362,27 @@
       }
 
       function rellenarDatosSimulados() {
-        // Datos demográficos reales de México
         var estados = {
           "CDMX": ["Cuauhtémoc", "Benito Juárez", "Miguel Hidalgo"],
           "Jalisco": ["Guadalajara", "Zapopan", "Tlaquepaque"],
           "Nuevo León": ["Monterrey", "San Nicolás", "Guadalupe"]
         };
 
-        // Generar nombre realista
         var nombres = ["Juan", "María", "Carlos", "Ana", "Luis", "Sofía", "José"];
         var apellidos = ["García", "Rodríguez", "Hernández", "López", "Martínez", "González"];
         var nombreCompleto = randomElement(nombres) + " " + randomElement(apellidos) + " " + randomElement(apellidos);
 
-        // Seleccionar estado y colonia coherente
         var estadosKeys = Object.keys(estados);
         var estadoSeleccionado = randomElement(estadosKeys);
         var coloniaSeleccionada = randomElement(estados[estadoSeleccionado]);
-        
-        // Generar dirección en formato "Calle [número] Colonia [nombre]"
+
         var numeroCalle = randomInt(1, 200);
         var direccionGenerada = "Calle " + numeroCalle + " Colonia " + coloniaSeleccionada;
-        
-        // Generar código postal válido
+
         var codigoPostalGenerado = generarCodigoPostal(estadoSeleccionado);
-        
-        // Generar teléfono
         var telefonoGenerado = generarTelefono();
-        
-        // Generar email
         var emailGenerado = generarEmail(nombreCompleto);
-        
-        // Rellenar los campos
+
         document.getElementById('nombre').value = nombreCompleto;
         document.getElementById('direccion').value = direccionGenerada;
         document.getElementById('estado').value = estadoSeleccionado;
@@ -386,14 +396,13 @@
         document.getElementById('codigo_postal').value = codigoPostalGenerado;
         document.getElementById('telefono').value = telefonoGenerado;
         document.getElementById('email').value = emailGenerado;
-        
-        // Disparar eventos 'input' para activar validaciones visuales
+
         var campos = ['nombre', 'direccion', 'estado', 'colonia', 'ciudad', 'codigo_postal', 'telefono', 'email'];
         campos.forEach(function(id) {
           var evt = new Event('input', { bubbles: true });
           document.getElementById(id).dispatchEvent(evt);
         });
-        
+
         console.log("Datos simulados generados:", {
           nombre: nombreCompleto,
           direccion: direccionGenerada,
@@ -481,10 +490,34 @@
       finalizeBtn.classList.add('loading');
       document.getElementById('spinner').classList.remove('hidden');
     });
-    
+
     // ✨ ADDITIONS ✨: Debug: Environment mode and MP public key (test/prod)
     console.log("DEBUG: Environment mode (backend flag 'sandbox'): ", "{{ sandbox if sandbox is defined else 'prod' }}");
     console.log("DEBUG: MP_PUBLIC_KEY used: ", "{{ config['MP_PUBLIC_KEY'] }}");
+
+    // FIX: Render Wallet Brick con estilo compacto y posicionado a una altura adecuada
+    const preferenceId = "{{ preference_id|default('') }}";
+    if (preferenceId) {
+      const mpButtonContainer = document.getElementById("mp-button-container");
+      mpButtonContainer.style.display = "flex";
+      const mp = new MercadoPago("{{ config['MP_PUBLIC_KEY'] }}", { locale: "es-MX" });
+      mp.bricks().create("wallet", "mp-button-container", {
+        initialization: { preferenceId: preferenceId },
+        customization: {
+          visual: {
+            buttonBackground: "#003a80",  // color secundario azul oscuro
+            textColor: "#ffffff",
+            borderRadius: "6px"
+          },
+          texts: {
+            action: "pay",
+            valueProp: "Paga con seguridad"
+          }
+        }
+      });
+    } else {
+      console.warn("No se ha definido un 'preference_id'. El botón de MercadoPago no se mostrará.");
+    }
   };
 </script>
 {% endblock %}

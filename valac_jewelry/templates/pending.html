@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}
+  Pago Pendiente - VALAC Joyas
+{% endblock %}
+
+{% block content %}
+<main class="container mx-auto p-6 pt-24">
+  <div class="bg-white shadow-md rounded p-6 text-center">
+    <!-- Icono de reloj (Font Awesome) -->
+    <div class="text-yellow-500 mb-4">
+      <i class="fas fa-clock fa-4x"></i>
+    </div>
+    
+    <h1 class="text-3xl font-bold mb-4">Pago Pendiente de Confirmación</h1>
+    <p class="mb-6">Tu pago está siendo procesado. Te notificaremos por correo cuando se complete.</p>
+    
+    <!-- Resumen Básico -->
+    <div class="border-t pt-4 mb-6 text-left">
+      <h2 class="text-xl font-semibold mb-2">Detalles de la Orden</h2>
+      <p><strong>ID de Orden:</strong> {{ order.id }}</p>
+      <p><strong>Total:</strong> ${{ order.total }}</p>
+      <p><strong>Método de Pago:</strong> {{ order.método_pago }}</p>
+    </div>
+
+    <!-- Instrucciones -->
+    <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 mb-6 text-left">
+      <p class="font-semibold">¿Qué hacer ahora?</p>
+      <ul class="list-disc pl-5 mt-2">
+        <li>Revisa tu correo electrónico (<strong>{{ order.email }}</strong>) para actualizaciones.</li>
+        <li>Este proceso puede tardar hasta 48 horas.</li>
+        <li>Si tienes dudas, contáctanos en <strong>valacjoyas@gmail.com</strong>.</li>
+      </ul>
+    </div>
+
+    <!-- Botones -->
+    <div class="flex flex-col sm:flex-row justify-center gap-4 mt-8">
+      <a href="{{ url_for('main.home') }}" class="bg-gray-600 text-white px-6 py-3 rounded hover:bg-gray-700 transition">
+        Volver al Inicio
+      </a>
+      <a href="{{ url_for('orders.track', order_id=order.id) }}" class="bg-blue-600 text-white px-6 py-3 rounded hover:bg-blue-700 transition">
+        Ver Estado de la Orden
+      </a>
+    </div>
+  </div>
+</main>
+{% endblock %}
+

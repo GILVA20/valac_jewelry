@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Pago en Proceso - VALAC Joyas{% endblock %}
+{% block content %}
+<main class="container mx-auto p-6 text-center">
+  <h1 class="text-2xl font-bold mb-4">Su pago está siendo procesado</h1>
+  <p class="mb-6">Hemos recibido su orden y estamos a la espera de la confirmación del pago. Esto puede tardar hasta el tiempo establecido por MercadoPago.</p>
+  <a href="{{ url_for('home') }}" class="btn btn-primary">Volver a la tienda</a>
+  <a href="{{ url_for('order_status', order_id=order_data.id) }}" class="btn btn-secondary ml-4">Consultar Estado de mi Orden</a>
+</main>
+{% endblock %}

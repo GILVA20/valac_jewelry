@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block title %}
+  Pagar con MercadoPago - VALAC Joyas
+{% endblock %}
+
+{% block content %}
+<main class="container mx-auto p-6">
+  <h1 class="text-3xl font-bold mb-4">Realiza tu pago</h1>
+  <!-- Contenedor donde se renderizará el componente Wallet de MercadoPago -->
+  <div id="wallet_container"></div>
+  <!-- Contenedor para mostrar mensajes de error detallados -->
+  <div id="mp-error" class="text-red-600 mt-4" style="display:none;"></div>
+</main>
+{% endblock %}
+
+{% block scripts_extra %}
+  <!-- Cargar el SDK de MercadoPago de forma asíncrona y con defer -->
+  <script src="https://sdk.mercadopago.com/js/v2" async defer></script>
+  <script>
+    window.onload = function() {
+      console.log("Window fully loaded in checkout.");
+      AOS.init();
+      console.log("AOS initialized globally.");
+
+      // Error 1: Verificar si el SDK se ha cargado
+      if (typeof MercadoPago === "undefined") {
+        const errorMsg = "Error: El SDK de MercadoPago no se ha cargado correctamente.";
+        console.error(errorMsg);
+        document.getElementById("mp-error").style.display = "block";
+        document.getElementById("mp-error").textContent = errorMsg + " Verifica la URL y tu conexión de red.";
+        return;
+      } else {
+        console.log("SDK de MercadoPago cargado correctamente:", MercadoPago);
+      }
+
+      // Error 2: Verificar la clave pública
+      const publicKey = "{{ config['MP_PUBLIC_KEY'] }}";
+      console.log("MP_PUBLIC_KEY:", "{{ MP_PUBLIC_KEY }}");
+      console.log("Clave pública recibida:", publicKey);
+      if (!publicKey || publicKey.trim() === "") {
+        const errorMsg = "Error: La clave pública de MercadoPago no está definida.";
+        console.error(errorMsg);
+        document.getElementById("mp-error").style.display = "block";
+        document.getElementById("mp-error").textContent = errorMsg;
+        return;
+      }
+
+      // Inicializa MercadoPago
+      let mp;
+      try {
+        mp = new MercadoPago(publicKey, { locale: "es-MX" });
+        console.log("MercadoPago inicializado:", mp);
+      } catch (initError) {
+        console.error("Error al inicializar MercadoPago:", initError);
+        document.getElementById("mp-error").style.display = "block";
+        document.getElementById("mp-error").textContent = "Error al inicializar MercadoPago. Detalles: " + initError;
+        return;
+      }
+
+      // Error 3: Verificar que preference_id esté definida
+      const preferenceId = "{{ preference_id }}";
+      console.log("Preference ID recibida:", preferenceId);
+      if (!preferenceId || preferenceId.trim() === "") {
+        const errorMsg = "Error: El preference_id no está definido.";
+        console.error(errorMsg);
+        document.getElementById("mp-error").style.display = "block";
+        document.getElementById("mp-error").textContent = errorMsg + " Verifica la generación de la preferencia en el backend.";
+        return;
+      }
+
+      // ✨ ADDITIONS ✨: Debug: Rendering MercadoPago checkout page with preference ID.
+      console.log("DEBUG: Preference ID: ", "{{ preference_id }}");
+      console.log("DEBUG: MP_PUBLIC_KEY: ", "{{ config['MP_PUBLIC_KEY'] }}");
+
+      // Intentar renderizar el componente "wallet"
+      try {
+        console.log("Intentando renderizar el componente Wallet...");
+        mp.bricks().create("wallet", "wallet_container", {
+          initialization: { preferenceId: preferenceId },
+          customization: { texts: { valueProp: 'smart_option' } }
+        });
+        console.log("Componente Wallet renderizado correctamente.");
+      } catch (err) {
+        console.error("Error al renderizar el componente Wallet:", err);
+        document.getElementById("mp-error").style.display = "block";
+        document.getElementById("mp-error").textContent = "Error al renderizar el componente de pago. Detalles: " + err;
+      }
+    };
+  </script>
+{% endblock %}

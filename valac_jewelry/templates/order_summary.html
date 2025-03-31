@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}
+  Resumen de Compra - VALAC Joyas
+{% endblock %}
+
+{% block content %}
+<main class="container mx-auto p-6">
+  <h1 class="text-3xl font-bold mb-4">¡Gracias por tu compra!</h1>
+  <p>Tu pedido ha sido procesado con éxito. A continuación, encontrarás el resumen de tu compra:</p>
+  
+  <div class="order-summary mt-4 border p-4 rounded shadow">
+    <p><strong>ID de Orden:</strong> {{ order_id }}</p>
+    <p><strong>Nombre del Cliente:</strong> {{ order.nombre }}</p>
+    <p><strong>Dirección de Envío:</strong> {{ order.dirección_envío }}</p>
+    <p><strong>Ciudad:</strong> {{ order.ciudad }}</p>
+    <p><strong>Código Postal:</strong> {{ order.codigo_postal }}</p>
+    <p><strong>Teléfono:</strong> {{ order.telefono }}</p>
+    <p><strong>Email:</strong> {{ order.email }}</p>
+    <p><strong>Método de Pago:</strong> {{ order.método_pago }}</p>
+    <p><strong>Subtotal:</strong> ${{ "{:.2f}".format(order.subtotal) }}</p>
+    <p><strong>Costo de Envío:</strong> ${{ "{:.2f}".format(order.costo_envío) }}</p>
+    <p><strong>Total:</strong> ${{ "{:.2f}".format(order.total) }}</p>
+    <p><strong>Fecha del Pedido:</strong> {{ order.fecha_pedido }}</p>
+  </div>
+
+  <h2 class="text-xl font-bold mt-6">Productos Comprados</h2>
+  <ul class="list-disc ml-6">
+    {% for item in order_items %}
+      <li>{{ item.cantidad }} x Producto ID {{ item.product_id }} a ${{ "{:.2f}".format(item.precio_unitario) }} cada uno</li>
+    {% endfor %}
+  </ul>
+</main>
+{% endblock %}

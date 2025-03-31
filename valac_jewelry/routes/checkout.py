@@ -171,6 +171,7 @@ def checkout():
                 "pending": url_for('pending.pending', _external=True)
             }
             notification_url = "https://valacjoyas.com/webhook"  # URL válida para notificaciones
+            # Se elimina "auto_return" para que se usen las back_urls
             preference_data = {
                 "items": [{
                     "title": "Orden de Compra VALAC Joyas",

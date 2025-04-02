@@ -1,0 +1,11 @@
+nombre,descripcion,precio,tipo_producto,genero,tipo_oro,imagen,stock_inicial
+Anillo Corazón 14k,Anillo de oro rosa con forma de corazón,1500.50,Anillos,Mujer,14k,/joyas/anillos/corazon.jpg,10
+Collar Perlas,Collar elegante con perlas cultivadas,890.00,Collares,Mujer,14k,/joyas/collares/perlas.jpg,5
+Pulso Plata,Pulsera de plata esterlina,99.99,Pulsos,Unisex,10k,/joyas/pulsos/plata.jpg,-3
+Tobillera Estrella,Tobillera con dije de estrella,120.00,Tobilleras,Mujer,18k,/joyas/tobilleras/estrella.jpg,8
+Aretes Flor,Aretes de oro con forma de flor,200.00,Aretes,Unisex,14k,/joyas/aretes/flor.jpg,15
+Anillo Clásico,,2500.00,Anillos,Hombre,14k,/joyas/anillos/clasico.jpg,7
+Collar Diamante,Collar con diamante incrustado,500.00,Collares,Mujer,14k,https://externo.com/diamante.jpg,12
+Pulso Cuero,Pulsera de cuero ajustable,150.00,Pulseras,Unisex,14k,/joyas/pulsos/cuero.jpg,0
+Anillo Solitario,Anillo de compromiso solitario,3000.00,Anillos,Mujer,24k,/joyas/anillos/solitario.jpg,3
+Aretes Corazón,Aretes mini corazón,80.50,Aretes,Mujer,10k,/joyas/aretes/corazon.jpg,20

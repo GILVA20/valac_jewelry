@@ -2,6 +2,8 @@ from flask import request, redirect, url_for, flash, current_app
 from flask_admin import BaseView, expose
 from flask_login import current_user
 import logging
+from .admin_bulk_upload import BulkUploadAdminView
+
 
 # Vista existente para productos
 class SupabaseProductAdmin(BaseView):

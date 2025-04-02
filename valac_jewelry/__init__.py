@@ -101,8 +101,9 @@ def create_app():
     app.register_blueprint(mock_checkout_bp)
     
     admin = Admin(app, name='VALAC Joyas Admin', template_mode='bootstrap3', url='/admin', endpoint='admin')
-    from .routes.admin import SupabaseProductAdmin
+    from .routes.admin import SupabaseProductAdmin, BulkUploadAdminView
     admin.add_view(SupabaseProductAdmin(name='Productos Supabase', endpoint='supabase_products'))
+    admin.add_view(BulkUploadAdminView(name='Carga Masiva', endpoint='bulk_upload'))
     
     return app
 

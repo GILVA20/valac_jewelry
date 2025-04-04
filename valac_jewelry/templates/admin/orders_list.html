@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <title>Administrar Órdenes - VALAC Joyas</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <!-- DataTables CSS (Versión estable 1.13.4) -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css">
+    <!-- jQuery (requerido por DataTables) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <!-- Archivo CSS externo: output.css -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
+    <!-- Integración inline de elstele.css (su contenido se integra aquí) -->
+    <style>
+      .fade-in {
+        animation: fadeIn 0.5s ease-in-out both;
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .skeleton-loader {
+        height: 120px;
+        background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 37%, #f0f0f0 63%);
+        background-size: 400% 100%;
+        animation: skeletonShine 1.2s ease-in-out infinite;
+        border-radius: 8px;
+      }
+      @keyframes skeletonShine {
+        0% { background-position: 100% 0; }
+        100% { background-position: -100% 0; }
+      }
+      /* Responsividad: columnas importantes primero */
+      .priority-1 {
+        display: table-cell;
+      }
+      @media screen and (max-width: 768px) {
+        .priority-1 { display: table-cell; }
+        .priority-2, .priority-3 { display: none; }
+      }
+      /* Chips de filtros activos */
+      #chipsContainer .badge {
+        font-size: 0.85rem;
+        padding: 0.5em 0.75em;
+        background-color: #0dcaf0;
+        color: #fff;
+        border-radius: 1em;
+        cursor: pointer;
+        transition: opacity 0.3s ease;
+      }
+      #chipsContainer .badge:hover {
+        opacity: 0.8;
+      }
+      /* Hover en la tabla para mejorar UX */
+      table#ordersTable tbody tr:hover {
+        background-color: #f8f9fa;
+        transition: background-color 0.2s ease;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="container-fluid py-5 fade-in">
+      <!-- Sección de KPIs -->
+      <div class="row mb-4">
+        <!-- Los KPIs se generan dinámicamente -->
+        {% for label, value, color, icon in [
+          ('Total Órdenes', stats.total, 'dark', 'fa-box'),
+          ('Pendientes', stats.pending, 'warning', 'fa-hourglass-start'),
+          ('En Proceso', stats.processed, 'info', 'fa-cogs'),
+          ('Completadas', stats.completed, 'success', 'fa-check-circle'),
+          ('Canceladas', stats.cancelled, 'danger', 'fa-times-circle')
+        ] %}
+        <div class="col-md-2 mb-3">
+          <div class="shadow-md rounded-xl p-4 text-gray-700 font-semibold transition-transform hover:scale-105">
+            <h6 class="text-gray-500">{{ label }}</h6>
+            <div class="d-flex justify-content-between align-items-center">
+              <h2 class="mb-0">{{ value }}</h2>
+              {% if label == 'Pendientes' %}
+              <button class="btn btn-sm btn-{{ color }}" data-bs-toggle="modal" data-bs-target="#pendingActions">
+                <i class="fas {{ icon }}"></i>
+              </button>
+              {% else %}
+              <i class="fas {{ icon }} text-{{ color }}"></i>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+  
+      <!-- Filtros Rápidos -->
+      <div class="row mb-4">
+        <div class="col-md-3">
+          <input type="date" id="startDate" class="form-control" placeholder="Desde">
+        </div>
+        <div class="col-md-3">
+          <input type="date" id="endDate" class="form-control" placeholder="Hasta">
+        </div>
+        <div class="col-md-3">
+          <select id="estadoFiltro" class="form-select">
+            <option value="">Todos los estados</option>
+            <option value="pending">Pendiente</option>
+            <option value="processed">Procesado</option>
+            <option value="shipped">Enviado</option>
+            <option value="delivered">Entregado</option>
+            <option value="cancelled">Cancelado</option>
+          </select>
+        </div>
+        <div class="col-md-3">
+          <button class="btn btn-outline-primary w-100" onclick="filtrarOrdenes()">Filtrar</button>
+        </div>
+      </div>
+  
+      <!-- Chips de Filtros Activos -->
+      <div id="chipsContainer" class="mb-3"></div>
+      <div class="mb-3">
+        <button class="btn btn-secondary" onclick="clearFilters()">Limpiar filtros</button>
+      </div>
+  
+      <!-- Tabla de Órdenes -->
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <div id="skeletonLoader" class="skeleton-loader mb-3" style="display: none;"></div>
+          <!-- Contenedor con scroll horizontal para pantallas pequeñas -->
+          <div class="overflow-x-auto">
+            <table id="ordersTable" class="table table-striped table-hover table-auto w-full">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Fecha</th>
+                  <th>Cliente</th>
+                  <th>Total</th>
+                  <th>Estado</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  
+    <!-- Modal ejemplo para acciones -->
+    <div class="modal fade" id="pendingActions" tabindex="-1">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title">Acciones Rápidas</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <p>Aquí puedes aplicar acciones a órdenes pendientes.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Scripts -->
+    <!-- Bootstrap Bundle con Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- DataTables y dependencias (Versión estable 1.13.4) -->
+    <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
+    <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
+    <script src="https://cdn.datatables.net/buttons/2.4.1/js/buttons.html5.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
+    <!-- Código JS personalizado con debugging para la carga de órdenes -->
+    <script>
+      // Declaramos la variable 'table' de forma global
+      var table;
+
+      function getStatusColor(status) {
+        switch (status) {
+          case 'pending': return 'warning';
+          case 'processed': return 'info';
+          case 'shipped': return 'primary';
+          case 'delivered': return 'success';
+          case 'cancelled': return 'danger';
+          default: return 'secondary';
+        }
+      }
+  
+      function updateFilterChips() {
+        const chips = [];
+        const estado = document.getElementById('estadoFiltro').value;
+        const start = document.getElementById('startDate').value;
+        const end = document.getElementById('endDate').value;
+        if (estado) chips.push(`<span class="badge bg-info me-2" onclick="removeFilter('estado')">Estado: ${estado} &times;</span>`);
+        if (start) chips.push(`<span class="badge bg-info me-2" onclick="removeFilter('start')">Desde: ${start} &times;</span>`);
+        if (end) chips.push(`<span class="badge bg-info me-2" onclick="removeFilter('end')">Hasta: ${end} &times;</span>`);
+        document.getElementById('chipsContainer').innerHTML = chips.join('');
+      }
+  
+      function removeFilter(filterType) {
+        if(filterType === 'estado'){
+          document.getElementById('estadoFiltro').value = '';
+          localStorage.removeItem('filtro_estado');
+        } else if(filterType === 'start'){
+          document.getElementById('startDate').value = '';
+          localStorage.removeItem('filtro_start');
+        } else if(filterType === 'end'){
+          document.getElementById('endDate').value = '';
+          localStorage.removeItem('filtro_end');
+        }
+        updateFilterChips();
+        if (table) {
+          table.ajax.reload(null, false);
+        }
+      }
+  
+      function clearFilters() {
+        Swal.fire({
+          title: '¿Limpiar filtros?',
+          text: "Esto eliminará todos los filtros aplicados.",
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonText: 'Sí, limpiar',
+          cancelButtonText: 'Cancelar'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            document.getElementById('estadoFiltro').value = '';
+            document.getElementById('startDate').value = '';
+            document.getElementById('endDate').value = '';
+            localStorage.removeItem('filtro_estado');
+            localStorage.removeItem('filtro_start');
+            localStorage.removeItem('filtro_end');
+            updateFilterChips();
+            if (table) {
+              table.ajax.reload(null, false);
+            }
+            Swal.fire('Filtros limpios', '', 'success');
+          }
+        });
+      }
+  
+      function filtrarOrdenes() {
+        const startDate = document.getElementById('startDate').value;
+        const endDate = document.getElementById('endDate').value;
+        console.debug('Filtrando órdenes con rango:', startDate, endDate);
+  
+        if (startDate && endDate && startDate > endDate) {
+          Swal.fire('Rango inválido', 'La fecha de inicio no puede ser mayor que la de fin.', 'warning');
+          return;
+        }
+        updateFilterChips();
+        localStorage.setItem('filtro_estado', document.getElementById('estadoFiltro').value);
+        localStorage.setItem('filtro_start', startDate);
+        localStorage.setItem('filtro_end', endDate);
+        if (table) {
+          table.ajax.reload(null, false);
+        } else {
+          console.error("La variable 'table' aún no está definida.");
+        }
+      }
+  
+      document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('estadoFiltro').value = localStorage.getItem('filtro_estado') || '';
+        document.getElementById('startDate').value = localStorage.getItem('filtro_start') || '';
+        document.getElementById('endDate').value = localStorage.getItem('filtro_end') || '';
+        updateFilterChips();
+  
+        // Inicialización de DataTable con debugging en la carga de datos desde Supabase
+        table = $('#ordersTable').DataTable({
+          ajax: {
+            url: '/admin/admin_orders/json',
+            dataSrc: function(json) {
+              console.debug('Datos recibidos de Supabase:', json);
+              if (json.error) {
+                console.error('Error al cargar órdenes:', json.error);
+              }
+              return json.data;
+            },
+            error: function(xhr, error, thrown) {
+              console.error('Error en la petición AJAX:', error, thrown);
+            }
+          },
+          columns: [
+            { data: 'id', className: 'dt-body-center priority-1' },
+            { data: 'fecha_pedido', render: data => moment(data).format('DD/MM/YYYY HH:mm') },
+            { data: 'cliente', render: data => `<a href="/admin/users/${data.id}" title="${data.nombre}">${data.nombre}</a>` },
+            { data: 'total', render: $.fn.dataTable.render.number(',', '.', 2, '$') },
+            { data: 'estado_pago', render: data => `<span class="badge bg-${getStatusColor(data)}">${data}</span>` },
+            {
+              data: null,
+              render: data => {
+                let actions = `<a href="/admin/orders/${data.id}" class="btn btn-sm btn-outline-primary">Ver</a>`;
+                if (data.estado_pago === 'pending') {
+                  actions += ` <button class="btn btn-sm btn-success process-btn" data-id="${data.id}">Procesar</button>`;
+                }
+                return `<div class="btn-group">${actions}</div>`;
+              }
+            }
+          ],
+          dom: 'Bfrtip',
+          buttons: [
+            {
+              extend: 'excelHtml5',
+              text: 'Exportar Excel',
+              exportOptions: { columns: ':visible' }
+            }
+          ],
+          order: [[1, 'desc']],
+          initComplete: function(settings, json) {
+            console.debug('DataTable inicializado. Datos:', json);
+          }
+        });
+  
+        document.getElementById('estadoFiltro').addEventListener('change', filtrarOrdenes);
+      });
+    </script>
+  </body>
+</html>

@@ -1,8 +1,9 @@
 from flask import request, redirect, url_for, flash, current_app
-from flask_admin import BaseView, expose
+from flask_admin import Admin, BaseView, expose
 from flask_login import current_user
 import logging
 from .admin_bulk_upload import BulkUploadAdminView
+from valac_jewelry.routes.admin_orders import OrderAdminView
 
 
 # Vista existente para productos
@@ -13,6 +14,7 @@ class SupabaseProductAdmin(BaseView):
     def inaccessible_callback(self, name, **kwargs):
         flash("Debes iniciar sesión como administrador para acceder a esta sección.", "error")
         return redirect(url_for('auth.login', next=request.url))
+
 
     @expose('/')
     def index(self):

@@ -70,17 +70,35 @@ class OrderService:
         return self.client.table("orders").update(data).eq("id", order_id).execute()
 
     def get_stats(self, orders):
-        stats = {
-            "total": len(orders),
-            "pending": sum(1 for o in orders if o['estado_pago'].lower() == 'pending'),
-            "processed": sum(1 for o in orders if o['estado_pago'].lower() == 'processed'),
-            "shipped": sum(1 for o in orders if o['estado_pago'].lower() == 'shipped'),
-            "delivered": sum(1 for o in orders if o['estado_pago'].lower() == 'delivered'),
-            "completed": sum(1 for o in orders if o['estado_pago'].lower() == 'delivered'),
-            "cancelled": sum(1 for o in orders if o['estado_pago'].lower() == 'cancelled')
+        # Estadísticas para estados de pago
+        payment_stats = {
+            "pending_payment": sum(1 for o in orders if o['estado_pago'].lower() == 'pending'),
+            "paid": sum(1 for o in orders if o['estado_pago'].lower() == 'paid'),
+            "refunded": sum(1 for o in orders if o['estado_pago'].lower() == 'refunded')
         }
+        # Estadísticas para estados de envío (asumiendo que se guardan en el campo 'shipping_status')
+        shipping_stats = {
+            "unshipped": sum(1 for o in orders if o.get('shipping_status', '').lower() == 'unshipped'),
+            "processing": sum(1 for o in orders if o.get('shipping_status', '').lower() == 'processing'),
+            "shipped": sum(1 for o in orders if o.get('shipping_status', '').lower() == 'shipped'),
+            "delivered": sum(1 for o in orders if o.get('shipping_status', '').lower() == 'delivered')
+        }
+        # Estadísticas totales (incluye total y opcionalmente mantiene compatibilidad con los antiguos stats)
+        stats = {
+            "total": len(orders)
+        }
+        stats.update(payment_stats)
+        stats.update(shipping_stats)
+        # Para compatibilidad (mapea los antiguos nombres si se requieren)
+        stats.update({
+            "pending": payment_stats["pending_payment"],
+            "processed": shipping_stats["processing"],
+            "cancelled": sum(1 for o in orders if o.get('estado_pago', '').lower() == 'cancelled'),
+            "completed": shipping_stats["delivered"],
+        })
         logger.debug("Estadísticas calculadas: %s", stats)
         return stats
+
 
 class OrderAdminView(BaseView):
     def is_accessible(self):

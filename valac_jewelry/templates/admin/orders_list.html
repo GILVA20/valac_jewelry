@@ -12,7 +12,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <!-- Archivo CSS externo: output.css -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
-    <!-- Integración inline de elstele.css (su contenido se integra aquí) -->
+    <!-- Integración inline de elstele.css -->
     <style>
       .fade-in {
         animation: fadeIn 0.5s ease-in-out both;
@@ -33,9 +33,7 @@
         100% { background-position: -100% 0; }
       }
       /* Responsividad: columnas importantes primero */
-      .priority-1 {
-        display: table-cell;
-      }
+      .priority-1 { display: table-cell; }
       @media screen and (max-width: 768px) {
         .priority-1 { display: table-cell; }
         .priority-2, .priority-3 { display: none; }
@@ -50,9 +48,7 @@
         cursor: pointer;
         transition: opacity 0.3s ease;
       }
-      #chipsContainer .badge:hover {
-        opacity: 0.8;
-      }
+      #chipsContainer .badge:hover { opacity: 0.8; }
       /* Hover en la tabla para mejorar UX */
       table#ordersTable tbody tr:hover {
         background-color: #f8f9fa;
@@ -62,34 +58,68 @@
   </head>
   <body>
     <main class="container-fluid py-5 fade-in">
-      <!-- Sección de KPIs -->
+      <!-- Sección de KPIs de Pago -->
       <div class="row mb-4">
-        <!-- Los KPIs se generan dinámicamente -->
-        {% for label, value, color, icon in [
-          ('Total Órdenes', stats.total, 'dark', 'fa-box'),
-          ('Pendientes', stats.pending, 'warning', 'fa-hourglass-start'),
-          ('En Proceso', stats.processed, 'info', 'fa-cogs'),
-          ('Completadas', stats.completed, 'success', 'fa-check-circle'),
-          ('Canceladas', stats.cancelled, 'danger', 'fa-times-circle')
-        ] %}
-        <div class="col-md-2 mb-3">
-          <div class="shadow-md rounded-xl p-4 text-gray-700 font-semibold transition-transform hover:scale-105">
-            <h6 class="text-gray-500">{{ label }}</h6>
-            <div class="d-flex justify-content-between align-items-center">
-              <h2 class="mb-0">{{ value }}</h2>
-              {% if label == 'Pendientes' %}
-              <button class="btn btn-sm btn-{{ color }}" data-bs-toggle="modal" data-bs-target="#pendingActions">
-                <i class="fas {{ icon }}"></i>
-              </button>
-              {% else %}
-              <i class="fas {{ icon }} text-{{ color }}"></i>
-              {% endif %}
-            </div>
+        <div class="col-12 mb-3">
+          <h4>Estados de Pago</h4>
+        </div>
+        <div class="col-md-4">
+          <div class="card shadow-md rounded-xl p-4">
+            <h6 class="text-muted">Total Órdenes</h6>
+            <h2>{{ stats.total }}</h2>
           </div>
         </div>
-        {% endfor %}
+        <div class="col-md-4">
+          <div class="card shadow-md rounded-xl p-4">
+            <h6 class="text-muted">Pagos Pendientes</h6>
+            <h2>{{ stats.pending_payment }}</h2>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card shadow-md rounded-xl p-4">
+            <h6 class="text-muted">Pagos Confirmados</h6>
+            <h2>{{ stats.paid }}</h2>
+          </div>
+        </div>
+        <div class="col-md-4 mt-2">
+          <div class="card shadow-md rounded-xl p-4">
+            <h6 class="text-muted">Pagos Reembolsados</h6>
+            <h2>{{ stats.refunded }}</h2>
+          </div>
+        </div>
       </div>
-  
+      
+      <!-- Sección de KPIs de Envío -->
+      <div class="row mb-4">
+        <div class="col-12 mb-3">
+          <h4>Estados de Envío</h4>
+        </div>
+        <div class="col-md-3">
+          <div class="card shadow-md rounded-xl p-4">
+            <h6 class="text-muted">No Enviados</h6>
+            <h2>{{ stats.unshipped }}</h2>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card shadow-md rounded-xl p-4">
+            <h6 class="text-muted">En Proceso</h6>
+            <h2>{{ stats.processing }}</h2>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card shadow-md rounded-xl p-4">
+            <h6 class="text-muted">Enviados</h6>
+            <h2>{{ stats.shipped }}</h2>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card shadow-md rounded-xl p-4">
+            <h6 class="text-muted">Entregados</h6>
+            <h2>{{ stats.delivered }}</h2>
+          </div>
+        </div>
+      </div>
+      
       <!-- Filtros Rápidos -->
       <div class="row mb-4">
         <div class="col-md-3">
@@ -100,7 +130,7 @@
         </div>
         <div class="col-md-3">
           <select id="estadoFiltro" class="form-select">
-            <option value="">Todos los estados</option>
+            <option value="">Todos los estados de pago</option>
             <option value="pending">Pendiente</option>
             <option value="processed">Procesado</option>
             <option value="shipped">Enviado</option>
@@ -109,21 +139,30 @@
           </select>
         </div>
         <div class="col-md-3">
+          <select id="envioFiltro" class="form-select">
+            <option value="">Todos los estados de envío</option>
+            <option value="unshipped">No Enviado</option>
+            <option value="processing">En Proceso</option>
+            <option value="shipped">Enviado</option>
+            <option value="delivered">Entregado</option>
+            <option value="cancelled">Cancelado</option>
+          </select>
+        </div>
+        <div class="col-md-3 mt-2">
           <button class="btn btn-outline-primary w-100" onclick="filtrarOrdenes()">Filtrar</button>
         </div>
       </div>
-  
+      
       <!-- Chips de Filtros Activos -->
       <div id="chipsContainer" class="mb-3"></div>
       <div class="mb-3">
         <button class="btn btn-secondary" onclick="clearFilters()">Limpiar filtros</button>
       </div>
-  
+      
       <!-- Tabla de Órdenes -->
       <div class="card shadow-sm">
         <div class="card-body">
           <div id="skeletonLoader" class="skeleton-loader mb-3" style="display: none;"></div>
-          <!-- Contenedor con scroll horizontal para pantallas pequeñas -->
           <div class="overflow-x-auto">
             <table id="ordersTable" class="table table-striped table-hover table-auto w-full">
               <thead>
@@ -132,7 +171,8 @@
                   <th>Fecha</th>
                   <th>Cliente</th>
                   <th>Total</th>
-                  <th>Estado</th>
+                  <th>Estado Pago</th>
+                  <th>Estado Envío</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
@@ -141,8 +181,8 @@
         </div>
       </div>
     </main>
-  
-    <!-- Modal ejemplo para acciones -->
+    
+    <!-- Modal para acciones -->
     <div class="modal fade" id="pendingActions" tabindex="-1">
       <div class="modal-dialog">
         <div class="modal-content">
@@ -156,11 +196,11 @@
         </div>
       </div>
     </div>
-  
+    
     <!-- Scripts -->
     <!-- Bootstrap Bundle con Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- DataTables y dependencias (Versión estable 1.13.4) -->
+    <!-- DataTables y dependencias -->
     <script src="https://cdn.datatables.net/1.13.4/js/jquery.dataTables.min.js"></script>
     <script src="https://cdn.datatables.net/1.13.4/js/dataTables.bootstrap5.min.js"></script>
     <script src="https://cdn.datatables.net/buttons/2.4.1/js/dataTables.buttons.min.js"></script>
@@ -168,37 +208,66 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/moment@2.29.4/moment.min.js"></script>
-    <!-- Código JS personalizado con debugging para la carga de órdenes -->
+    
+    <!-- Código JS personalizado -->
     <script>
-      // Declaramos la variable 'table' de forma global
       var table;
-
-      function getStatusColor(status) {
-        switch (status) {
-          case 'pending': return 'warning';
-          case 'processed': return 'info';
-          case 'shipped': return 'primary';
-          case 'delivered': return 'success';
-          case 'cancelled': return 'danger';
-          default: return 'secondary';
+      
+      function getPaymentStatusColor(status) {
+        switch(status.toLowerCase()){
+          case 'pending':
+            return 'warning';
+          case 'paid':
+            return 'success';
+          case 'refunded':
+            return 'danger';
+          default:
+            return 'secondary';
         }
       }
-  
+      
+      function getShippingStatusColor(status) {
+  if (!status) {
+    // Devuelve un color por defecto si el estado es undefined, nulo o una cadena vacía.
+    return 'secondary';
+  }
+  switch(status.toLowerCase()){
+    case 'unshipped':
+      return 'secondary';
+    case 'processing':
+      return 'info';
+    case 'shipped':
+      return 'primary';
+    case 'delivered':
+      return 'success';
+    case 'cancelled':
+      return 'danger';
+    default:
+      return 'secondary';
+  }
+}
+
+      
       function updateFilterChips() {
         const chips = [];
         const estado = document.getElementById('estadoFiltro').value;
+        const envio = document.getElementById('envioFiltro').value;
         const start = document.getElementById('startDate').value;
         const end = document.getElementById('endDate').value;
-        if (estado) chips.push(`<span class="badge bg-info me-2" onclick="removeFilter('estado')">Estado: ${estado} &times;</span>`);
+        if (estado) chips.push(`<span class="badge bg-info me-2" onclick="removeFilter('estado')">Estado Pago: ${estado} &times;</span>`);
+        if (envio) chips.push(`<span class="badge bg-info me-2" onclick="removeFilter('envio')">Estado Envío: ${envio} &times;</span>`);
         if (start) chips.push(`<span class="badge bg-info me-2" onclick="removeFilter('start')">Desde: ${start} &times;</span>`);
         if (end) chips.push(`<span class="badge bg-info me-2" onclick="removeFilter('end')">Hasta: ${end} &times;</span>`);
         document.getElementById('chipsContainer').innerHTML = chips.join('');
       }
-  
+      
       function removeFilter(filterType) {
         if(filterType === 'estado'){
           document.getElementById('estadoFiltro').value = '';
           localStorage.removeItem('filtro_estado');
+        } else if(filterType === 'envio'){
+          document.getElementById('envioFiltro').value = '';
+          localStorage.removeItem('filtro_envio');
         } else if(filterType === 'start'){
           document.getElementById('startDate').value = '';
           localStorage.removeItem('filtro_start');
@@ -211,7 +280,7 @@
           table.ajax.reload(null, false);
         }
       }
-  
+      
       function clearFilters() {
         Swal.fire({
           title: '¿Limpiar filtros?',
@@ -223,9 +292,11 @@
         }).then((result) => {
           if (result.isConfirmed) {
             document.getElementById('estadoFiltro').value = '';
+            document.getElementById('envioFiltro').value = '';
             document.getElementById('startDate').value = '';
             document.getElementById('endDate').value = '';
             localStorage.removeItem('filtro_estado');
+            localStorage.removeItem('filtro_envio');
             localStorage.removeItem('filtro_start');
             localStorage.removeItem('filtro_end');
             updateFilterChips();
@@ -236,18 +307,19 @@
           }
         });
       }
-  
+      
       function filtrarOrdenes() {
         const startDate = document.getElementById('startDate').value;
         const endDate = document.getElementById('endDate').value;
         console.debug('Filtrando órdenes con rango:', startDate, endDate);
-  
+      
         if (startDate && endDate && startDate > endDate) {
           Swal.fire('Rango inválido', 'La fecha de inicio no puede ser mayor que la de fin.', 'warning');
           return;
         }
         updateFilterChips();
         localStorage.setItem('filtro_estado', document.getElementById('estadoFiltro').value);
+        localStorage.setItem('filtro_envio', document.getElementById('envioFiltro').value);
         localStorage.setItem('filtro_start', startDate);
         localStorage.setItem('filtro_end', endDate);
         if (table) {
@@ -256,14 +328,14 @@
           console.error("La variable 'table' aún no está definida.");
         }
       }
-  
+      
       document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('estadoFiltro').value = localStorage.getItem('filtro_estado') || '';
+        document.getElementById('envioFiltro').value = localStorage.getItem('filtro_envio') || '';
         document.getElementById('startDate').value = localStorage.getItem('filtro_start') || '';
         document.getElementById('endDate').value = localStorage.getItem('filtro_end') || '';
         updateFilterChips();
-  
-        // Inicialización de DataTable con debugging en la carga de datos desde Supabase
+      
         table = $('#ordersTable').DataTable({
           ajax: {
             url: '/admin/admin_orders/json',
@@ -283,7 +355,14 @@
             { data: 'fecha_pedido', render: data => moment(data).format('DD/MM/YYYY HH:mm') },
             { data: 'cliente', render: data => `<a href="/admin/users/${data.id}" title="${data.nombre}">${data.nombre}</a>` },
             { data: 'total', render: $.fn.dataTable.render.number(',', '.', 2, '$') },
-            { data: 'estado_pago', render: data => `<span class="badge bg-${getStatusColor(data)}">${data}</span>` },
+            { 
+              data: 'estado_pago', 
+              render: data => `<span class="badge bg-${getPaymentStatusColor(data)}" title="Estado de pago">${data}</span>` 
+            },
+            { 
+              data: 'shipping_status', 
+              render: data => `<span class="badge bg-${getShippingStatusColor(data)}" title="Estado de envío">${data}</span>` 
+            },
             {
               data: null,
               render: data => {
@@ -308,8 +387,9 @@
             console.debug('DataTable inicializado. Datos:', json);
           }
         });
-  
+      
         document.getElementById('estadoFiltro').addEventListener('change', filtrarOrdenes);
+        document.getElementById('envioFiltro').addEventListener('change', filtrarOrdenes);
       });
     </script>
   </body>

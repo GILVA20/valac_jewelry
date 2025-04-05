@@ -287,7 +287,7 @@
             {
               data: null,
               render: data => {
-                let actions = `<a href="/admin/orders/${data.id}" class="btn btn-sm btn-outline-primary">Ver</a>`;
+                let actions = `<a href="/admin/admin_orders/${data.id}" class="btn btn-sm btn-outline-primary">Ver</a>`;
                 if (data.estado_pago === 'pending') {
                   actions += ` <button class="btn btn-sm btn-success process-btn" data-id="${data.id}">Procesar</button>`;
                 }

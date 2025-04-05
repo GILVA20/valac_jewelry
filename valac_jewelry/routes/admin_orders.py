@@ -3,14 +3,9 @@ from flask import request, redirect, url_for, flash, current_app, jsonify
 from flask_admin import BaseView, expose
 from flask_login import current_user
 
-# Configuración básica de logging (si no se configura de forma global)
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='%(asctime)s %(levelname)s %(name)s: %(message)s'
-)
 logger = logging.getLogger(__name__)
 
-# Definición de flujos de estados actualizados
+# Flujos de estados para pago y envío
 PAYMENT_STATES = {
     'pending': ['paid', 'refunded'],
     'paid': [],
@@ -25,7 +20,6 @@ SHIPPING_STATES = {
     'cancelled': []
 }
 
-# Se conserva ORDER_STATES original para compatibilidad, aunque se recomienda migrar a los nuevos flujos.
 ORDER_STATES = {
     'pending': ['processed', 'cancelled'],
     'processed': ['shipped', 'cancelled'],
@@ -42,7 +36,6 @@ class OrderService:
         logger.debug("Obteniendo órdenes con filtros: %s", filters)
         query = self.client.table('orders').select("*")
         if filters:
-            # Ahora se diferencian los filtros por estado de pago y envío
             if 'estado_pago' in filters:
                 query = query.eq('estado_pago', filters['estado_pago'])
             if 'estado_envio' in filters:
@@ -59,8 +52,7 @@ class OrderService:
         logger.debug("Obteniendo detalle de orden id: %s", order_id)
         result = self.client.table('orders').select("*").eq("id", order_id).execute()
         if result.data:
-            order = result.data[0]
-            return order
+            return result.data[0]
         else:
             logger.error("Orden con id %s no encontrada", order_id)
             return None
@@ -70,26 +62,23 @@ class OrderService:
         return self.client.table("orders").update(data).eq("id", order_id).execute()
 
     def get_stats(self, orders):
-        # Estadísticas para estados de pago
+        # Estadísticas de pago
         payment_stats = {
             "pending_payment": sum(1 for o in orders if o['estado_pago'].lower() == 'pending'),
             "paid": sum(1 for o in orders if o['estado_pago'].lower() == 'paid'),
             "refunded": sum(1 for o in orders if o['estado_pago'].lower() == 'refunded')
         }
-        # Estadísticas para estados de envío (asumiendo que se guardan en el campo 'shipping_status')
+        # Estadísticas de envío
         shipping_stats = {
-            "unshipped": sum(1 for o in orders if o.get('shipping_status', '').lower() == 'unshipped'),
-            "processing": sum(1 for o in orders if o.get('shipping_status', '').lower() == 'processing'),
-            "shipped": sum(1 for o in orders if o.get('shipping_status', '').lower() == 'shipped'),
-            "delivered": sum(1 for o in orders if o.get('shipping_status', '').lower() == 'delivered')
+            "unshipped": sum(1 for o in orders if o.get('shipping_status') in [None, '', 'no_enviado']),
+            "processing": sum(1 for o in orders if o.get('shipping_status') == 'processing'),
+            "shipped": sum(1 for o in orders if o.get('shipping_status') == 'shipped'),
+            "delivered": sum(1 for o in orders if o.get('shipping_status') == 'delivered')
         }
-        # Estadísticas totales (incluye total y opcionalmente mantiene compatibilidad con los antiguos stats)
-        stats = {
-            "total": len(orders)
-        }
+        # Estadísticas totales y mapeo para compatibilidad con nombres anteriores
+        stats = {"total": len(orders)}
         stats.update(payment_stats)
         stats.update(shipping_stats)
-        # Para compatibilidad (mapea los antiguos nombres si se requieren)
         stats.update({
             "pending": payment_stats["pending_payment"],
             "processed": shipping_stats["processing"],
@@ -98,6 +87,7 @@ class OrderService:
         })
         logger.debug("Estadísticas calculadas: %s", stats)
         return stats
+
 
 
 class OrderAdminView(BaseView):

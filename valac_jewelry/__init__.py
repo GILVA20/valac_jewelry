@@ -101,10 +101,11 @@ def create_app():
     app.register_blueprint(mock_checkout_bp)
     
     admin = Admin(app, name='VALAC Joyas Admin', template_mode='bootstrap3', url='/admin', endpoint='admin')
-    from .routes.admin import SupabaseProductAdmin, BulkUploadAdminView,SalesAdmin, PaymentsAdmin, ReportsAdmin
+    from .routes.admin import SupabaseProductAdmin, BulkUploadAdminView, SalesAdmin, PaymentsAdmin, ReportsAdmin
     from .routes.admin_orders import OrderAdminView
     admin.add_view(SupabaseProductAdmin(name='Productos Supabase', endpoint='supabase_products'))
     admin.add_view(BulkUploadAdminView(name='Carga Masiva', endpoint='bulk_upload'))
+    # Mantén el endpoint "admin_orders" para la vista de órdenes
     admin.add_view(OrderAdminView(name='Órdenes', endpoint='admin_orders'))
     admin.add_view(SalesAdmin(name='Ventas', endpoint='sales'))
     admin.add_view(PaymentsAdmin(name='Pagos / Cobranza', endpoint='payments'))

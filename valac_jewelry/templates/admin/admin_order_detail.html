@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <title>Detalle de Orden - VALAC Joyas</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <!-- DataTables CSS (opcional si se usara en otras vistas) -->
+    <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
+    <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css">
+    <!-- Archivo CSS externo: output.css (si lo tienes) -->
+    <link rel="stylesheet" href="output.css">
+    <style>
+      /* Animación Fade-In */
+      .fade-in {
+        animation: fadeIn 0.5s ease-in-out both;
+      }
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      /* Sombra y bordes redondeados */
+      .shadow-lg { box-shadow: 0 1rem 3rem rgba(0,0,0,0.175)!important; }
+      .rounded-lg { border-radius: 0.5rem !important; }
+      /* Estilos de tarjetas */
+      .card-header { padding: 0.75rem 1.25rem; }
+      .card-body { padding: 1.25rem; }
+    </style>
+  </head>
+  <body>
+    <div class="container py-5 fade-in">
+      <h2 class="mb-4 text-center">Detalle de la Orden #123</h2>
+      
+      <!-- Información General de la Orden -->
+      <div class="row mb-4">
+        <div class="col-lg-6">
+          <div class="card shadow-lg rounded-lg p-4 mb-4">
+            <div class="card-header bg-primary text-white rounded-top">
+              <h4 class="mb-0">Información de la Orden</h4>
+            </div>
+            <div class="card-body">
+              <p><strong>Fecha de Pedido:</strong> 15/04/2025 14:30</p>
+              <p><strong>Cliente:</strong> Juan Pérez</p>
+              <p><strong>Total:</strong> $150.00</p>
+              <p>
+                <strong>Estado de Pago:</strong>
+                <span class="badge bg-warning">Pending</span>
+              </p>
+              <p><strong>Método de Pago:</strong> Tarjeta de Crédito</p>
+              <p><strong>Notas Administrativas:</strong> Ninguna</p>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Información de Envío -->
+        <div class="col-lg-6">
+          <div class="card shadow-lg rounded-lg p-4 mb-4">
+            <div class="card-header bg-success text-white rounded-top">
+              <h4 class="mb-0">Información de Envío</h4>
+            </div>
+            <div class="card-body">
+              <p><strong>Dirección de Envío:</strong> Calle Falsa 123</p>
+              <p><strong>Ciudad:</strong> Ciudad de México</p>
+              <p><strong>Código Postal:</strong> 01234</p>
+              <p><strong>Método de Envío:</strong> Estándar</p>
+              <p><strong>Guía de Envío:</strong> GUA123456789</p>
+              <p><strong>Número de Seguimiento:</strong> TRK987654321</p>
+              <p>
+                <strong>Estado de Envío:</strong>
+                <span class="badge bg-primary">Processing</span>
+              </p>
+              <p><strong>Dirección Completa (JSON):</strong></p>
+              <pre class="bg-light p-3 rounded">
+{
+  "calle": "Calle Falsa",
+  "numero": "123",
+  "colonia": "Colonia Ejemplo",
+  "ciudad": "Ciudad de México"
+}
+              </pre>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Historial de Transiciones -->
+      <div class="card shadow-lg rounded-lg p-4 mb-4">
+        <div class="card-header bg-secondary text-white rounded-top">
+          <h4 class="mb-0">Historial de Transiciones</h4>
+        </div>
+        <div class="card-body">
+          <pre class="bg-light p-3 rounded">
+[
+  {
+    "fecha": "15/04/2025 14:30",
+    "estado_pago": "pending",
+    "shipping_status": "unshipped"
+  },
+  {
+    "fecha": "15/04/2025 15:00",
+    "estado_pago": "paid",
+    "shipping_status": "processing"
+  }
+]
+          </pre>
+        </div>
+      </div>
+      
+      <!-- Formulario para Actualizar Detalles -->
+      <div class="card shadow-lg rounded-lg p-4">
+        <div class="card-header bg-info text-white rounded-top">
+          <h4 class="mb-0">Actualizar Detalles de la Orden</h4>
+        </div>
+        <div class="card-body">
+          <form method="post" action="/admin/orders/123">
+            <div class="row mb-3">
+              <div class="col-md-6">
+                <label for="estado_pago" class="form-label">Estado de Pago</label>
+                <select class="form-select" id="estado_pago" name="estado_pago" required>
+                  <option value="pending" selected>Pending</option>
+                  <option value="paid">Paid</option>
+                  <option value="refunded">Refunded</option>
+                </select>
+              </div>
+              <div class="col-md-6">
+                <label for="shipping_status" class="form-label">Estado de Envío</label>
+                <select class="form-select" id="shipping_status" name="shipping_status" required>
+                  <option value="unshipped" selected>Unshipped</option>
+                  <option value="processing">Processing</option>
+                  <option value="shipped">Shipped</option>
+                  <option value="delivered">Delivered</option>
+                  <option value="cancelled">Cancelled</option>
+                </select>
+              </div>
+            </div>
+            <div class="mb-3">
+              <label for="guia_envio" class="form-label">Guía de Envío</label>
+              <input type="text" class="form-control" id="guia_envio" name="guia_envio" value="GUA123456789">
+            </div>
+            <div class="mb-3">
+              <label for="fecha_envio_cliente" class="form-label">Fecha de Envío al Cliente</label>
+              <input type="datetime-local" class="form-control" id="fecha_envio_cliente" name="fecha_envio_cliente" value="2025-04-15T15:00">
+            </div>
+            <button type="submit" class="btn btn-primary">Actualizar Detalles</button>
+          </form>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Bootstrap Bundle con Popper -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>

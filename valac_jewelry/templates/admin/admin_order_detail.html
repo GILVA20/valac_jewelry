@@ -5,7 +5,7 @@
     <title>Detalle de Orden - VALAC Joyas</title>
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-    <!-- DataTables CSS (opcional si se usara en otras vistas) -->
+    <!-- DataTables CSS (opcional) -->
     <link rel="stylesheet" href="https://cdn.datatables.net/1.13.4/css/dataTables.bootstrap5.min.css">
     <link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.4.1/css/buttons.bootstrap5.min.css">
     <!-- Archivo CSS externo: output.css (si lo tienes) -->
@@ -29,7 +29,21 @@
   </head>
   <body>
     <div class="container py-5 fade-in">
-      <h2 class="mb-4 text-center">Detalle de la Orden #123</h2>
+      <h2 class="mb-4 text-center">Detalle de la Orden #{{ order.id }}</h2>
+      
+      <!-- Contenedor para mensajes flash -->
+      <div id="flash-message">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+              <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+              </div>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+      </div>
       
       <!-- Información General de la Orden -->
       <div class="row mb-4">
@@ -39,15 +53,17 @@
               <h4 class="mb-0">Información de la Orden</h4>
             </div>
             <div class="card-body">
-              <p><strong>Fecha de Pedido:</strong> 15/04/2025 14:30</p>
-              <p><strong>Cliente:</strong> Juan Pérez</p>
-              <p><strong>Total:</strong> $150.00</p>
+              <p><strong>Fecha de Pedido:</strong> {{ order.fecha_pedido }}</p>
+              <p><strong>Cliente:</strong> {{ order.cliente.nombre if order.cliente else 'Desconocido' }}</p>
+              <p><strong>Total:</strong> ${{ order.total }}</p>
               <p>
                 <strong>Estado de Pago:</strong>
-                <span class="badge bg-warning">Pending</span>
+                <span class="badge bg-{{ 'success' if order.estado_pago == 'paid' else 'warning' }}">
+                  {{ order.estado_pago|capitalize }}
+                </span>
               </p>
-              <p><strong>Método de Pago:</strong> Tarjeta de Crédito</p>
-              <p><strong>Notas Administrativas:</strong> Ninguna</p>
+              <p><strong>Método de Pago:</strong> {{ order.metodo_pago }}</p>
+              <p><strong>Notas Administrativas:</strong> {{ order.notas or 'Ninguna' }}</p>
             </div>
           </div>
         </div>
@@ -59,25 +75,20 @@
               <h4 class="mb-0">Información de Envío</h4>
             </div>
             <div class="card-body">
-              <p><strong>Dirección de Envío:</strong> Calle Falsa 123</p>
-              <p><strong>Ciudad:</strong> Ciudad de México</p>
-              <p><strong>Código Postal:</strong> 01234</p>
-              <p><strong>Método de Envío:</strong> Estándar</p>
-              <p><strong>Guía de Envío:</strong> GUA123456789</p>
-              <p><strong>Número de Seguimiento:</strong> TRK987654321</p>
+              <p><strong>Dirección de Envío:</strong> {{ order.direccion_envio }}</p>
+              <p><strong>Ciudad:</strong> {{ order.ciudad }}</p>
+              <p><strong>Código Postal:</strong> {{ order.codigo_postal }}</p>
+              <p><strong>Método de Envío:</strong> {{ order.metodo_envio }}</p>
+              <p><strong>Guía de Envío:</strong> {{ order.guia_envio }}</p>
+              <p><strong>Número de Seguimiento:</strong> {{ order.tracking_number }}</p>
               <p>
                 <strong>Estado de Envío:</strong>
-                <span class="badge bg-primary">Processing</span>
+                <span class="badge bg-{{ 'success' if order.estado_envio == 'delivered' else ('info' if order.estado_envio == 'processing' else 'primary') }}">
+                  {{ order.estado_envio|capitalize }}
+                </span>
               </p>
               <p><strong>Dirección Completa (JSON):</strong></p>
-              <pre class="bg-light p-3 rounded">
-{
-  "calle": "Calle Falsa",
-  "numero": "123",
-  "colonia": "Colonia Ejemplo",
-  "ciudad": "Ciudad de México"
-}
-              </pre>
+              <pre class="bg-light p-3 rounded">{{ order.direccion_completa | tojson(indent=2) }}</pre>
             </div>
           </div>
         </div>
@@ -90,19 +101,12 @@
         </div>
         <div class="card-body">
           <pre class="bg-light p-3 rounded">
-[
-  {
-    "fecha": "15/04/2025 14:30",
-    "estado_pago": "pending",
-    "shipping_status": "unshipped"
-  },
-  {
-    "fecha": "15/04/2025 15:00",
-    "estado_pago": "paid",
-    "shipping_status": "processing"
-  }
-]
-          </pre>
+            {% if order.status_history %}
+              {{ order.status_history | tojson(indent=2) }}
+            {% else %}
+              {"message": "No hay historial disponible"}
+            {% endif %}
+            </pre>            
         </div>
       </div>
       
@@ -112,34 +116,34 @@
           <h4 class="mb-0">Actualizar Detalles de la Orden</h4>
         </div>
         <div class="card-body">
-          <form method="post" action="/admin/orders/123">
+          <form id="update-form" method="post" action="/admin/admin_orders/{{ order.id }}">
             <div class="row mb-3">
               <div class="col-md-6">
                 <label for="estado_pago" class="form-label">Estado de Pago</label>
                 <select class="form-select" id="estado_pago" name="estado_pago" required>
-                  <option value="pending" selected>Pending</option>
-                  <option value="paid">Paid</option>
-                  <option value="refunded">Refunded</option>
+                  <option value="pending" {% if order.estado_pago == 'pending' %}selected{% endif %}>Pending</option>
+                  <option value="paid" {% if order.estado_pago == 'paid' %}selected{% endif %}>Paid</option>
+                  <option value="refunded" {% if order.estado_pago == 'refunded' %}selected{% endif %}>Refunded</option>
                 </select>
               </div>
               <div class="col-md-6">
-                <label for="shipping_status" class="form-label">Estado de Envío</label>
-                <select class="form-select" id="shipping_status" name="shipping_status" required>
-                  <option value="unshipped" selected>Unshipped</option>
-                  <option value="processing">Processing</option>
-                  <option value="shipped">Shipped</option>
-                  <option value="delivered">Delivered</option>
-                  <option value="cancelled">Cancelled</option>
+                <label for="estado_envio" class="form-label">Estado de Envío</label>
+                <select class="form-select" id="estado_envio" name="estado_envio" required>
+                  <option value="unshipped" {% if order.estado_envio == 'unshipped' %}selected{% endif %}>Unshipped</option>
+                  <option value="processing" {% if order.estado_envio == 'processing' %}selected{% endif %}>Processing</option>
+                  <option value="shipped" {% if order.estado_envio == 'shipped' %}selected{% endif %}>Shipped</option>
+                  <option value="delivered" {% if order.estado_envio == 'delivered' %}selected{% endif %}>Delivered</option>
+                  <option value="cancelled" {% if order.estado_envio == 'cancelled' %}selected{% endif %}>Cancelled</option>
                 </select>
               </div>
             </div>
             <div class="mb-3">
               <label for="guia_envio" class="form-label">Guía de Envío</label>
-              <input type="text" class="form-control" id="guia_envio" name="guia_envio" value="GUA123456789">
+              <input type="text" class="form-control" id="guia_envio" name="guia_envio" value="{{ order.guia_envio }}">
             </div>
             <div class="mb-3">
               <label for="fecha_envio_cliente" class="form-label">Fecha de Envío al Cliente</label>
-              <input type="datetime-local" class="form-control" id="fecha_envio_cliente" name="fecha_envio_cliente" value="2025-04-15T15:00">
+              <input type="datetime-local" class="form-control" id="fecha_envio_cliente" name="fecha_envio_cliente" value="{{ order.fecha_envio_cliente }}">
             </div>
             <button type="submit" class="btn btn-primary">Actualizar Detalles</button>
           </form>
@@ -147,7 +151,40 @@
       </div>
     </div>
     
+    <!-- jQuery (requerido para AJAX) -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <!-- Bootstrap Bundle con Popper -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Script AJAX para actualizar detalles sin recarga con debugging en consola -->
+    <script>
+      $(document).ready(function() {
+        $('#update-form').on('submit', function(e) {
+          e.preventDefault(); // Prevenir el envío tradicional
+          var form = $(this);
+          $.ajax({
+            url: form.attr('action'),
+            method: 'POST',
+            data: form.serialize(),
+            success: function(response) {
+              console.log("Respuesta de actualización:", response);
+              var message = response.message || "Detalles actualizados correctamente.";
+              $('#flash-message').html('<div class="alert alert-success alert-dismissible fade show" role="alert">' + 
+                message + 
+                '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
+                '</div>');
+            },
+            error: function(xhr) {
+              console.error("Error en actualización:", xhr);
+              var errorMsg = (xhr.responseJSON && xhr.responseJSON.error) ? xhr.responseJSON.error : "Error al actualizar la orden.";
+              $('#flash-message').html('<div class="alert alert-danger alert-dismissible fade show" role="alert">' + 
+                errorMsg + 
+                '<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>' +
+                '</div>');
+            }
+          });
+        });
+      });
+    </script>
   </body>
 </html>

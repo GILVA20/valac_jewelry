@@ -388,13 +388,15 @@
             },
             {
               data: null,
-              render: data => {
-                let actions = `<a href="/admin/admin_orders/${data.id}" class="btn btn-sm btn-outline-primary">Ver</a>`;
-                if (data.estado_pago === 'pending') {
-                  actions += ` <button class="btn btn-sm btn-success process-btn" data-id="${data.id}">Procesar</button>`;
-                }
-                return `<div class="btn-group">${actions}</div>`;
-              }
+render: data => {
+  console.debug("Renderizando acciones para:", data);
+  let actions = `<a href="/admin/admin_orders/${data.id}" class="btn btn-sm btn-outline-primary">Ver</a>`;
+  if (data.estado_pago === 'pending') {
+    actions += ` <button class="btn btn-sm btn-success process-btn" data-id="${data.id}">Procesar</button>`;
+  }
+  console.debug("Acciones generadas:", actions);
+  return `<div class="btn-group">${actions}</div>`;
+}
             }
           ],
           dom: 'Bfrtip',

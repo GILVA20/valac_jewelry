@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Resumen de tu orden</title>
+</head>
+<body style="font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5;">
+  <div style="max-width: 600px; margin: 0 auto; background-color: #fff; padding: 24px; border-radius: 8px;">
+    <h2 style="text-align: center; color: #333;">¡Gracias por tu compra!</h2>
+    <p style="text-align: center;">Este es el resumen de tu orden:</p>
+    
+    <ul style="list-style: none; padding-left: 0;">
+      <li><strong>ID:</strong> {{ order.id }}</li>
+      <li><strong>Nombre:</strong> {{ order.nombre }}</li>
+      <li><strong>Dirección:</strong> {{ order["dirección_envío"] }}, {{ order.colonia }}, {{ order.ciudad }} {{ order.codigo_postal }}</li>
+      <li><strong>Teléfono:</strong> {{ order.telefono }}</li>
+      <li><strong>Email:</strong> {{ order.email }}</li>
+      <li><strong>Total:</strong> ${{ order.total }}</li>
+      <li><strong>Estado de pago:</strong> {{ order.estado_pago }}</li>
+    </ul>
+
+    <h3 style="margin-top: 30px;">Artículos:</h3>
+    {% for item in order_items %}
+    <div style="margin-bottom: 20px; border-bottom: 1px solid #ddd; padding-bottom: 12px;">
+      <p><strong>{{ item.nombre }}</strong></p>
+      {% if item.descripcion %}
+        <p>{{ item.descripcion }}</p>
+      {% endif %}
+      <p>Precio: ${{ item.precio }} | Cantidad: {{ item.cantidad }}</p>
+    </div>
+    {% endfor %}
+
+    <p style="text-align: center; margin-top: 40px;">
+      <a href="https://valacjoyas.com" style="padding: 12px 20px; background-color: #d5a300; color: white; text-decoration: none; border-radius: 4px;">
+        Visitar VALAC Joyas
+      </a>
+    </p>
+  </div>
+</body>
+</html>

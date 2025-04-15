@@ -13,6 +13,11 @@ class Config:
     # Se sobreescriben las claves de MercadoPago según el ambiente
     MP_ACCESS_TOKEN = os.getenv("MP_ACCESS_TOKEN_PROD" if IS_PROD else "MP_ACCESS_TOKEN_TEST")
     MP_PUBLIC_KEY = os.getenv("MP_PUBLIC_KEY_PROD" if IS_PROD else "MP_PUBLIC_KEY_TEST")
+    MAIL_SERVER = os.getenv('MAIL_SERVER')
+    MAIL_PORT = int(os.getenv('MAIL_PORT'))
+    MAIL_USE_TLS = os.getenv('MAIL_USE_TLS', 'True') == 'True'
+    MAIL_SENDER = os.getenv('MAIL_SENDER')
+    MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
 
 class DevelopmentConfig(Config):
     DEBUG = True

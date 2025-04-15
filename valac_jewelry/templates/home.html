@@ -3,12 +3,37 @@
 {% block title %}VALAC Joyas{% endblock %}
 
 {% block content %}
+
+  {% set banner_images = [
+    {'filename': 'sapphire-ring.jpg', 'alt': 'Banner 1'},
+    {'filename': 'CadenasJorge.jpg', 'alt': 'Banner 2'},
+    {'filename': 'goldwomencollar.jpg', 'alt': 'Banner 3'}
+  ] %}
+
+  <!-- Estilos específicos para transición suave de carga -->
+  <style>
+    .banner-slider img {
+      opacity: 0;
+      transition: opacity 0.5s ease-in-out;
+    }
+    .banner-slider img.loaded {
+      opacity: 1;
+    }
+  </style>
+
   <!-- Sección: Banner y Slider de Banner -->
   <section class="relative mt-24">
-    <div class="banner-slider">
-      <img src="{{ SUPABASE_STORAGE_URL }}sapphire-ring.jpg" alt="Banner 1" class="w-full h-[600px] object-cover object-center">
-      <img src="{{ SUPABASE_STORAGE_URL }}mangoldchain.jpg" alt="Banner 2" class="w-full h-[600px] object-cover object-center">
-      <img src="{{ SUPABASE_STORAGE_URL }}goldwomencollar.jpg" alt="Banner 3" class="w-full h-[600px] object-cover object-center">
+    <div class="banner-slider relative overflow-hidden" style="height:auto;">
+      {% for image in banner_images %}
+        <img
+          src="{{ SUPABASE_STORAGE_URL }}{{ image.filename }}"
+          alt="{{ image.alt }}"
+          class="w-full object-cover object-center"
+          loading="eager"
+          width="1920"
+          height="600"
+        >
+      {% endfor %}
     </div>
     <div class="absolute inset-0 flex items-center justify-center" data-aos="fade-up" data-aos-duration="1000">
       <div class="text-center text-white bg-black bg-opacity-50 px-8 py-6 rounded-lg">
@@ -19,16 +44,14 @@
     </div>
   </section>
 
-  <!-- Sección de Productos Destacados (mostrar solo 3 productos más caros) -->
+  <!-- Sección de Productos Destacados -->
   <section id="productos-destacados" class="py-12 bg-white">
     <div class="container mx-auto text-center">
       <h2 class="text-3xl font-semibold mb-8 text-gray-800" data-aos="fade-up" data-aos-duration="1000">
         Productos Destacados
       </h2>
       <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
-        <!-- Los 3 productos más caros se cargarán dinámicamente -->
       </div>
-      <!-- Botón para ver más (redirecciona a /collection) -->
       <div class="mt-8">
         <a href="/collection" class="bg-yellow-500 text-white px-6 py-3 rounded-lg text-xl hover:bg-yellow-600 transition-colors">
           Ver Colección Completa
@@ -82,15 +105,46 @@
     document.addEventListener("DOMContentLoaded", async function(){
       console.log("DEBUG: DOM fully loaded, starting initialization in home.html...");
 
-      // Inicializar Slick Slider para banner y reseñas
+      const bannerImages = document.querySelectorAll('.banner-slider img');
+      const bannerContainer = document.querySelector('.banner-slider');
+      let loadedBannerCount = 0;
+
+      const adjustSliderHeight = (img) => {
+        const aspectRatio = img.naturalWidth / img.naturalHeight;
+        const containerWidth = bannerContainer.clientWidth;
+        const targetHeight = containerWidth / aspectRatio;
+        bannerContainer.style.height = `${targetHeight}px`;
+      };
+
+      bannerImages.forEach(img => {
+        const onLoad = () => {
+          img.classList.add('loaded');
+          loadedBannerCount++;
+
+          if (loadedBannerCount === 1) {
+            adjustSliderHeight(img);
+            window.addEventListener('resize', () => adjustSliderHeight(img));
+          }
+
+          if (loadedBannerCount === bannerImages.length) {
+            $('.banner-slider').slick({
+              autoplay: true,
+              autoplaySpeed: 3000,
+              arrows: true,
+              dots: true
+            });
+            console.log("DEBUG: Slick Slider para banner inicializado tras carga completa.");
+          }
+        };
+
+        if (img.complete) {
+          onLoad();
+        } else {
+          img.addEventListener('load', onLoad);
+        }
+      });
+
       if (typeof $ !== "undefined" && $.fn.slick) {
-        $('.banner-slider').slick({
-          autoplay: true,
-          autoplaySpeed: 3000,
-          arrows: true,
-          dots: true
-        });
-        console.log("DEBUG: Slick Slider para banner inicializado.");
         $('.review-slider').slick({
           autoplay: true,
           autoplaySpeed: 3000,
@@ -106,11 +160,9 @@
         console.error("DEBUG: Slick Slider no se encontró. Verifica que jQuery y Slick estén cargados.");
       }
 
-      // Inicializar AOS
       AOS.init();
       console.log("DEBUG: AOS inicializado en home.html.");
 
-      // Cargar productos de Supabase y mostrar los 3 productos más caros
       try {
         const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm");
         const SUPABASE_URL = "{{ config['SUPABASE_URL'] }}";
@@ -118,7 +170,6 @@
         const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
         console.log("DEBUG: Supabase initialized in home.html:", supabaseClient);
 
-        // Consulta a Supabase para obtener todos los productos
         const { data: products, error } = await supabaseClient
           .from('products')
           .select('id, nombre, descripcion, precio, tipo_producto, genero, tipo_oro, imagen, created_at');
@@ -126,18 +177,15 @@
           console.error("DEBUG: Error loading products from Supabase:", error);
           return;
         }
+
         console.log("DEBUG: Products loaded:", products);
 
-        // Ordenar productos por precio descendente (los más caros primero)
         products.sort((a, b) => b.precio - a.precio);
-        // Tomar solo los 3 primeros
         const top3 = products.slice(0, 3);
         const productGrid = document.getElementById('product-grid');
         if (productGrid) {
           productGrid.innerHTML = "";
           top3.forEach((product, index) => {
-            // Si product.imagen existe, se asume que ya es la URL completa (desde Supabase Storage).
-            // De lo contrario, se utiliza un placeholder desde Supabase Storage.
             const imageUrl = product.imagen && product.imagen !== 'undefined' ? product.imagen : `${SUPABASE_STORAGE_URL}placeholder.jpg`;
             productGrid.innerHTML += `
               <div class="bg-white p-5 rounded-lg shadow-md product-card" data-aos="fade-up" data-aos-delay="${index * 50}">

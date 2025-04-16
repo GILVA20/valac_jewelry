@@ -1,21 +1,17 @@
 from flask import Blueprint, render_template, request, redirect, flash, url_for
 
-contact_bp = Blueprint('contact', __name__)
+from flask import Blueprint, request, redirect, url_for, flash
 
-@contact_bp.route('/contact', methods=['GET'])
+contact_bp = Blueprint('contact', __name__, url_prefix='/contact')
+
+@contact_bp.route('/', methods=['GET'])
 def contact():
     return render_template('contact.html')
 
-@contact_bp.route('/contact/send', methods=['POST'])
+@contact_bp.route('/send', methods=['POST'])
 def send():
-    # Extract data from the contact form
-    name = request.form.get('name')
-    email = request.form.get('email')
-    subject = request.form.get('subject')
-    message = request.form.get('message')
-    
-    # Here you can process the data (validate, send email, store in database, etc.)
-    flash("Tu mensaje ha sido enviado. ¡Gracias por contactarnos!", "success")
-    
-    # Redirect back to the contact page (or another page if preferred)
+    # Aquí procesas los datos del formulario
+    # Por ejemplo, leer request.form['nombre'], etc.
+    # y luego envías el correo o almacenas el mensaje, etc.
+    flash("Mensaje enviado correctamente", "success")
     return redirect(url_for('contact.contact'))

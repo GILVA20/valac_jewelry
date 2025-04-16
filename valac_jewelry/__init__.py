@@ -73,6 +73,8 @@ def create_app():
     
     from .routes.cart import cart_bp
     app.register_blueprint(cart_bp, url_prefix='/cart')
+    from .routes.contact import contact_bp
+    app.register_blueprint(contact_bp)
 
         # Registrar blueprint de órdenes para seguimiento
     from .routes.orders import orders_bp

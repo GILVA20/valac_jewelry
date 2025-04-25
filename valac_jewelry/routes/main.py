@@ -13,9 +13,9 @@ def home():
     return render_template('home.html', products=products)
     return render_template('home.html')
 
-@main_bp.route('/collection')
-def collection():
-    return render_template('collection.html')
+def collection_redirect():
+    from flask import redirect, url_for
+    return redirect(url_for("collection.collection_home"), code=302)
 
 @main_bp.route('/about')
 def about():

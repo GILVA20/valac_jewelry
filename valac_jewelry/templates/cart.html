@@ -6,20 +6,6 @@
 
 {% block content %}
 <main class="pt-24 container mx-auto p-6">
-  <!-- Mensajes Flash para Accesibilidad -->
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      <div class="mb-4" role="alert" aria-live="assertive">
-        {% for category, message in messages %}
-          <div class="p-2 rounded mb-2 text-white
-                      {% if category == 'success' %}bg-green-600{% elif category == 'error' %}bg-red-600{% elif category == 'warning' %}bg-yellow-500{% elif category == 'info' %}bg-blue-600{% endif %}">
-            {{ message }}
-          </div>
-        {% endfor %}
-      </div>
-    {% endif %}
-  {% endwith %}
-
   <!-- Si el servidor indica que no hay productos, se limpia localStorage -->
   {% if not products %}
     <script>
@@ -118,7 +104,8 @@
   // Actualiza el resumen de la compra y sincroniza con localStorage
   const updateSummary = () => {
     const subtotal = calculateSubtotal();
-    const shipping = subtotal > 0 ? 260 : 0;
+    // 🔄 REEMPLAZA el cálculo de shipping dentro de updateOrderSummary()
+    const shipping = subtotal >= 8500 ? 0 : (subtotal > 0 ? 260 : 0);
     const total = subtotal + shipping;
     document.getElementById('subtotal').textContent = `$${subtotal.toFixed(2)}`;
     document.getElementById('shipping').textContent = `$${shipping.toFixed(2)}`;

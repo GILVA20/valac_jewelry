@@ -107,7 +107,7 @@ def checkout():
         flash("Tu carrito está vacío.", "error")
         return redirect(url_for('cart.view_cart'))
     
-    shipping_cost = 280.0  # Costo fijo simulado de envío
+    shipping_cost = 0.0 if subtotal >= 8500 else (260.0 if subtotal > 0 else 0.0)
     total = subtotal + shipping_cost
     current_app.logger.debug("Costo de envío: %s, Total calculado: %s", shipping_cost, total)
     

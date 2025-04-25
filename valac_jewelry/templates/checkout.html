@@ -304,7 +304,7 @@
     const calculateSubtotal = () => cartItems.reduce((sum, item) => sum + item.precio * item.cantidad, 0);
     const updateOrderSummary = () => {
       const subtotal = calculateSubtotal();
-      const shipping = subtotal >= 8000 ? 0 : (subtotal > 0 ? 260 : 0);
+      const shipping = subtotal >= 8500 ? 0 : (subtotal > 0 ? 260 : 0);
       const total = subtotal + shipping;
       document.getElementById('subtotal').textContent = "$" + subtotal.toFixed(2);
       document.getElementById('shipping').textContent = "$" + shipping.toFixed(2);

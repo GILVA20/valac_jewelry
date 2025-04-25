@@ -273,18 +273,32 @@
           .gte('precio', parseInt(price_min))
           .lte('precio', parseInt(price_max));
 
-        if (category) {
-          query = query.eq('tipo_producto', category);
-          console.log("DEBUG: Filtering by category:", category);
-        }
+          const mapCategoria = {
+          anillos: 'Anillos',
+          aretes:  'Aretes',
+          cadenas: 'Cadenas',
+          pulsos:  'Pulsos',
+          dijes:   'Dijes'
+        };
+
+// y dejas todo el HTML tal cual
+if (category) {
+  query = query.eq('tipo_producto', mapCategoria[category] || category);
+}
         if (type_oro) {
           query = query.eq('tipo_oro', type_oro);
           console.log("DEBUG: Filtering by type of gold:", type_oro);
         }
         if (genero) {
-          query = query.eq('genero', genero);
-          console.log("DEBUG: Filtering by gender:", genero);
-        }
+      if (genero !== 'Unisex') {
+        // Para Hombre o Mujer mostramos también productos Unisex
+        query = query.in('genero', [genero, 'Unisex']);
+      } else {
+        // Para Unisex mantenemos el filtro directo
+        query = query.eq('genero', 'Unisex');
+      }
+      console.log('DEBUG: Filtering by gender w/ unisex:', genero);
+    }
         console.log("DEBUG: Filtering by price range:", price_min, price_max);
 
         const { data: products, error } = await query;

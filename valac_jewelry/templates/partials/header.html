@@ -1,87 +1,109 @@
-<header class="fixed top-0 left-0 right-0 z-50 shadow-md bg-white">
+<header class="fixed top-0 left-0 right-0 z-50 bg-white shadow-md">
   <div class="container mx-auto flex justify-between items-center p-4 md:p-6">
-    <!-- Logo (sin negritas) -->
+    <!-- Logo -->
     <div class="text-2xl sm:text-3xl md:text-4xl">
-      <a href="/" class="hover:text-[#D4AF37] transition-colors">VALAC Joyas</a>
+      <a href="/" class="transition-colors hover:text-[#D4AF37]">VALAC Joyas</a>
     </div>
 
-    <!-- Botón menú hamburguesa (móviles y tabletas) -->
-    <button id="menu-toggle" class="lg:hidden text-3xl focus:outline-none" aria-label="Abrir menú">
-      <i class="fas fa-bars"></i>
+    <!-- Botón hamburguesa (móvil) -->
+    <button id="menu-toggle"
+            class="lg:hidden text-3xl focus:outline-none"
+            aria-label="Abrir menú">
+      <i class="fas fa-bars" aria-hidden="true"></i>
     </button>
 
-    <!-- Menú de navegación (pantallas grandes) -->
+    <!-- NAV (desktop) -->
     <nav class="hidden lg:flex space-x-4 lg:space-x-6">
-      <a href="/" class="text-lg lg:text-xl hover:text-[#D4AF37] transition-colors">Inicio</a>
-      <a href="/collection" class="text-lg lg:text-xl hover:text-[#D4AF37] transition-colors">Colección</a>
-      <a href="/about" class="text-lg lg:text-xl hover:text-[#D4AF37] transition-colors">Sobre Nosotros</a>
-      <a href="/contact" class="text-lg lg:text-xl hover:text-[#D4AF37] transition-colors">Contacto</a>
-      <a href="/cart" class="text-lg lg:text-xl hover:text-[#D4AF37] transition-colors">
-        <i class="fas fa-shopping-cart"></i> Carrito
+      <a href="/" class="transition-colors hover:text-[#D4AF37] text-lg lg:text-xl">Inicio</a>
+
+      <!-- Colección + MEGA-MENÚ -->
+      <div class="relative group">
+        <a href="/collection"
+           class="transition-colors hover:text-[#D4AF37] flex items-center gap-1 text-lg lg:text-xl">
+          Colección
+          <svg class="w-4 h-4 mt-0.5" fill="none" stroke="currentColor"
+               viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M19 9l-7 7-7-7" />
+          </svg>
+        </a>
+
+        <!-- MEGA-MENÚ optimizado -->
+        <div class="absolute left-1/2 -translate-x-1/2 top-full w-[280px] min-w-max p-4
+                    bg-white rounded-xl shadow-lg ring-1 ring-gray-200
+                    opacity-0 invisible translate-y-2
+                    transition-opacity transition-transform duration-200 ease-in-out
+                    group-hover:visible group-hover:opacity-100 group-hover:translate-y-0
+                    group-focus-within:visible group-focus-within:opacity-100 group-focus-within:translate-y-0
+                    z-50">
+          <div class="flex flex-row gap-4 text-[#424242]">
+
+            <!-- Categorías principales -->
+            {% for g in ['Hombre','Mujer'] %}
+            <div class="space-y-1">
+              <h4 class="font-bold text-lg border-b-2 border-[#D4AF37] pb-1 mb-2">{{ g }}</h4>
+              <div class="flex flex-col space-y-2">
+                {% for c in ['aretes','cadenas','anillos','dijes','pulsos'] %}
+                <a href="/collection?genero={{ g }}&category={{ c }}&mix_unisex=1"
+                   class="block capitalize text-base hover:text-[#D4AF37] hover:pl-1 transition-all py-1 px-2 rounded-md hover:bg-gray-50">
+                  <i class="fas fa-gem text-xs mr-1"></i>{{ c }}
+                </a>
+                {% endfor %}
+              </div>
+            </div>
+            {% endfor %}
+
+          </div>
+        </div>
+      </div>
+
+      <a href="/about"   class="transition-colors hover:text-[#D4AF37] text-lg lg:text-xl">Sobre&nbsp;Nosotros</a>
+      <a href="/contact" class="transition-colors hover:text-[#D4AF37] text-lg lg:text-xl">Contacto</a>
+      <a href="/cart"
+         class="transition-colors hover:text-[#D4AF37] flex items-center gap-1 text-lg lg:text-xl">
+        <i class="fas fa-shopping-cart" aria-hidden="true"></i> Carrito
       </a>
     </nav>
 
-    <!-- Íconos de redes sociales (pantallas grandes) -->
-    <div class="hidden lg:flex space-x-2 lg:space-x-4">
-      <a href="#" class="text-xl lg:text-2xl hover:text-[#D4AF37] transition-colors"><i class="fab fa-facebook"></i></a>
-      <a href="#" class="text-xl lg:text-2xl hover:text-[#D4AF37] transition-colors"><i class="fab fa-instagram"></i></a>
-      <a href="#" class="text-xl lg:text-2xl hover:text-[#D4AF37] transition-colors"><i class="fab fa-twitter"></i></a>
+    <!-- Redes -->
+    <div class="hidden lg:flex space-x-4">
+      <a href="#" class="transition-colors hover:text-[#D4AF37] text-2xl"><i class="fab fa-facebook"  aria-hidden="true"></i></a>
+      <a href="#" class="transition-colors hover:text-[#D4AF37] text-2xl"><i class="fab fa-instagram" aria-hidden="true"></i></a>
+      <a href="#" class="transition-colors hover:text-[#D4AF37] text-2xl"><i class="fab fa-twitter"   aria-hidden="true"></i></a>
     </div>
   </div>
-</header>
 
-<!-- Sidebar (menú lateral para móviles) -->
-<aside id="sidebar" class="fixed top-0 left-0 h-full w-64 bg-white shadow-lg transform -translate-x-full transition-transform ease-in-out duration-300 z-50">
-  <div class="p-6">
-    <!-- Botón para cerrar el sidebar -->
-    <button id="close-sidebar" class="text-3xl mb-6 focus:outline-none" aria-label="Cerrar menú">
-      <i class="fas fa-times"></i>
-    </button>
-    <nav class="space-y-4">
-      <a href="/" class="block text-lg hover:text-[#D4AF37] transition-colors">Inicio</a>
-      <a href="/collection" class="block text-lg hover:text-[#D4AF37] transition-colors">Colección</a>
-      <a href="/about" class="block text-lg hover:text-[#D4AF37] transition-colors">Sobre Nosotros</a>
-      <a href="/contact" class="block text-lg hover:text-[#D4AF37] transition-colors">Contacto</a>
-      <a href="/cart" class="block text-lg hover:text-[#D4AF37] transition-colors">
-        <i class="fas fa-shopping-cart"></i> Carrito
-      </a>
+  <!-- Menú móvil desplegable -->
+  <div id="mobile-menu" class="hidden lg:hidden bg-white shadow-md">
+    <nav class="flex flex-col p-4 space-y-2">
+      <a href="/" class="py-2 px-3 rounded-md hover:bg-gray-100">Inicio</a>
+      <div class="flex flex-col">
+        <span class="py-2 px-3 font-semibold">Colección</span>
+        {% for g in ['Hombre','Mujer'] %}
+          <div class="ml-4">
+            <span class="font-semibold text-[#D4AF37]">{{ g }}</span>
+            <div class="flex flex-col ml-2">
+              {% for c in ['aretes','cadenas','anillos','dijes','pulsos'] %}
+                <a href="/collection?genero={{ g }}&category={{ c }}&mix_unisex=1" class="py-1 px-2 rounded-md hover:bg-gray-100 capitalize">
+                  {{ c }}
+                </a>
+              {% endfor %}
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+      <a href="/about" class="py-2 px-3 rounded-md hover:bg-gray-100">Sobre Nosotros</a>
+      <a href="/contact" class="py-2 px-3 rounded-md hover:bg-gray-100">Contacto</a>
+      <a href="/cart" class="py-2 px-3 rounded-md hover:bg-gray-100"><i class="fas fa-shopping-cart"></i> Carrito</a>
     </nav>
   </div>
-</aside>
 
-<!-- Overlay para fondo oscuro al abrir el sidebar -->
-<div id="overlay" class="fixed inset-0 bg-black bg-opacity-50 hidden z-40"></div>
+  <script>
+    const menuToggle = document.getElementById('menu-toggle');
+    const mobileMenu = document.getElementById('mobile-menu');
 
-<!-- CSS adicional -->
-<style>
-  /* Clase para activar el sidebar */
-  .sidebar-open {
-    transform: translateX(0) !important;
-  }
-</style>
-
-<!-- JavaScript para manejar el sidebar -->
-<script>
-  const menuToggle = document.getElementById('menu-toggle');
-  const sidebar = document.getElementById('sidebar');
-  const closeSidebar = document.getElementById('close-sidebar');
-  const overlay = document.getElementById('overlay');
-
-  // Abrir sidebar en móviles y tabletas
-  menuToggle.addEventListener('click', () => {
-    sidebar.classList.add('sidebar-open');
-    overlay.classList.remove('hidden');
-  });
-
-  // Cerrar sidebar
-  closeSidebar.addEventListener('click', () => {
-    sidebar.classList.remove('sidebar-open');
-    overlay.classList.add('hidden');
-  });
-
-  // Cerrar sidebar al hacer clic en el overlay
-  overlay.addEventListener('click', () => {
-    sidebar.classList.remove('sidebar-open');
-    overlay.classList.add('hidden');
-  });
-</script>
+    menuToggle.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+    });
+  </script>
+</header>

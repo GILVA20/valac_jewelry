@@ -25,12 +25,18 @@ def send_order_confirmation_email(order, order_items):
         msg["Subject"] = f"Gracias por tu compra #{order['id']} en VALAC Joyas"
         msg["From"] = sender_email
         msg["To"] = recipient_email
+        msg["To"] = recipient_email
+        if sender_email and sender_email != recipient_email:
+            msg["Bcc"] = sender_email          # copia oculta
+            recipients = [recipient_email, sender_email]   # 👈 1) lista completa
+        else:
+            recipients = [recipient_email]
         msg.attach(MIMEText(html_content, "html"))
 
         with smtplib.SMTP(smtp_server, smtp_port) as server:
             server.starttls()
             server.login(sender_email, sender_password)
-            server.sendmail(sender_email, recipient_email, msg.as_string())
+            server.sendmail(sender_email, recipients, msg.as_string()) 
 
         current_app.logger.info("Correo de confirmación enviado a %s", recipient_email)
 

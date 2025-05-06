@@ -204,8 +204,12 @@
       <!-- Sección de Productos -->
       <section id="products-section" class="flex-1 border border-gray-200 rounded-md p-6 bg-white">
         <h1 class="text-3xl font-semibold mb-8 text-[#424242]">Colección de Joyas</h1>
-        <p class="mb-4 text-gray-600">Mostrando {{ products|length }} producto(s).</p>
-        <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+              <!-- Spinner oculto por defecto -->
+              <div id="loading-spinner">
+                <i class="fas fa-spinner fa-pulse fa-2x text-gray-500"></i>
+              </div>
+              <!-- Aquí se renderizan los productos -->
+              <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
           <!-- Los productos se cargarán dinámicamente -->
         </div>
       </section>
@@ -269,7 +273,7 @@
         showSpinner();
         let query = supabaseClient
           .from('products')
-          .select('id, nombre, descripcion, precio, tipo_producto, genero, tipo_oro, imagen, created_at')
+          .select('id, nombre, descripcion, precio, descuento_pct, precio_descuento, tipo_producto, genero, tipo_oro, imagen, created_at')
           .gte('precio', parseInt(price_min))
           .lte('precio', parseInt(price_max));
 
@@ -335,19 +339,25 @@ if (category) {
           productGrid.innerHTML = "";
           filteredProducts.forEach((product, index) => {
             const imageUrl = (product.imagen && product.imagen !== 'undefined') ? product.imagen : '/static/images/placeholder.jpg';
-            productGrid.innerHTML += `
-              <div class="bg-white p-5 rounded-lg shadow-md product-card" data-aos="fade-up" data-aos-delay="${index * 50}">
-                <img src="${imageUrl}" loading="lazy" alt="${product.nombre}" class="w-full h-64 object-cover mb-4 rounded">
-                <h3 class="text-xl font-semibold text-[#424242]">${product.nombre}</h3>
-                <p class="text-gray-800 mt-2 font-playfair">$${product.precio}</p>
-                <p class="text-gray-600 mt-1 text-sm">Oro: ${product.tipo_oro} | Género: ${product.genero}</p>
-                <div class="mt-4">
-                  <a href="/producto/${product.id}" class="btn-detalles">
-                    Ver detalles
-                  </a>
-                </div>
+                      productGrid.innerHTML += `
+            <div class="relative bg-white p-5 rounded-lg shadow-md overflow-hidden" data-aos="fade-up" data-aos-delay="${index * 50}">
+              ${product.descuento_pct > 0 ? `
+                <div class="discount-badge">-${product.descuento_pct}%</div>
+              ` : ``}
+              <img src="${imageUrl}" alt="${product.nombre}">
+              <h3 class="text-xl font-semibold text-[#424242] mt-2">${product.nombre}</h3>
+              ${product.descuento_pct > 0 ? `
+                <p class="text-gray-500 line-through mt-1">$${product.precio}</p>
+                <p class="text-2xl font-bold text-red-600">$${product.precio_descuento}</p>
+              ` : `
+                <p class="text-2xl font-semibold text-gray-800 mt-2">$${product.precio}</p>
+              `}
+              <p class="text-gray-600 mt-1 text-sm">Oro: ${product.tipo_oro} | Género: ${product.genero}</p>
+              <div class="mt-4">
+                <a href="/producto/${product.id}" class="btn-detalles">Ver detalles</a>
               </div>
-            `;
+            </div>
+          `;
           });
           console.log("DEBUG: Products rendered in collection.html.");
           AOS.refresh();

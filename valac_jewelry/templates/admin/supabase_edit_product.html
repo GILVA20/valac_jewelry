@@ -45,10 +45,11 @@
                 <label for="tipo_producto" class="block text-gray-700 font-medium mb-2">Tipo de Producto:</label>
                 <select id="tipo_producto" name="tipo_producto" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
                     <option value="Anillos" {% if product.tipo_producto == "Anillos" %}selected{% endif %}>Anillos</option>
+                    <option value="Dijes" {% if product.tipo_producto == "Aretes" %}selected{% endif %}>Dijes</option>
                     <option value="Collares" {% if product.tipo_producto == "Collares" %}selected{% endif %}>Collares</option>
                     <option value="Pulsos" {% if product.tipo_producto == "Pulsos" %}selected{% endif %}>Pulsos</option>
                     <option value="Cadenas" {% if product.tipo_producto == "Cadenas" %}selected{% endif %}>Cadenas</option>
-                    <option value="Dijes" {% if product.tipo_producto == "Dijes" %}selected{% endif %}>Dijes</option>
+                    <option value="Aretes" {% if product.tipo_producto == "Dijes" %}selected{% endif %}>Aretes</option>
                 </select>
             </div>
 

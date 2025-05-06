@@ -5,22 +5,61 @@
 {% endblock %}
 
 {% block content %}
-  <div class="container mx-auto p-6 pt-24">
+  <style>
+    /* Badge “En oferta” estilo pill */
+    .discount-badge {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background-color: #000;
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      z-index: 10;
+    }
+    .product-detail-container {
+      position: relative;
+    }
+  </style>
+
+  <div class="product-detail-container container mx-auto p-6 pt-24">
+    {% if product.descuento_pct and product.descuento_pct > 0 %}
+      <div class="discount-badge">
+        En oferta {{ product.descuento_pct }}%
+      </div>
+    {% endif %}
     <div class="flex flex-col md:flex-row gap-8">
       <!-- Slider de Imágenes del Producto -->
       <div class="md:w-1/2">
         <div class="product-slider">
           <div>
-            <img src="{{ product.imagen or url_for('static', filename='images/placeholder.jpg') }}" alt="{{ product.nombre }}" class="rounded-lg">
+            <img src="{{ product.imagen or url_for('static', filename='images/placeholder.jpg') }}"
+                 alt="{{ product.nombre }}"
+                 class="rounded-lg">
           </div>
-          {# Se pueden incluir imágenes adicionales si están disponibles #}
         </div>
       </div>
 
       <!-- Información del Producto -->
       <div class="md:w-1/2">
         <h1 class="text-3xl font-bold text-[#424242] mb-4">{{ product.nombre }}</h1>
-        <p class="text-xl text-gray-600 mb-2">Precio: ${{ product.precio }}</p>
+
+        {% if product.descuento_pct and product.descuento_pct > 0 %}
+          <p class="text-gray-500 line-through mt-4 text-lg">
+            ${{ "%.2f"|format(product.precio) }}
+          </p>
+          <p class="text-3xl font-bold text-red-600 mt-1">
+            ${{ "%.2f"|format(product.precio_descuento) }}
+          </p>
+        {% else %}
+          <p class="text-3xl font-semibold text-gray-800 mt-4">
+            ${{ "%.2f"|format(product.precio) }}
+          </p>
+        {% endif %}
+
         <p class="text-md text-gray-500 mb-4">
           Tipo de Oro: {{ product.tipo_oro }}<br>
           Género: {{ product.genero }}<br>
@@ -29,9 +68,11 @@
         </p>
         <p class="mb-6 text-gray-800">{{ product.descripcion }}</p>
         <div class="flex flex-wrap gap-4">
-          <!-- Botón para Agregar al Carrito (sólo agrega el producto) -->
-          <form action="{{ url_for('cart.add_to_cart', product_id=product.id) }}" method="POST" class="inline-block">
-            <button type="submit" class="bg-[#d5a300] text-white px-6 py-3 rounded hover:bg-[#b38f00] transition-colors">
+          <form action="{{ url_for('cart.add_to_cart', product_id=product.id) }}"
+                method="POST"
+                class="inline-block">
+            <button type="submit"
+                    class="bg-[#d5a300] text-white px-6 py-3 rounded hover:bg-[#b38f00] transition-colors">
               <i class="fas fa-shopping-cart"></i> Agregar al Carrito
             </button>
           </form>
@@ -44,19 +85,37 @@
       <h2 class="text-2xl font-semibold text-[#424242] mb-6">También te puede interesar</h2>
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
         {% for rp in related_products %}
-        <div class="bg-white p-5 rounded-lg shadow-lg transition-transform transform hover:scale-105 hover:shadow-xl" data-aos="fade-up" data-aos-delay="{{ loop.index0 * 50 }}">
-          <img src="{{ rp.imagen or url_for('static', filename='images/placeholder.jpg') }}" alt="{{ rp.nombre }}" class="w-full h-64 object-cover mb-4 rounded">
-          <h3 class="text-xl font-semibold text-[#424242]">{{ rp.nombre }}</h3>
-          <p class="text-gray-800 mt-2 font-bold">$ {{ rp.precio }}</p>
-          <a href="{{ url_for('products.product_detail', product_id=rp.id) }}"
-             class="mt-4 inline-block bg-[#d5a300] text-white px-4 py-2 rounded hover:bg-[#b38f00] transition-colors">
-            Ver detalles
-          </a>
-        </div>
+          <div class="bg-white p-5 rounded-lg shadow-lg transition-transform transform hover:scale-105 hover:shadow-xl"
+               data-aos="fade-up" data-aos-delay="{{ loop.index0 * 50 }}">
+            <div class="relative">
+              {% if rp.descuento_pct and rp.descuento_pct > 0 %}
+                <div class="discount-badge">-{{ rp.descuento_pct }}%</div>
+              {% endif %}
+              <img src="{{ rp.imagen or url_for('static', filename='images/placeholder.jpg') }}"
+                   alt="{{ rp.nombre }}"
+                   class="w-full h-64 object-cover mb-4 rounded">
+            </div>
+            <h3 class="text-xl font-semibold text-[#424242]">{{ rp.nombre }}</h3>
+            {% if rp.descuento_pct and rp.descuento_pct > 0 %}
+              <p class="text-gray-500 line-through mt-1">
+                ${{ "%.2f"|format(rp.precio) }}
+              </p>
+              <p class="text-lg font-bold text-red-600">
+                ${{ "%.2f"|format(rp.precio_descuento) }}
+              </p>
+            {% else %}
+              <p class="text-lg font-semibold text-gray-800 mt-2">
+                ${{ "%.2f"|format(rp.precio) }}
+              </p>
+            {% endif %}
+            <a href="{{ url_for('products.product_detail', product_id=rp.id) }}"
+               class="mt-4 inline-block bg-[#d5a300] text-white px-4 py-2 rounded hover:bg-[#b38f00] transition-colors">
+              Ver detalles
+            </a>
+          </div>
         {% endfor %}
       </div>
     </div>
-  </div>
 {% endblock %}
 
 {% block scripts_extra %}

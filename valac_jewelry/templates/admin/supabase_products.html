@@ -6,7 +6,6 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
   <!-- Incluye FontAwesome para iconos -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  <!-- Opcional: Puedes incluir librerías para lightbox si deseas, aquí usaremos un modal simple con Tailwind -->
   <style>
     /* Estilos para el modal */
     .modal {
@@ -36,12 +35,9 @@
     <a href="{{ url_for('.new') }}" class="mb-6 inline-block bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
       <i class="fas fa-plus mr-2"></i>Agregar Producto
     </a>
-
-    <!-- Botón para acceder a la vista de Galería/Ordenación (placeholder) -->
+    <!-- Botón para ver galería/ordenar -->
     <a href="{{ url_for('.gallery') }}" class="mb-6 inline-block bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
-        <i class="fas fa-th-large mr-2"></i>Ver Galería / Ordenar
-    </a>
-          <i class="fas fa-th-large mr-2"></i>Ver Galería / Ordenar
+      <i class="fas fa-th-large mr-2"></i>Ver Galería / Ordenar
     </a>
 
     <!-- Campo de búsqueda -->
@@ -49,54 +45,87 @@
       <input type="text" id="search" placeholder="Buscar producto..." class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
     </div>
 
-    <!-- Tabla de productos -->
-    <div class="overflow-x-auto">
-      <table class="w-full border-collapse">
-        <thead class="bg-gray-100">
-          <tr>
-            <th class="border p-3 text-left text-gray-700">ID</th>
-            <th class="border p-3 text-left text-gray-700">Nombre</th>
-            <th class="border p-3 text-left text-gray-700">Precio</th>
-            <th class="border p-3 text-left text-gray-700">Tipo Producto</th>
-            <th class="border p-3 text-left text-gray-700">Género</th>
-            <th class="border p-3 text-left text-gray-700">Tipo de Oro</th>
-            <th class="border p-3 text-left text-gray-700">Imagen</th>
-            <th class="border p-3 text-left text-gray-700">Acciones</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for prod in products %}
-          <tr class="hover:bg-gray-50 transition duration-200">
-            <td class="border p-3 text-gray-700">{{ prod.id }}</td>
-            <td class="border p-3 text-gray-700">{{ prod.nombre }}</td>
-            <td class="border p-3 text-gray-700">${{ prod.precio }}</td>
-            <td class="border p-3 text-gray-700">{{ prod.tipo_producto }}</td>
-            <td class="border p-3 text-gray-700">{{ prod.genero }}</td>
-            <td class="border p-3 text-gray-700">{{ prod.tipo_oro }}</td>
-            <td class="border p-3">
-              {% if prod.imagen and prod.imagen != 'undefined' %}
-                <img src="{{ prod.imagen }}" alt="{{ prod.nombre }}" class="w-16 h-16 object-cover rounded-lg cursor-pointer" onclick="openModal('{{ prod.imagen }}')">
-              {% else %}
-                <span class="text-red-500">No disponible</span>
-              {% endif %}
-            </td>
-            <td class="border p-3">
-              <!-- Botón de Editar -->
-              <a href="{{ url_for('.edit_product', id=prod.id) }}" class="text-blue-500 hover:text-blue-600 mr-2">
-                <i class="fas fa-edit"></i>
-              </a>
-              <!-- Botón de Eliminar (envía POST) -->
-              <form method="POST" action="{{ url_for('supabase_products.delete_product', product_id=prod.id) }}" style="display:inline;" onsubmit="return confirm('¿Estás seguro de eliminar este producto?');">
-              <button type="submit" class="text-red-500 hover:text-red-600">
-                  <i class="fas fa-trash"></i>
-                </button>
-              </form>
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
+    <!-- Formulario de descuento en lote -->
+    <form id="batch_form" method="post" class="mb-6">
+      <div class="flex items-center space-x-2">
+        <input
+          type="number"
+          name="bulk_descuento_pct"
+          min="0" max="100"
+          placeholder="% Descuento"
+          class="w-32 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none"
+        />
+        <button
+          formaction="{{ url_for('.apply_discount') }}"
+          formmethod="post"
+          class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300"
+        >
+          Aplicar a seleccionados
+        </button>
+        <button
+          formaction="{{ url_for('.remove_discount') }}"
+          formmethod="post"
+          class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300"
+        >
+          Quitar descuento
+        </button>
+      </div>
+
+      <!-- Tabla de productos con select y columnas de descuento -->
+      <div class="overflow-x-auto mt-4">
+        <table class="w-full border-collapse">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="border p-3"><input type="checkbox" id="select_all" /></th>
+              <th class="border p-3 text-left text-gray-700">ID</th>
+              <th class="border p-3 text-left text-gray-700">Nombre</th>
+              <th class="border p-3 text-left text-gray-700">Precio</th>
+              <th class="border p-3 text-left text-gray-700">% Descuento</th>
+              <th class="border p-3 text-left text-gray-700">Precio Desc.</th>
+              <th class="border p-3 text-left text-gray-700">Tipo Producto</th>
+              <th class="border p-3 text-left text-gray-700">Género</th>
+              <th class="border p-3 text-left text-gray-700">Tipo de Oro</th>
+              <th class="border p-3 text-left text-gray-700">Imagen</th>
+              <th class="border p-3 text-left text-gray-700">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for prod in products %}
+            <tr class="hover:bg-gray-50 transition duration-200">
+              <td class="border p-3 text-center">
+                <input type="checkbox" name="product_ids" value="{{ prod.id }}" class="select_row" />
+              </td>
+              <td class="border p-3 text-gray-700">{{ prod.id }}</td>
+              <td class="border p-3 text-gray-700">{{ prod.nombre }}</td>
+              <td class="border p-3 text-gray-700">${{ prod.precio }}</td>
+              <td class="border p-3 text-gray-700">{{ prod.descuento_pct or 0 }}%</td>
+              <td class="border p-3 text-gray-700">${{ prod.precio_descuento or 0 }}</td>
+              <td class="border p-3 text-gray-700">{{ prod.tipo_producto }}</td>
+              <td class="border p-3 text-gray-700">{{ prod.genero }}</td>
+              <td class="border p-3 text-gray-700">{{ prod.tipo_oro }}</td>
+              <td class="border p-3">
+                {% if prod.imagen and prod.imagen != 'undefined' %}
+                  <img src="{{ prod.imagen }}" alt="{{ prod.nombre }}" class="w-16 h-16 object-cover rounded-lg cursor-pointer" onclick="openModal('{{ prod.imagen }}')">
+                {% else %}
+                  <span class="text-red-500">No disponible</span>
+                {% endif %}
+              </td>
+              <td class="border p-3">
+                <a href="{{ url_for('.edit_product', id=prod.id) }}" class="text-blue-500 hover:text-blue-600 mr-2">
+                  <i class="fas fa-edit"></i>
+                </a>
+                <form method="POST" action="{{ url_for('supabase_products.delete_product', product_id=prod.id) }}" style="display:inline;" onsubmit="return confirm('¿Estás seguro de eliminar este producto?');">
+                  <button type="submit" class="text-red-500 hover:text-red-600">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </form>
 
     <!-- Paginación (opcional) -->
     <div class="mt-6 flex justify-center">
@@ -116,38 +145,36 @@
     </div>
   </div>
 
-  <!-- Script para búsqueda y modal -->
+  <!-- Script para búsqueda, selección y modal -->
   <script>
     // Búsqueda interactiva
     document.getElementById('search').addEventListener('input', function() {
-      const searchTerm = this.value.toLowerCase();
-      const rows = document.querySelectorAll('tbody tr');
-      rows.forEach(row => {
-        const name = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
-        row.style.display = name.includes(searchTerm) ? '' : 'none';
+      const term = this.value.toLowerCase();
+      document.querySelectorAll('tbody tr').forEach(row => {
+        const name = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+        row.style.display = name.includes(term) ? '' : 'none';
       });
     });
 
-    // Función para abrir el modal y mostrar la imagen en grande
-    function openModal(imageUrl) {
-      const modal = document.getElementById('image-modal');
-      const modalImage = document.getElementById('modal-image');
-      modalImage.src = imageUrl + "?t=" + new Date().getTime(); // Agrega timestamp para evitar caché
-      modal.style.display = 'flex';
-    }
-
-    // Función para cerrar el modal
-    document.getElementById('close-modal').addEventListener('click', function() {
-      document.getElementById('image-modal').style.display = 'none';
+    // Select all
+    document.getElementById('select_all').addEventListener('change', function() {
+      document.querySelectorAll('.select_row').forEach(cb => cb.checked = this.checked);
     });
 
-    // Cerrar el modal al hacer clic fuera de la imagen
-    window.onclick = function(event) {
+    // Modal de imagen
+    function openModal(url) {
       const modal = document.getElementById('image-modal');
-      if (event.target == modal) {
-        modal.style.display = 'none';
-      }
+      document.getElementById('modal-image').src = url + "?t=" + Date.now();
+      modal.style.display = 'flex';
     }
+    document.getElementById('close-modal').onclick = () => {
+      document.getElementById('image-modal').style.display = 'none';
+    };
+    window.onclick = e => {
+      if (e.target.id === 'image-modal') {
+        e.target.style.display = 'none';
+      }
+    };
   </script>
 </body>
 </html>

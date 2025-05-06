@@ -66,7 +66,11 @@ def collection_home():
     supabase = current_app.supabase
 
     # ---------------------------- 1) Construcción del query dinámico -----
-    query = supabase.table("products").select("*")
+    #query = supabase.table("products").select("*")
+    query = supabase.table("products").select(
+        "id, nombre, descripcion, precio, descuento_pct, precio_descuento, " +
+        "tipo_producto, genero, tipo_oro, imagen, created_at"
+    )
     logger.debug("📥 Query base creada")
 
     # Parámetros de la URL

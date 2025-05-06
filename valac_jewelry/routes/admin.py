@@ -1,12 +1,13 @@
+from flask import flash, redirect, request, url_for
+from flask_login import current_user
+from flask_admin import BaseView, expose
+import logging
 from flask import request, redirect, url_for, flash, current_app
 from flask_admin import Admin, BaseView, expose
 from flask_login import current_user
 import logging
 from .admin_bulk_upload import BulkUploadAdminView
 
-
-
-# Vista existente para productos
 class SupabaseProductAdmin(BaseView):
     def is_accessible(self):
         return current_user.is_authenticated and getattr(current_user, 'is_admin', False)
@@ -15,39 +16,79 @@ class SupabaseProductAdmin(BaseView):
         flash("Debes iniciar sesión como administrador para acceder a esta sección.", "error")
         return redirect(url_for('auth.login', next=request.url))
 
-
-    @expose('/')
+    @expose('/', methods=['GET'])
     def index(self):
         supabase = self.admin.app.supabase
         response = supabase.table("products").select("*").execute()
         if not response.data:
-            logging.error("Error al obtener productos: " + str(response))
+            logging.error("Error al obtener productos: %s", response)
             products = []
         else:
             products = response.data
-            logging.info(f"Productos obtenidos: {products}")
+            logging.info("Productos obtenidos: %d", len(products))
         return self.render('admin/supabase_products.html', products=products)
-    
+
+    @expose('/apply_discount', methods=['POST'])
+    def apply_discount(self):
+        supabase = self.admin.app.supabase
+        ids = request.form.getlist('product_ids')
+        pct = int(request.form.get('bulk_descuento_pct', 0))
+
+        for pid in ids:
+            # Obtener precio original
+            resp = supabase.table("products").select("precio").eq("id", int(pid)).execute()
+            if resp.data:
+                precio = float(resp.data[0]['precio'])
+                precio_desc = round(precio * (1 - pct/100), 2)
+                # Actualizar descuento_pct y precio_descuento
+                supabase.table("products").update({
+                    "descuento_pct": pct,
+                    "precio_descuento": precio_desc
+                }).eq("id", int(pid)).execute()
+
+        flash(f"Descuento {pct}% aplicado a {len(ids)} producto(s).", "success")
+        return redirect(url_for('.index'))
+
+    @expose('/remove_discount', methods=['POST'])
+    def remove_discount(self):
+        supabase = self.admin.app.supabase
+        ids = request.form.getlist('product_ids')
+
+        for pid in ids:
+            supabase.table("products").update({
+                "descuento_pct": 0,
+                "precio_descuento": 0
+            }).eq("id", int(pid)).execute()
+
+        flash(f"Descuentos eliminados de {len(ids)} producto(s).", "info")
+        return redirect(url_for('.index'))
+
     @expose('/new', methods=['GET', 'POST'])
     def new(self):
         if request.method == 'POST':
-            nombre = request.form.get('nombre')
+            nombre    = request.form.get('nombre')
             descripcion = request.form.get('descripcion')
-            precio = request.form.get('precio')
+            precio    = request.form.get('precio')
+            descuento_pct = int(request.form.get('descuento_pct', 0))
             tipo_producto = request.form.get('tipo_producto')
-            genero = request.form.get('genero')
-            tipo_oro = request.form.get('tipo_oro')
+            genero    = request.form.get('genero')
+            tipo_oro  = request.form.get('tipo_oro')
             imagen_url = request.form.get('imagen')
-            
+
             if not all([nombre, descripcion, precio, tipo_producto, genero, tipo_oro, imagen_url]):
                 flash("Todos los campos son obligatorios.", "error")
                 return self.render('admin/supabase_new_product.html', config=current_app.config)
-            
+
+            precio = float(precio)
+            precio_descuento = round(precio * (1 - descuento_pct/100), 2)
+
             supabase = self.admin.app.supabase
             data = {
                 "nombre": nombre,
                 "descripcion": descripcion,
-                "precio": float(precio),
+                "precio": precio,
+                "descuento_pct": descuento_pct,
+                "precio_descuento": precio_descuento,
                 "tipo_producto": tipo_producto,
                 "genero": genero,
                 "tipo_oro": tipo_oro,
@@ -59,9 +100,9 @@ class SupabaseProductAdmin(BaseView):
             else:
                 flash("Producto agregado exitosamente.", "success")
             return redirect(url_for('.index'))
-        
+
         return self.render('admin/supabase_new_product.html', config=current_app.config)
-    
+
     @expose('/delete/<int:product_id>', methods=['POST'])
     def delete_product(self, product_id):
         supabase = self.admin.app.supabase
@@ -75,37 +116,53 @@ class SupabaseProductAdmin(BaseView):
     @expose('/edit/<int:id>', methods=['GET', 'POST'])
     def edit_product(self, id):
         supabase = self.admin.app.supabase
+
         if request.method == 'POST':
-            nombre = request.form.get('nombre')
+            nombre    = request.form.get('nombre')
             descripcion = request.form.get('descripcion')
-            precio = request.form.get('precio')
+            precio    = float(request.form.get('precio'))
+            descuento_pct = int(request.form.get('descuento_pct', 0))
+            precio_descuento = round(precio * (1 - descuento_pct/100), 2)
             tipo_producto = request.form.get('tipo_producto')
-            genero = request.form.get('genero')
-            tipo_oro = request.form.get('tipo_oro')
+            genero    = request.form.get('genero')
+            tipo_oro  = request.form.get('tipo_oro')
             imagen_url = request.form.get('imagen')
+
             response = supabase.table("products").update({
                 "nombre": nombre,
                 "descripcion": descripcion,
-                "precio": float(precio),
+                "precio": precio,
+                "descuento_pct": descuento_pct,
+                "precio_descuento": precio_descuento,
                 "tipo_producto": tipo_producto,
                 "genero": genero,
                 "tipo_oro": tipo_oro,
                 "imagen": imagen_url
             }).eq("id", id).execute()
+
             if not response.data:
                 flash("Error al actualizar el producto.", "error")
             else:
                 flash("Producto actualizado exitosamente.", "success")
             return redirect(url_for('.index'))
 
-        response = supabase.table("products").select("*").eq("id", id).execute()
-        if not response.data:
+        # GET: traer datos actuales, incluyendo descuento
+        resp = supabase.table("products").select("*").eq("id", id).execute()
+        if not resp.data:
             flash("Producto no encontrado.", "error")
             return redirect(url_for('.index'))
-        product = response.data[0]
-        images_response = supabase.table("product_images").select("*").eq("product_id", id).order("orden").execute()
-        gallery = images_response.data if images_response.data else []
-        return self.render('admin/supabase_edit_product.html', product=product, gallery=gallery, config=current_app.config)
+        product = resp.data[0]
+
+        images_response = supabase.table("product_images") \
+            .select("*").eq("product_id", id).order("orden").execute()
+        gallery = images_response.data or []
+
+        return self.render(
+            'admin/supabase_edit_product.html',
+            product=product,
+            gallery=gallery,
+            config=current_app.config
+        )
 
     @expose('/delete_gallery_image/<int:image_id>', methods=['POST'])
     def delete_gallery_image(self, image_id):
@@ -121,7 +178,7 @@ class SupabaseProductAdmin(BaseView):
     def gallery(self):
         supabase = self.admin.app.supabase
         response = supabase.table("products").select("id, nombre, imagen").execute()
-        media_items = response.data if response.data else []
+        media_items = response.data or []
         return self.render('admin/supabase_gallery.html', media_items=media_items)
 
 # Nueva vista para Ventas

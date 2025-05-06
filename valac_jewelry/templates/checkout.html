@@ -5,7 +5,22 @@
 {% endblock %}
 
 {% block content %}
-<main class="pt-24 container mx-auto p-6">
+<main class="pt-24 container mx-auto px-4 pb-40 md:pb-0">
+
+    <!-- Progress Bar: Carrito → Datos → Pago → Confirmación -->
+    <div class="mb-8">
+      <ul class="flex justify-between text-sm font-medium">
+        {% set steps = ['Carrito','Datos','Pago','Confirmación'] %}
+        {% for s in steps %}
+        <li class="flex-1 text-center">
+          <div class="{% if loop.index <= current_step %}text-yellow-500{% else %}text-gray-400{% endif %}">{{ s }}</div>
+          {% if not loop.last %}
+          <div class="h-1 {% if loop.index < current_step %}bg-yellow-500{% else %}bg-gray-200{% endif %} mx-auto mt-1 w-3/4"></div>
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
   <!-- Breadcrumb para el proceso de checkout -->
   <nav class="mb-6 text-sm text-gray-600" aria-label="Breadcrumb">
     <ol class="list-reset flex">
@@ -22,23 +37,30 @@
   <!-- Resumen del Pedido y mensaje para revisar antes de pagar -->
   <section class="mb-8 p-4 bg-gray-100 rounded-md">
     <h2 class="text-lg font-bold mb-2">Revise su pedido antes de pagar</h2>
-    <div id="order-details">
-      <div class="flex justify-between mb-1">
-        <span>Subtotal:</span>
-        <span id="subtotal">$0.00</span>
-      </div>
-      <div class="flex justify-between mb-1">
-        <span>Envío:</span>
-        <span id="shipping">$0.00</span>
-      </div>
-      <div class="flex justify-between font-bold border-t pt-1">
-        <span>Total:</span>
-        <span id="total">$0.00</span>
-      </div>
-    </div>
+          <div id="order-details">
+            <div class="flex justify-between mb-1">
+              <span>Subtotal:</span>
+              <span>${{ '%.2f'|format(subtotal) }}</span>
+            </div>
+            <div class="flex justify-between mb-1">
+              <span>Envío:</span>
+              <span>${{ '%.2f'|format(shipping) }}</span>
+            </div>
+            {% if discount and discount > 0 %}
+            <div class="flex justify-between mb-1 text-red-600">
+              <span>Descuento:</span>
+              <span>-${{ '%.2f'|format(discount) }}</span>
+            </div>
+            {% endif %}
+            <div class="flex justify-between font-bold border-t pt-1">
+              <span>Total:</span>
+              <span>${{ '%.2f'|format(total) }}</span>
+            </div>
+          </div>   
   </section>
 
-  <form id="checkout-form" method="POST" action="{{ url_for('checkout.checkout') }}">
+    <form id="checkout-form" method="POST" action="{{ url_for('checkout.checkout') }}"
+          class="grid grid-cols-1 lg:grid-cols-3 gap-8">
     <!-- Estilos generales y específicos para el formulario -->
     <style>
       body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; }
@@ -219,7 +241,7 @@
             <option value="" disabled selected>-- Elige una opción --</option>
             <option value="mercadopago">MercadoPago</option>
             <option value="aplazo">Aplazo</option>
-           <!--option value="mock_gateway">Pago Simulado</option--> 
+           <option value="mock_gateway">Pago Simulado</option> 
           </select>
         </div>
         <!-- Banner de Confirmación para MercadoPago -->
@@ -233,19 +255,56 @@
     <div id="mp-button-container"></div>
 
     <!-- Elementos de Confianza: Aquí se incluye un sello de seguridad y se podría agregar un testimonio o mini-carrito -->
-    <section class="trust-section text-center mt-8" data-aos="fade-up" data-aos-duration="1600">
-      <img src="{{ url_for('static', filename='images/sello_seguridad.png') }}" alt="Sello de Seguridad" class="mx-auto mb-2" style="max-width: 100px;">
-      <p class="text-sm text-gray-600">Compra 100% segura con encriptación SSL</p>
-      <p class="mt-2 italic text-sm text-gray-700">"¡Más de 10,000 pagos procesados con seguridad!"</p>
+    <section class="trust-section text-center mt-8">
+      <p class="text-sm text-gray-600">Compra 100% segura con SSL</p>
+      <p class="mt-2 italic text-sm text-gray-700">“+10,000 compras seguras”</p>
     </section>
+    
 
     <!-- Botón de Finalizar Compra (si no se usa el brick de MercadoPago) -->
-    <button type="submit" id="finalize-btn" class="checkout-btn mt-6 w-full" data-aos="fade-up" data-aos-duration="1800">
-      Finalizar compra (MercadoPago)
-      <span id="spinner" class="spinner hidden"></span>
-    </button>
+
+        <!-- Sticky Sidebar / Footer -->
+        <aside class="lg:col-span-1">
+          <div class="sticky top-24 bg-white p-6 rounded-lg shadow space-y-6">
+            <h3 class="text-xl font-semibold">Resumen de tu Compra</h3>
+                         <div class="space-y-2 text-gray-700">
+                            <div class="flex justify-between">
+                              <span>Subtotal</span>
+                              <span>${{ '%.2f'|format(subtotal) }}</span>
+                            </div>
+                            {% if discount > 0 %}
+                            <div class="flex justify-between text-red-600">
+                              <span>Descuento</span>
+                              <span>–${{ '%.2f'|format(discount) }}</span>
+                            </div>
+                            {% endif %}
+                            <div class="flex justify-between">
+                              <span>Envío</span>
+                              <span>${{ '%.2f'|format(shipping) }}</span>
+                            </div>
+                            <div class="border-t pt-2 flex justify-between font-bold">
+                              <span>Total</span>
+                              <span>${{ '%.2f'|format(total) }}</span>
+                            </div>
+                          </div>
+            <button id="checkout-btn" type="submit"
+                    class="w-full py-3 bg-gradient-to-r from-yellow-500 to-yellow-600
+                           text-white font-semibold rounded-lg shadow hover:scale-[1.02]
+                           transition"
+                    aria-label="Pagar ahora">
+              Pagar Ahora
+              <span id="spinner" class="hidden inline-block ml-2 w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+            </button>
+            <p class="text-xs text-center text-gray-500">Transacción 100% segura</p>
+            <img src="{{ url_for('static', filename='images/sello_seguridad.png') }}" alt="Sello SSL"
+                 class="mx-auto w-16 mt-2" aria-hidden="true">
+            <p class="text-sm italic text-gray-600 text-center">“+10,000 compras seguras”</p>
+          </div>
+        </aside>
   </form>
 </main>
+<!-- Toast Container -->
+<div id="toast-container" class="fixed bottom-4 right-4 space-y-2 z-50"></div>
 {% endblock %}
 
 {% block scripts_extra %}
@@ -260,6 +319,22 @@
       document.head.appendChild(script);
     });
   }
+  // Toast helper
+  function toast(msg,type='info'){
+    const t=document.createElement('div');
+    t.className=`px-4 py-2 rounded shadow ${
+      type==='error'?'bg-red-500':'bg-green-500'
+    } text-white`;
+    t.textContent=msg;
+    document.getElementById('toast-container').append(t);
+    setTimeout(()=>t.remove(),4000);
+  }
+  // Flash → toast
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, m in messages %}
+      toast({{ m|tojson }},'{{ 'error' if cat=='error' else 'info' }}');
+    {% endfor %}
+  {% endwith %}
 
   window.onload = async function() {
     console.log("Window fully loaded in checkout.");
@@ -299,18 +374,6 @@
       return re.test(cvc);
     }
 
-    // Actualizar el resumen del pedido según el carrito almacenado
-    const cartItems = JSON.parse(localStorage.getItem('cartItems')) || [];
-    const calculateSubtotal = () => cartItems.reduce((sum, item) => sum + item.precio * item.cantidad, 0);
-    const updateOrderSummary = () => {
-      const subtotal = calculateSubtotal();
-      const shipping = subtotal >= 8500 ? 0 : (subtotal > 0 ? 260 : 0);
-      const total = subtotal + shipping;
-      document.getElementById('subtotal').textContent = "$" + subtotal.toFixed(2);
-      document.getElementById('shipping').textContent = "$" + shipping.toFixed(2);
-      document.getElementById('total').textContent = "$" + total.toFixed(2);
-    };
-    updateOrderSummary();
 
     // --- INTEGRACIÓN DEL AUTORELLENADO SIMULADO ---
     (function() {

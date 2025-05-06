@@ -5,10 +5,40 @@
 {% endblock %}
 
 {% block content %}
-<main class="container mx-auto p-6">
+<main class="pt-24 container mx-auto px-4 pb-40">
+
+    <!-- Progress Bar (hasta Pago) -->
+    <div class="mb-8">
+      <ul class="flex justify-between text-sm font-medium" aria-label="Progreso de compra">
+        {% set steps = ['Carrito','Datos','Pago','Confirmación'] %}
+        {% for s in steps %}
+        <li class="flex-1 text-center">
+          <div class="{% if loop.index <= 3 %}text-yellow-500 font-semibold{% else %}text-gray-300{% endif %}">{{ s }}</div>
+          {% if not loop.last %}
+          <div class="mx-auto mt-1 h-1 w-3/4 {% if loop.index < 3 %}bg-yellow-500{% else %}bg-gray-200{% endif %}"></div>
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+    </div>
   <h1 class="text-3xl font-bold mb-4">Realiza tu pago</h1>
   <!-- Contenedor donde se renderizará el componente Wallet de MercadoPago -->
-  <div id="wallet_container"></div>
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Resumen de tu Compra -->
+        <aside class="lg:col-span-1">
+          <div class="sticky top-24 bg-white p-6 rounded-lg shadow space-y-6">
+            <h3 class="text-xl font-semibold">Resumen de tu Compra</h3>
+            <div class="space-y-2 text-gray-700">
+              <div class="flex justify-between"><span>Subtotal</span><span id="subtotal">$0.00</span></div>
+              <div class="flex justify-between"><span>Envío</span><span id="shipping">$0.00</span></div>
+              <div class="border-t pt-2 flex justify-between font-bold"><span>Total</span><span id="total">$0.00</span></div>
+            </div>
+          </div>
+        </aside>
+    
+        <!-- Contenedor donde se renderizará el componente Wallet de MercadoPago -->
+        <div id="wallet_container" class="lg:col-span-2 flex justify-center"></div>
+      </div>
   <!-- Contenedor para mostrar mensajes de error detallados -->
   <div id="mp-error" class="text-red-600 mt-4" style="display:none;"></div>
 </main>
@@ -86,6 +116,18 @@
         document.getElementById("mp-error").style.display = "block";
         document.getElementById("mp-error").textContent = "Error al renderizar el componente de pago. Detalles: " + err;
       }
-    };
+           // ——————————————————————————————
+      // Después de montar el brick, actualizamos el resumen del carrito
+      const cartItems = JSON.parse(localStorage.getItem('cartItems') || '[]');
+      const calculateSubtotal = () => cartItems.reduce((sum, item) => sum + item.precio * item.cantidad, 0);
+      const updateOrderSummary = () => {
+        const sub = calculateSubtotal();
+        const ship = sub >= 8500 ? 0 : (sub > 0 ? 260 : 0);
+        document.getElementById('subtotal').textContent = '$' + sub.toFixed(2);
+        document.getElementById('shipping').textContent = '$' + ship.toFixed(2);
+        document.getElementById('total').textContent = '$' + (sub + ship).toFixed(2);
+      };
+      updateOrderSummary(); 
+    };  
   </script>
 {% endblock %}

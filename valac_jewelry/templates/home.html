@@ -171,8 +171,8 @@
         console.log("DEBUG: Supabase initialized in home.html:", supabaseClient);
 
         const { data: products, error } = await supabaseClient
-          .from('products')
-          .select('id, nombre, descripcion, precio, tipo_producto, genero, tipo_oro, imagen, created_at');
+                .from('products')
+                .select('id, nombre, descripcion, precio, descuento_pct, precio_descuento, tipo_producto, genero, tipo_oro, imagen, created_at');
         if (error) {
           console.error("DEBUG: Error loading products from Supabase:", error);
           return;
@@ -187,17 +187,25 @@
           productGrid.innerHTML = "";
           top3.forEach((product, index) => {
             const imageUrl = product.imagen && product.imagen !== 'undefined' ? product.imagen : `${SUPABASE_STORAGE_URL}placeholder.jpg`;
-            productGrid.innerHTML += `
-              <div class="bg-white p-5 rounded-lg shadow-md product-card" data-aos="fade-up" data-aos-delay="${index * 50}">
-                <img src="${imageUrl}" loading="lazy" alt="${product.nombre}" class="w-full h-64 object-cover mb-4 rounded">
-                <h3 class="text-xl font-semibold text-[#424242]">${product.nombre}</h3>
-                <p class="text-gray-800 mt-2 font-playfair">$${product.precio}</p>
-                <p class="text-gray-600 mt-1 text-sm">Oro: ${product.tipo_oro} | Género: ${product.genero}</p>
-                <a href="/producto/${product.id}" class="mt-4 inline-block bg-[#d5a300] text-white px-4 py-2 rounded hover:bg-[#b38f00] transition-colors">
-                  Ver detalles
-                </a>
-              </div>
-            `;
+          productGrid.innerHTML += `
+            <div class="relative bg-white p-5 rounded-lg shadow-md product-card" data-aos="fade-up" data-aos-delay="${index * 50}">
+              ${product.descuento_pct > 0 ? `
+                <div class="discount-badge">-${product.descuento_pct}%</div>
+              ` : ``}
+              <img src="${imageUrl}" loading="lazy" alt="${product.nombre}" class="w-full h-64 object-cover mb-4 rounded">
+              <h3 class="text-xl font-semibold text-[#424242]">${product.nombre}</h3>
+              ${product.descuento_pct > 0 ? `
+                <p class="text-gray-500 line-through mt-2">$${product.precio.toFixed(2)}</p>
+                <p class="text-2xl font-bold text-red-600 mt-1">$${product.precio_descuento.toFixed(2)}</p>
+              ` : `
+                <p class="text-2xl font-semibold text-gray-800 mt-2">$${product.precio.toFixed(2)}</p>
+              `}
+              <p class="text-gray-600 mt-1 text-sm">Oro: ${product.tipo_oro} | Género: ${product.genero}</p>
+              <a href="/producto/${product.id}" class="mt-4 inline-block bg-[#d5a300] text-white px-4 py-2 rounded hover:bg-[#b38f00] transition-colors">
+                Ver detalles
+              </a>
+            </div>
+          `;
           });
           console.log("DEBUG: Top 3 products rendered in home.html.");
         } else {

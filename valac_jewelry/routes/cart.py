@@ -50,7 +50,14 @@ def view_cart():
                 else:
                     prod = resp.data
                     prod['cantidad'] = quantity
+                    # ✨ Unidad a cobrar: si hay descuento, usamos precio_descuento
+                    pct = prod.get('descuento_pct') or 0
+                    if pct > 0 and prod.get('precio_descuento') is not None:
+                        prod['unit_price'] = prod['precio_descuento']
+                    else:
+                        prod['unit_price'] = prod['precio']
                     products.append(prod)
+
             else:
                 flash(f"El producto con ID {product_id} no está disponible.", 'error')
         except Exception as e:

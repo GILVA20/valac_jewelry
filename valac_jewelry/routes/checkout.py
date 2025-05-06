@@ -31,12 +31,12 @@ def build_order_items_and_subtotal():
             resp = supabase.table('products').select('*').eq('id', product_id).single().execute()
             if resp.data:
                 product = resp.data
-                # Asignar la cantidad y asegurar que existan campos necesarios
                 product['cantidad'] = int(quantity)
-                # Si faltan detalles, se pueden agregar campos vacíos
                 product.setdefault("descripcion", "Sin descripción")
-                price = float(product.get("precio", 0))
-                subtotal += price * int(quantity)
+                unit_price = float(product.get("precio_descuento",
+                product.get("precio", 0)))
+                product['unit_price'] = unit_price
+                subtotal += unit_price * int(quantity)
                 order_items.append(product)
             else:
                 current_app.logger.error("Producto con ID %s no encontrado.", product_id)
@@ -55,7 +55,6 @@ def create_order_in_db(order_data, order_items):
         return None
     order_id = response.data[0]["id"]
     order_data["id"] = order_id
-    # Guardamos la orden y sus ítems en la sesión para mostrarlos en la vista de éxito
     session["order_data"] = order_data
     session["order_items"] = order_items
     return order_id
@@ -63,8 +62,23 @@ def create_order_in_db(order_data, order_items):
 @checkout_bp.route('/checkout', methods=['GET', 'POST'])
 def checkout():
     if request.method == 'GET':
-        return render_template('checkout.html')
-    
+        # 1) Construye ítems y subtotal
+        order_items, subtotal = build_order_items_and_subtotal()
+        # 2) Calcula envío, descuento y total
+        shipping = 0.0 if subtotal >= 8500 else (260.0 if subtotal > 0 else 0.0)
+        discount = session.get('discount_amount', 0.0)   # 0.0 si no usas descuento
+        total = subtotal + shipping - discount
+        # 3) Renderiza pasando TODO el contexto al template
+        return render_template(
+            'checkout.html',
+            current_step=3,
+            order_items=order_items,
+            subtotal=subtotal,
+            shipping=shipping,
+            discount=discount,
+            total=total
+        )
+
     # Extraer y sanitizar datos del formulario
     nombre = sanitize_input(request.form.get('nombre'))
     direccion_envio = sanitize_input(request.form.get('direccion'))
@@ -74,8 +88,8 @@ def checkout():
     codigo_postal = sanitize_input(request.form.get('codigo_postal'))
     telefono = sanitize_input(request.form.get('telefono'))
     email = sanitize_input(request.form.get('email'))
-    
-    # Extraer el método de pago (se permite 'mock_gateway')
+
+    # Extraer el método de pago
     metodo_pago = request.form.get('metodo_pago', '').strip().lower()
     if metodo_pago == "mercadopago":
         metodo_pago = "MercadoPago"
@@ -84,34 +98,37 @@ def checkout():
     elif metodo_pago == "mock_gateway":
         metodo_pago = "mock_gateway"
     metodo_pago = sanitize_input(metodo_pago)
-    
-    # Mapear abreviaturas a nombre completo (por ejemplo, "hi" a "Hidalgo")
+
+    # Mapear abreviaturas a nombre completo
     estado_mapping = {"hi": "Hidalgo", "hidalgo": "Hidalgo"}
     estado_geografico = estado_mapping.get(estado_envio.lower(), estado_envio)
-    
-    # Validar que se hayan completado todos los campos obligatorios
+
+    # Validar campos obligatorios
     if not all([nombre, direccion_envio, estado_geografico, colonia, ciudad, codigo_postal, telefono, email, metodo_pago]):
         flash("Por favor, completa todos los campos obligatorios.", "error")
         return redirect(url_for('checkout.checkout'))
-    
-    current_app.logger.debug("Datos del checkout: nombre=%s, direccion=%s, estado_geografico=%s, colonia=%s, ciudad=%s, cp=%s, telefono=%s, email=%s, metodo_pago=%s",
-                               nombre, direccion_envio, estado_geografico, colonia, ciudad, codigo_postal, telefono, email, metodo_pago)
-    
-    # Construir la lista de ítems de la orden y calcular el subtotal dinámicamente
+
+    current_app.logger.debug(
+        "Datos del checkout: nombre=%s, direccion=%s, estado_geografico=%s, colonia=%s, ciudad=%s, cp=%s, telefono=%s, email=%s, metodo_pago=%s",
+        nombre, direccion_envio, estado_geografico, colonia, ciudad, codigo_postal, telefono, email, metodo_pago
+    )
+
+    # Construir ítems y subtotal
     order_items, subtotal = build_order_items_and_subtotal()
     current_app.logger.debug("Ítems de orden obtenidos: %s", order_items)
     current_app.logger.debug("Subtotal calculado: %s", subtotal)
-    
-    # Si no hay ítems en el carrito, abortamos
+
     if not order_items:
         flash("Tu carrito está vacío.", "error")
         return redirect(url_for('cart.view_cart'))
-    
+
     shipping_cost = 0.0 if subtotal >= 8500 else (260.0 if subtotal > 0 else 0.0)
-    total = subtotal + shipping_cost
+    # recuperar el descuento correctamente
+    discount = session.get('discount_amount', 0.0)
+    total = subtotal + shipping_cost - discount
     current_app.logger.debug("Costo de envío: %s, Total calculado: %s", shipping_cost, total)
-    
-    # Preparar los datos de la orden
+
+    # Preparar datos de la orden
     order_data = {
         "nombre": nombre,
         "dirección_envío": direccion_envio,
@@ -125,94 +142,103 @@ def checkout():
         "subtotal": subtotal,
         "costo_envío": shipping_cost,
         "total": total,
-        "estado_pago": "Pendiente"  # Estado inicial de la orden
+        "estado_pago": "Pendiente"
     }
-    
     current_app.logger.debug("Datos de orden: %s", order_data)
-    
+
     # Registrar la orden en Supabase
     order_id = create_order_in_db(order_data, order_items)
     if not order_id:
         flash("Error registrando la orden.", "error")
         return redirect(url_for('checkout.checkout'))
     current_app.logger.debug("Orden registrada con ID: %s", order_id)
-    
+
     # Validar método de pago
     if metodo_pago not in ["MercadoPago", "aplazo", "mock_gateway"]:
         flash("Método de pago no válido. Selecciona MercadoPago, Aplazo o Pago Simulado.", "error")
         return redirect(url_for('checkout.checkout'))
-    
+
+    # Manejo de MercadoPago
     if metodo_pago == "MercadoPago":
-        simular_pago = os.environ.get("SIMULAR_PAGO", "False").lower() == "true"
+        simular_pago = os.getenv("SIMULAR_PAGO", "False").lower() == "true"
         current_app.logger.debug("Método MercadoPago seleccionado. SIMULAR_PAGO: %s", simular_pago)
+
         if simular_pago:
             simulated_status = {
                 "estado_pago": "Completado",
                 "transaction_id": "SIMULADO",
                 "fecha_actualizacion": "now()"
             }
-            response = supabase.table("orders").update(simulated_status).eq("id", order_id).execute()
-            current_app.logger.debug("Respuesta de simulación: %s", response)
-            if not response.data:
-                flash("Error al simular el pago.", "error")
-                return redirect(url_for('checkout.checkout'))
+            resp = supabase.table("orders").update(simulated_status).eq("id", order_id).execute()
+            current_app.logger.debug("Respuesta de simulación: %s", resp)
             flash("Pago simulado con éxito. Orden completada.", "success")
             return redirect(url_for('success.success'))
-        else:
-            current_app.logger.debug("Iniciando integración real con MercadoPago")
-            ENV = os.getenv("FLASK_ENV", "development").lower()
-            IS_PROD = ENV == "production"
-            token = current_app.config["MP_ACCESS_TOKEN"]
-            current_app.logger.debug("Token seleccionado: %s", token)
-            mp = mercadopago.SDK(token)
-            back_urls = {
-                "success": url_for('success.success', _external=True),
-                "failure": url_for('failure.failure', _external=True),
-                "pending": url_for('pending.pending', _external=True)
-            }
-            notification_url = "https://valacjoyas.com/webhook"  # URL válida para notificaciones
-            # Se elimina "auto_return" para que se usen las back_urls
-            preference_data = {
-                "items": [{
-                    "title": "Orden de Compra VALAC Joyas",
-                    "unit_price": total,
-                    "quantity": 1
-                }],
-                "back_urls": back_urls,
-                "auto_return": "approved",
-                "notification_url": notification_url,
-                "metadata": {"environment": "test"}
-            }
-            current_app.logger.debug("Datos para preferencia: %s", preference_data)
-            preference_response = mp.preference().create(preference_data)
-            current_app.logger.debug("Respuesta de preferencia: %s", preference_response)
-            if not preference_response or "response" not in preference_response:
-                current_app.logger.error("Respuesta inválida de MercadoPago: %s", preference_response)
-                flash("Error en la respuesta de MercadoPago, por favor inténtalo nuevamente.", "error")
-                return redirect(url_for('checkout.checkout'))
-            preference = preference_response["response"]
-            if "id" not in preference:
-                current_app.logger.error("Error: La preferencia no contiene 'id'. Respuesta: %s", preference)
-                flash("Error al crear la preferencia de pago.", "error")
-                return redirect(url_for('checkout.checkout'))
-            preference_id = preference["id"]
-            current_app.logger.debug("Preferencia creada con ID: %s", preference_id)
-            return render_template("mercadopago_checkout.html",
-                                   preference_id=preference_id,
-                                   MP_PUBLIC_KEY=current_app.config["MP_PUBLIC_KEY"],
-                                   sandbox=(not IS_PROD))
-    elif metodo_pago == "aplazo":
-        # Lógica simulada para Aplazo
-        pago_exitoso = True  # Simulación fija
-        current_app.logger.debug("Método Aplazo seleccionado. Pago exitoso simulación: %s", pago_exitoso)
-        if pago_exitoso:
-            flash("Pago procesado con éxito. ¡Gracias por tu compra!", "success")
-            return redirect(url_for('success.success'))
-        else:
-            flash("Error al procesar el pago. Intenta nuevamente.", "error")
+
+        # Integración real
+        ENV = os.getenv("FLASK_ENV", "development").lower()
+        IS_PROD = ENV == "production"
+        token = current_app.config["MP_ACCESS_TOKEN"]
+        current_app.logger.debug("Token seleccionado: %s", token)
+        mp = mercadopago.SDK(token)
+
+        back_urls = {
+            "success": url_for('success.success', _external=True),
+            "failure": url_for('failure.failure', _external=True),
+            "pending": url_for('pending.pending', _external=True)
+        }
+        notification_url = "https://valacjoyas.com/webhook"
+
+        preference_data = {
+            "items": [{
+                "title": "Orden de Compra VALAC Joyas",
+                "unit_price": total,            # usa el total con descuento
+                "quantity": 1
+            }],
+            "back_urls": back_urls,
+            "notification_url": notification_url,
+            "payment_methods": { "installments": 6 },  # hasta 6 MSI
+            "metadata": {"environment": IS_PROD and "prod" or "test"}
+        }
+        if IS_PROD:
+            preference_data["auto_return"] = "approved"
+
+        current_app.logger.debug("Datos para preferencia: %s", preference_data)
+        preference_response = mp.preference().create(preference_data)
+        current_app.logger.debug("Respuesta de preferencia: %s", preference_response)
+
+        if not preference_response or "response" not in preference_response:
+            current_app.logger.error("Respuesta inválida de MercadoPago: %s", preference_response)
+            flash("Error en la respuesta de MercadoPago, por favor inténtalo nuevamente.", "error")
             return redirect(url_for('checkout.checkout'))
-    elif metodo_pago == "mock_gateway":
-        # Método de pago simulado: redirige a la vista de simulación
+
+        pref = preference_response["response"]
+        if "id" not in pref:
+            current_app.logger.error("Error: La preferencia no contiene 'id'. Respuesta: %s", pref)
+            flash("Error al crear la preferencia de pago.", "error")
+            return redirect(url_for('checkout.checkout'))
+
+        preference_id = pref["id"]
+        current_app.logger.debug("Preferencia creada con ID: %s", preference_id)
+        return render_template(
+            "mercadopago_checkout.html",
+            preference_id=preference_id,
+            MP_PUBLIC_KEY=current_app.config["MP_PUBLIC_KEY"],
+            subtotal=subtotal,
+            shipping=shipping_cost,
+            discount=discount,
+            total=total,
+            sandbox=(not IS_PROD)
+        )
+
+    # Manejo de Aplazo
+    if metodo_pago == "aplazo":
+        current_app.logger.debug("Método Aplazo seleccionado.")
+        flash("Pago procesado con éxito. ¡Gracias por tu compra!", "success")
+        return redirect(url_for('success.success'))
+
+    # Pago simulado
+    if metodo_pago == "mock_gateway":
         return redirect(url_for('mock_checkout.index', order_id=order_id))
-    
-    return render_template('checkout.html')
+
+    # Fallback: recargar checkout
+    return render_template('checkout.html', current_step=3)

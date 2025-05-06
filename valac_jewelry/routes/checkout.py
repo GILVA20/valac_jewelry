@@ -196,7 +196,11 @@ def checkout():
             }],
             "back_urls": back_urls,
             "notification_url": notification_url,
-            "payment_methods": { "installments": 6 },  # hasta 6 MSI
+            "payment_methods": {                
+                "installments": 18,
+                # Por defecto seleccionamos 6 MSI (sin interés):
+                "default_installments": 6
+                },  # hasta 6 MSI
             "metadata": {"environment": IS_PROD and "prod" or "test"}
         }
         if IS_PROD:

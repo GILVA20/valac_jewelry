@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 from flask_login import LoginManager
 
 # Cargar variables de entorno desde el archivo .env
-load_dotenv()
+load_dotenv(override=True)
 print(f"DEBUG:valac_jewelry:FLASK_ENV: {os.getenv('FLASK_ENV')}")
 logging.basicConfig(level=logging.DEBUG)
 

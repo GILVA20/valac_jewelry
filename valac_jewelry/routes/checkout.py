@@ -201,7 +201,8 @@ def checkout():
                 # Por defecto seleccionamos 6 MSI (sin interés):
                 "default_installments": 6
                 },  # hasta 6 MSI
-            "metadata": {"environment": IS_PROD and "prod" or "test"}
+            "metadata": {"environment": IS_PROD and "prod" or "test"},
+            "external_reference": str(order_id)
         }
         if IS_PROD:
             preference_data["auto_return"] = "approved"

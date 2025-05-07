@@ -72,13 +72,12 @@ def create_preference():
                 "failure": "https://valacjoyas.com/failure",
                 "pending": "https://valacjoyas.com/pending"
             },
-            "auto_return": "approved",
             "notification_url": "https://valacjoyas.com/webhook",
             "payment_methods": {
                 "installments": 12
             },
             "external_reference": order_id
-        }
+            }
         logging.debug("DEBUG: Datos de preferencia a crear: %s", preference_data)
 
         # Reinstanciar SDK con token del app.config

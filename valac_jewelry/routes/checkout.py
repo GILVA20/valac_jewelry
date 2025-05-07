@@ -201,15 +201,17 @@ def checkout():
                 # Por defecto seleccionamos 6 MSI (sin interés):
                 "default_installments": 6
                 },  # hasta 6 MSI
-            "metadata": {"environment": IS_PROD and "prod" or "test"},
-            "external_reference": str(order_id)
+        "metadata": {"environment": IS_PROD and "prod" or "test"},
+        "external_reference": str(order_id)
         }
         if IS_PROD:
             preference_data["auto_return"] = "approved"
 
         current_app.logger.debug("Datos para preferencia: %s", preference_data)
+        current_app.logger.debug("DEBUG: external_reference en checkout.py = %s", preference_data.get("external_reference"))
         preference_response = mp.preference().create(preference_data)
         current_app.logger.debug("Respuesta de preferencia: %s", preference_response)
+        current_app.logger.debug("DEBUG: preference_response.status_code o contenido = %s", getattr(preference_response, 'status', preference_response))
 
         if not preference_response or "response" not in preference_response:
             current_app.logger.error("Respuesta inválida de MercadoPago: %s", preference_response)

@@ -174,20 +174,31 @@ def checkout():
             flash("Pago simulado con éxito. Orden completada.", "success")
             return redirect(url_for('success.success'))
 
-        # Integración real
+        # 1) Determinar si estamos en prod o dev
         ENV = os.getenv("FLASK_ENV", "development").lower()
         IS_PROD = ENV == "production"
-        token = current_app.config["MP_ACCESS_TOKEN"]
+
+        # 2) Elegir token según ambiente
+        token = (
+            current_app.config["MP_ACCESS_TOKEN"] if IS_PROD
+            else current_app.config["MP_ACCESS_TOKEN_TEST"]
+        )
         current_app.logger.debug("Token seleccionado: %s", token)
         mp = mercadopago.SDK(token)
 
+        # 3) Construir back_urls: dominio público en prod, localhost en dev
+        if IS_PROD:
+            base_url = "https://valacjoyas.com"
+        else:
+            # request.url_root suele traer "http://127.0.0.1:5000/"
+            base_url = request.url_root.rstrip('/')
         back_urls = {
-            "success": url_for('success.success', _external=True),
-            "failure": url_for('failure.failure', _external=True),
-            "pending": url_for('pending.pending', _external=True)
-        }
+            "success": f"{base_url}/success",
+            "failure": f"{base_url}/failure",
+            "pending": f"{base_url}/pending",
+        }       
         notification_url = "https://valacjoyas.com/webhook"
-
+        
         preference_data = {
             "items": [{
                 "title": "Orden de Compra VALAC Joyas",
@@ -201,12 +212,14 @@ def checkout():
                 # Por defecto seleccionamos 6 MSI (sin interés):
                 "default_installments": 6
                 },  # hasta 6 MSI
-        "metadata": {"environment": IS_PROD and "prod" or "test"},
+        "metadata": {"environment": "production" if IS_PROD else "sandbox"},
         "external_reference": str(order_id)
         }
         if IS_PROD:
             preference_data["auto_return"] = "approved"
-
+            current_app.logger.debug(
+                "MercadoPago configurado en '%s' env", preference_data["metadata"]["environment"]
+            )
         current_app.logger.debug("Datos para preferencia: %s", preference_data)
         current_app.logger.debug("DEBUG: external_reference en checkout.py = %s", preference_data.get("external_reference"))
         preference_response = mp.preference().create(preference_data)

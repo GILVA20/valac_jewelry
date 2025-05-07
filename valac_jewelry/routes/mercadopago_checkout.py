@@ -13,8 +13,8 @@ def sanitize_input(input_str):
     return str(input_str).strip().replace("<", "&lt;").replace(">", "&gt;")
 
 # Configuración de MercadoPago según entorno
-MP_ACCESS_TOKEN = os.getenv("MP_ACCESS_TOKEN_PROD" if IS_PROD else "MP_ACCESS_TOKEN_TEST")
-MP_PUBLIC_KEY    = os.getenv("MP_PUBLIC_KEY_PROD" if IS_PROD else "MP_PUBLIC_KEY_TEST")
+MP_ACCESS_TOKEN = os.getenv("MP_ACCESS_TOKEN" if IS_PROD else "MP_ACCESS_TOKEN_TEST")
+MP_PUBLIC_KEY    = os.getenv("MP_PUBLIC_KEY" if IS_PROD else "MP_PUBLIC_KEY_TEST")
 logging.debug("DEBUG: MP_ACCESS_TOKEN utilizado: %s", MP_ACCESS_TOKEN)
 mp = mercadopago.SDK(MP_ACCESS_TOKEN)
 

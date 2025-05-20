@@ -5,9 +5,9 @@
 {% block content %}
 
   {% set banner_images = [
-    {'filename': 'PromoDiaMadres.jpg', 'alt': 'Banner 1'},
-    {'filename': 'PromoDiaMadres.jpg', 'alt': 'Banner 2'},
-    {'filename': 'PromoDiaMadres.jpg', 'alt': 'Banner 3'}
+    {'filename': 'HotSale2.jpeg', 'alt': 'Banner 1'},
+    {'filename': 'HotSale1.jpeg', 'alt': 'Banner 2'},
+    {'filename': 'HotSale3.jpeg', 'alt': 'Banner 3'}
   ] %}
 
   <!-- Estilos específicos para transición suave de carga -->
@@ -43,7 +43,16 @@
       </div>
     </div>
   </section>
-
+   <!-- 💬 Popup modal promocional Hot Sale -->
+   <div id="promo-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden">
+     <div class="bg-white max-w-md mx-auto rounded-lg p-6 relative shadow-xl text-center">
+       <button onclick="document.getElementById('promo-modal').classList.add('hidden')" class="absolute top-2 right-3 text-gray-600 text-xl">&times;</button>
+       <img src="{{ SUPABASE_STORAGE_URL }}HotSale2.jpeg" alt="Hot Sale VALAC" class="rounded mb-4">
+       <h2 class="text-2xl font-semibold text-gray-800 mb-2">¡Hot Sale en VALAC!</h2>
+       <p class="text-gray-600 mb-3">Hasta 35% de descuento + 3 y 6 MSI en artículos seleccionados</p>
+       <a href="/collection" class="bg-[#d5a300] hover:bg-[#b38f00] text-white px-5 py-2 rounded inline-block">Ver promociones</a>
+     </div>
+   </div>
   <!-- Sección de Productos Destacados -->
   <section id="productos-destacados" class="py-12 bg-white">
     <div class="container mx-auto text-center">
@@ -215,5 +224,10 @@
         console.error("DEBUG: Error initializing Supabase in home.html:", err);
       }
     });
+  // 💡 Mostrar modal tras 1.5s
+  setTimeout(() => {
+    const modal = document.getElementById("promo-modal");
+    if (modal) modal.classList.remove("hidden");
+  }, 1500);
   </script>
 {% endblock %}

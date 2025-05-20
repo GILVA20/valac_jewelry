@@ -329,12 +329,6 @@
     document.getElementById('toast-container').append(t);
     setTimeout(()=>t.remove(),4000);
   }
-  // Flash → toast
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% for cat, m in messages %}
-      toast({{ m|tojson }},'{{ 'error' if cat=='error' else 'info' }}');
-    {% endfor %}
-  {% endwith %}
 
   window.onload = async function() {
     console.log("Window fully loaded in checkout.");

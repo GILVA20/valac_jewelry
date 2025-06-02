@@ -27,6 +27,41 @@ class SupabaseProductAdmin(BaseView):
             products = response.data
             logging.info("Productos obtenidos: %d", len(products))
         return self.render('admin/supabase_products.html', products=products)
+    @expose('/update-stock/<int:product_id>', methods=['POST'])
+    def update_stock(self,product_id):
+            supabase = current_app.supabase
+            try:
+                # Validar existencia del campo
+                if 'stock_total' not in request.form:
+                    flash("Falta el valor de stock_total en el formulario", "error")
+                    return redirect(url_for('supabase_products.index'))
+
+                new_stock = request.form.get('stock_total').strip()
+
+                # Validación robusta
+                if not new_stock.isdigit() or int(new_stock) < 0:
+                    flash("El valor de stock debe ser un número entero positivo", "error")
+                    return redirect(url_for('supabase_products.index'))
+
+                new_stock_int = int(new_stock)
+
+                # Intentar actualizar en Supabase
+                response = supabase.table("products") \
+                                .update({"stock_total": new_stock_int}) \
+                                .eq("id", product_id) \
+                                .execute()
+
+                if response.error:
+                    current_app.logger.error(f"[update_stock] Error Supabase: {response.error}")
+                    flash("Ocurrió un error al actualizar el stock. Revisa los logs.", "error")
+                else:
+                    flash("Stock actualizado correctamente", "success")
+
+            except Exception as e:
+                current_app.logger.exception("[update_stock] Excepción inesperada")
+                flash("Error inesperado al actualizar el stock", "error")
+
+            return redirect(url_for('supabase_products.index'))
 
     @expose('/apply_discount', methods=['POST'])
     def apply_discount(self):

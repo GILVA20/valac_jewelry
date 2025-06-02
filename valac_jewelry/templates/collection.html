@@ -241,6 +241,18 @@
               <div id="loading-spinner">
                 <i class="fas fa-spinner fa-pulse fa-2x text-gray-500"></i>
               </div>
+              <div class="flex justify-end mb-4">
+                <label for="sort" class="mr-2 font-semibold text-gray-700">Ordenar por:</label>
+                <select id="sort" name="sort"
+                  class="border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[#d5a300]">
+                  <option value="precio_desc" {% if request.args.get('sort') == 'precio_desc' or not request.args.get('sort') %}selected{% endif %}>Precio: Mayor a Menor</option>
+                  <option value="precio_asc" {% if request.args.get('sort') == 'precio_asc' %}selected{% endif %}>Precio: Menor a Mayor</option>
+                  <option value="novedades" {% if request.args.get('sort') == 'novedades' %}selected{% endif %}>Más recientes</option>
+                  <option value="nombre_asc" {% if request.args.get('sort') == 'nombre_asc' %}selected{% endif %}>Nombre: A-Z</option>
+                  <option value="nombre_desc" {% if request.args.get('sort') == 'nombre_desc' %}selected{% endif %}>Nombre: Z-A</option>
+
+                </select>
+              </div>
               <!-- Aquí se renderizan los productos -->
               <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
           <!-- Los productos se cargarán dinámicamente -->
@@ -299,7 +311,8 @@
       const price_min = urlParams.get('price_min') || 0;
       const price_max = urlParams.get('price_max') || 250000;
       const search = urlParams.get('search') || '';
-      const sort = urlParams.get('sort') || '';
+      const sort = urlParams.get('sort') || 'precio_desc';
+
       console.log("DEBUG: Filter parameters:", { category, type_oro, genero, price_min, price_max, search, sort });
 
       loadProducts = async function(){
@@ -355,14 +368,22 @@ if (category) {
         }
 
         if (sort === 'precio_asc') {
-          filteredProducts.sort((a, b) => a.precio - b.precio);
-          console.log("DEBUG: Products sorted by ascending price");
-        } else if (sort === 'precio_desc') {
-          filteredProducts.sort((a, b) => b.precio - a.precio);
-          console.log("DEBUG: Products sorted by descending price");
+        filteredProducts.sort((a, b) => parseFloat(a.precio) - parseFloat(b.precio));
+        console.log("DEBUG: Products sorted by ascending price");
+      } else if (sort === 'precio_desc') {
+        filteredProducts.sort((a, b) => parseFloat(b.precio) - parseFloat(a.precio));
+        console.log("DEBUG: Products sorted by descending price");
+
         } else if (sort === 'novedades') {
           filteredProducts.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
           console.log("DEBUG: Products sorted by newest");
+        }
+        else if (sort === 'nombre_asc') {
+          filteredProducts.sort((a, b) => a.nombre.localeCompare(b.nombre));
+          console.log("DEBUG: Products sorted by name A-Z");
+        } else if (sort === 'nombre_desc') {
+          filteredProducts.sort((a, b) => b.nombre.localeCompare(a.nombre));
+          console.log("DEBUG: Products sorted by name Z-A");
         }
 
         console.log("DEBUG: Final products to render:", filteredProducts);
@@ -414,6 +435,14 @@ if (category) {
           loadProducts();
         });
       });
+      const sortSelect = document.getElementById('sort');
+      if (sortSelect) {
+        sortSelect.addEventListener('change', () => {
+          const currentUrl = new URL(window.location.href);
+          currentUrl.searchParams.set('sort', sortSelect.value);
+          window.location.href = currentUrl.toString(); // recarga con nuevo orden
+        });
+      }
     } catch (err) {
       console.error("DEBUG: Error importing Supabase in collection.html:", err);
     }

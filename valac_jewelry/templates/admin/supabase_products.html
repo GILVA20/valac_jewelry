@@ -77,15 +77,15 @@
           <thead class="bg-gray-100">
             <tr>
               <th class="border p-3"><input type="checkbox" id="select_all" /></th>
-              <th class="border p-3 text-left text-gray-700">ID</th>
-              <th class="border p-3 text-left text-gray-700">Nombre</th>
-              <th class="border p-3 text-left text-gray-700">Stock</th>
-              <th class="border p-3 text-left text-gray-700">Precio</th>
-              <th class="border p-3 text-left text-gray-700">% Descuento</th>
-              <th class="border p-3 text-left text-gray-700">Precio Desc.</th>
-              <th class="border p-3 text-left text-gray-700">Tipo Producto</th>
-              <th class="border p-3 text-left text-gray-700">Género</th>
-              <th class="border p-3 text-left text-gray-700">Tipo de Oro</th>
+              <th class="border p-3 text-left text-gray-700 cursor-pointer" data-sort="id">ID</th>
+              <th class="border p-3 text-left text-gray-700 cursor-pointer" data-sort="nombre">Nombre</th>
+              <th class="border p-3 text-left text-gray-700 cursor-pointer" data-sort="stock_total">Stock</th>
+              <th class="border p-3 text-left text-gray-700 cursor-pointer" data-sort="precio">Precio</th>
+              <th class="border p-3 text-left text-gray-700 cursor-pointer" data-sort="descuento_pct">% Descuento</th>
+              <th class="border p-3 text-left text-gray-700 cursor-pointer" data-sort="precio_descuento">Precio Desc.</th>
+              <th class="border p-3 text-left text-gray-700 cursor-pointer" data-sort="tipo_producto">Tipo Producto</th>
+              <th class="border p-3 text-left text-gray-700 cursor-pointer" data-sort="genero">Género</th>
+              <th class="border p-3 text-left text-gray-700 cursor-pointer" data-sort="tipo_oro">Tipo de Oro</th>
               <th class="border p-3 text-left text-gray-700">Imagen</th>
               <th class="border p-3 text-left text-gray-700">Acciones</th>
             </tr>
@@ -156,35 +156,69 @@
   </div>
 
   <!-- Script para búsqueda, selección y modal -->
-  <script>
-    // Búsqueda interactiva
-    document.getElementById('search').addEventListener('input', function() {
-      const term = this.value.toLowerCase();
-      document.querySelectorAll('tbody tr').forEach(row => {
-        const name = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
-        row.style.display = name.includes(term) ? '' : 'none';
-      });
+<!-- Script para búsqueda, selección, modal y ordenamiento -->
+<script>
+  // Búsqueda interactiva
+  document.getElementById('search').addEventListener('input', function () {
+    const term = this.value.toLowerCase();
+    document.querySelectorAll('tbody tr').forEach(row => {
+      const name = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+      row.style.display = name.includes(term) ? '' : 'none';
     });
+  });
 
-    // Select all
-    document.getElementById('select_all').addEventListener('change', function() {
-      document.querySelectorAll('.select_row').forEach(cb => cb.checked = this.checked);
-    });
+  // Select all
+  document.getElementById('select_all').addEventListener('change', function () {
+    document.querySelectorAll('.select_row').forEach(cb => cb.checked = this.checked);
+  });
 
-    // Modal de imagen
-    function openModal(url) {
-      const modal = document.getElementById('image-modal');
-      document.getElementById('modal-image').src = url + "?t=" + Date.now();
-      modal.style.display = 'flex';
+  // Modal de imagen
+  function openModal(url) {
+    const modal = document.getElementById('image-modal');
+    document.getElementById('modal-image').src = url + "?t=" + Date.now();
+    modal.style.display = 'flex';
+  }
+  document.getElementById('close-modal').onclick = () => {
+    document.getElementById('image-modal').style.display = 'none';
+  };
+  window.onclick = e => {
+    if (e.target.id === 'image-modal') {
+      e.target.style.display = 'none';
     }
-    document.getElementById('close-modal').onclick = () => {
-      document.getElementById('image-modal').style.display = 'none';
-    };
-    window.onclick = e => {
-      if (e.target.id === 'image-modal') {
-        e.target.style.display = 'none';
-      }
-    };
-  </script>
+  };
+
+  // Ordenamiento por columnas
+  const headers = document.querySelectorAll('th[data-sort]');
+  let currentSort = { column: null, asc: true };
+
+  headers.forEach(header => {
+    header.addEventListener('click', () => {
+      const key = header.getAttribute('data-sort');
+      const rows = Array.from(document.querySelectorAll('tbody tr')).filter(row => row.style.display !== 'none');
+      const colIndex = Array.from(header.parentElement.children).indexOf(header);
+
+      const getValue = (row) => {
+        const cell = row.children[colIndex];
+        const raw = cell.textContent.trim();
+        const number = parseFloat(raw.replace(/[^0-9.\-]+/g, ''));
+        return isNaN(number) ? raw.toLowerCase() : number;
+      };
+
+      const asc = currentSort.column === key ? !currentSort.asc : true;
+      currentSort = { column: key, asc };
+
+      rows.sort((a, b) => {
+        const valA = getValue(a);
+        const valB = getValue(b);
+        if (valA < valB) return asc ? -1 : 1;
+        if (valA > valB) return asc ? 1 : -1;
+        return 0;
+      });
+
+      const tbody = document.querySelector('tbody');
+      rows.forEach(row => tbody.appendChild(row)); // reordenar
+    });
+  });
+</script>
 </body>
 </html>

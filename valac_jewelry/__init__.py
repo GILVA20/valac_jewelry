@@ -105,6 +105,7 @@ def create_app():
     admin = Admin(app, name='VALAC Joyas Admin', template_mode='bootstrap3', url='/admin', endpoint='admin')
     from .routes.admin import SupabaseProductAdmin, BulkUploadAdminView, SalesAdmin, PaymentsAdmin, ReportsAdmin
     from .routes.admin_orders import OrderAdminView
+    from .routes.analytics import AnalyticsAdmin
     admin.add_view(SupabaseProductAdmin(name='Productos Supabase', endpoint='supabase_products'))
     admin.add_view(BulkUploadAdminView(name='Carga Masiva', endpoint='bulk_upload'))
     # Mantén el endpoint "admin_orders" para la vista de órdenes
@@ -112,6 +113,7 @@ def create_app():
     admin.add_view(SalesAdmin(name='Ventas', endpoint='sales'))
     admin.add_view(PaymentsAdmin(name='Pagos / Cobranza', endpoint='payments'))
     admin.add_view(ReportsAdmin(name='Reportes', endpoint='reports'))
+    admin.add_view(AnalyticsAdmin(name='Analytics', endpoint='analytics'))
     return app
 
 if __name__ == '__main__':

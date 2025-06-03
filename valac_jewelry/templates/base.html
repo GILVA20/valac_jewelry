@@ -6,26 +6,25 @@
   <!-- Título de la página (se puede sobrescribir en cada template) -->
   <title>{% block title %}VALAC Joyas{% endblock %}</title>
   <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
-  
+
   <!-- Fuentes (Playfair Display y Roboto) -->
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
-  
+
   <!-- Hoja de estilos principal (TailwindCSS) -->
   <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
-  
+
   <!-- FontAwesome para íconos -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-  
+
   <!-- Slick Slider CSS para carruseles -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick-theme.min.css">
-  
+
   <!-- AOS CSS para animaciones -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
-  
+
   <!-- Estilos globales de tipografía y colores -->
   <style>
-    /* Aplica la tipografía a todo el sitio */
     body {
       font-family: 'Playfair Display', serif;
       font-weight: 400;
@@ -33,17 +32,14 @@
       background-color: #f7f7f7;
       position: relative;
     }
-    /* Estilos para títulos */
     h1, h2, h3 {
       font-family: 'Playfair Display', serif;
       font-weight: 600;
     }
-    /* Estilos para párrafos */
     p {
       font-family: 'Playfair Display', serif;
       font-weight: 400;
     }
-    /* Estilos para enlaces */
     a {
       font-family: 'Playfair Display', serif;
       font-weight: 600;
@@ -54,37 +50,47 @@
       color: #d5a300;
     }
   </style>
-  
+
   {% block head_extra %}{% endblock %}
 </head>
 <body>
-  
+
+  <!-- Banner superior -->
   <div id="top-banner" class="fixed top-0 left-0 right-0 bg-black text-white text-center py-2 px-4 text-sm md:text-base z-50">
-      🔥 Hot Sale: Hasta 35% de descuento + 3, 6, 9 MSI en artículos seleccionados.
-    </div>
-  <!-- Header común (se carga desde un archivo parcial) -->
+    🔥 Hot Sale: Hasta 35% de descuento + 3, 6, 9 MSI en artículos seleccionados.
+  </div>
+
+  <!-- Header común -->
   {% include 'partials/header.html' %}
-  
-  <!-- Bloque para contenido específico de cada página -->
+
+  <!-- Contenido específico de cada página -->
   {% block content %}{% endblock %}
-  
-  <!-- Footer común (se carga desde un archivo parcial) -->
+
+  <!-- Footer común -->
   {% include 'partials/footer.html' %}
-  
-  <!-- Carga global de scripts -->
+
+  <!-- Scripts globales -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/slick-carousel/1.8.1/slick.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
-  
-  <!-- Inicialización global de AOS y otros scripts comunes -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Inicialización global -->
   <script>
-    document.addEventListener('DOMContentLoaded', function(){
+    document.addEventListener('DOMContentLoaded', function () {
+      // AOS para animaciones
       AOS.init();
-      console.log("AOS inicializado globalmente.");
-      // Aquí puedes agregar más inicializaciones globales (por ejemplo, conexión a Supabase si se requiere en el frontend)
+
+      // Lucide icons
+      lucide.createIcons();
+
+      // Session persistente para analítica
+      const sessionId = localStorage.getItem("valac_session_id") || crypto.randomUUID();
+      localStorage.setItem("valac_session_id", sessionId);
+      window.VALAC_SESSION_ID = sessionId;
     });
   </script>
-  
+
   {% block scripts_extra %}{% endblock %}
 </body>
 </html>

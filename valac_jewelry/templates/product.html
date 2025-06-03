@@ -73,10 +73,13 @@
               <button disabled class="bg-gray-400 text-white px-4 py-2 rounded opacity-50 cursor-not-allowed">Agotado</button>
             {% else %}
               <form action="{{ url_for('cart.add_to_cart', product_id=product.id) }}" method="POST" class="inline-block">
-                <button type="submit" class="bg-[#d5a300] text-white px-6 py-3 rounded hover:bg-[#b38f00] transition-colors">
-                  <i class="fas fa-shopping-cart"></i> Agregar al Carrito
-                </button>
-              </form>
+  <button 
+    type="submit" 
+    onclick="trackBuyClick({{ product.id }})"
+    class="bg-[#d5a300] text-white px-6 py-3 rounded hover:bg-[#b38f00] transition-colors">
+    <i class="fas fa-shopping-cart"></i> Agregar al Carrito
+  </button>
+</form>
             {% endif %}
 
             {% if 0 < product.stock_total <= 1 %}
@@ -138,4 +141,29 @@
   // Inicializar AOS
   AOS.init();
 </script>
+
+<script>
+  const sessionId = localStorage.getItem("valac_session_id") || crypto.randomUUID();
+  localStorage.setItem("valac_session_id", sessionId);
+
+  // TRACK general de navegación
+  fetch("/api/track-route", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ path: window.location.pathname, session_id: sessionId })
+  });
+
+  // Registrar vista del producto
+  fetch("/api/track_view/{{ product.id }}", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ session_id: sessionId })
+  });
+
+  // Función para click en comprar
+  function trackBuyClick(productId) {
+    fetch(`/api/track_buy_click/${productId}`, { method: "POST" });
+  }
+</script>
+{% include 'partials/tracking.html' %}
 {% endblock %}

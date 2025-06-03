@@ -230,4 +230,17 @@
     if (modal) modal.classList.remove("hidden");
   }, 1500);
   </script>
+  <script>
+  const sessionId = localStorage.getItem("valac_session_id") || crypto.randomUUID();
+  localStorage.setItem("valac_session_id", sessionId);
+
+  // TRACK general de navegación
+  fetch("/api/track-route", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ path: window.location.pathname, session_id: sessionId })
+  });
+</script>
+
+  {% include 'partials/tracking.html' %}
 {% endblock %}

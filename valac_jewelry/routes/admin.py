@@ -7,6 +7,7 @@ from flask_admin import Admin, BaseView, expose
 from flask_login import current_user
 import logging
 from .admin_bulk_upload import BulkUploadAdminView
+from collections import Counter
 
 class SupabaseProductAdmin(BaseView):
     def is_accessible(self):

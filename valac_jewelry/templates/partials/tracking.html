@@ -1,0 +1,33 @@
+<script>
+  function trackView(productId) {
+    fetch(`/admin/analytics/track_view/${productId}`, {
+      method: 'POST'
+    }).then(response => {
+      console.log(`[track_view] ID: ${productId}`, response.status);
+    }).catch(err => {
+      console.error('[track_view] Error:', err);
+    });
+  }
+
+  function trackNavigation(path) {
+    fetch('/admin/analytics/track_navigation', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ path: path })
+    }).then(response => {
+      console.log(`[track_navigation] PATH: ${path}`, response.status);
+    }).catch(err => {
+      console.error('[track_navigation] Error:', err);
+    });
+  }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    {% if product %}
+      trackView({{ product.id }});
+    {% endif %}
+
+    trackNavigation(window.location.pathname);
+  });
+</script>

@@ -413,7 +413,10 @@ if (category) {
               `}
               <p class="text-gray-600 mt-1 text-sm">Oro: ${product.tipo_oro} | Género: ${product.genero}</p>
               <div class="mt-4">
-                <a href="/producto/${product.id}" class="btn-detalles">Ver detalles</a>
+                <a href="/producto/${product.id}" class="btn-detalles"
+                onclick="fetch('/api/product-view/${product.id}', { method: 'POST' }).catch(console.error);">
+                Ver detalles
+              </a>
               </div>
             </div>
           `;
@@ -557,4 +560,5 @@ if (category) {
     }
   });
 </script>
+{% include 'partials/tracking.html' %}
 {% endblock %}

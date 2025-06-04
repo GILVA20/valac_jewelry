@@ -25,7 +25,7 @@
     }
   </style>
 
-  <div class="product-detail-container container mx-auto p-6 pt-24">
+  <div class="product-detail-container container mx-auto p-6 pt-32 md:pt-36">
     {% if product.descuento_pct and product.descuento_pct > 0 %}
       <div class="discount-badge">
         En oferta {{ product.descuento_pct }}%
@@ -46,7 +46,8 @@
 
       <!-- Información del Producto -->
       <div class="md:w-1/2">
-        <h1 class="text-3xl font-bold text-[#424242] mb-4">{{ product.nombre }}</h1>
+        <h1 class="text-3xl md:text-4xl font-bold text-[#333333] mb-6 font-playfair break-words min-h-[3rem]">{{ product.nombre }}</h1>
+
 
         {% if product.descuento_pct and product.descuento_pct > 0 %}
           <p class="text-gray-500 line-through mt-4 text-lg">
@@ -61,7 +62,7 @@
           </p>
         {% endif %}
 
-        <p class="text-md text-gray-500 mb-4">
+        <p class="text-sm text-gray-600 mb-4 leading-snug font-medium">
           Tipo de Oro: {{ product.tipo_oro }}<br>
           Género: {{ product.genero }}<br>
           Categoría: {{ product.tipo_producto }}
@@ -83,7 +84,7 @@
             {% endif %}
 
             {% if 0 < product.stock_total <= 1 %}
-              <p class="text-sm text-red-500 mt-2">Última piezas disponible</p>
+              <p class="text-sm text-red-500 mt-2">Última pieza disponible</p>
             {% endif %}
         </div>
       </div>
@@ -118,7 +119,8 @@
               </p>
             {% endif %}
             <a href="{{ url_for('products.product_detail', product_id=rp.id) }}"
-               class="mt-4 inline-block bg-[#d5a300] text-white px-4 py-2 rounded hover:bg-[#b38f00] transition-colors">
+              class="ver-detalles-btn mt-4 inline-block bg-[#d5a300] text-white px-4 py-2 rounded hover:bg-[#b38f00] transition-colors"
+              data-id="{{ rp.id }}">
               Ver detalles
             </a>
           </div>
@@ -147,14 +149,14 @@
   localStorage.setItem("valac_session_id", sessionId);
 
   // TRACK general de navegación
-  fetch("/api/track-route", {
+  fetch("/admin/analytics/track_navigation", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ path: window.location.pathname, session_id: sessionId })
   });
 
   // Registrar vista del producto
-  fetch("/api/track_view/{{ product.id }}", {
+   fetch("/admin/analytics/track_view/{{ product.id }}", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ session_id: sessionId })
@@ -162,8 +164,29 @@
 
   // Función para click en comprar
   function trackBuyClick(productId) {
-    fetch(`/api/track_buy_click/${productId}`, { method: "POST" });
+    fetch(`/admin/analytics/track_buy_click/${productId}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ session_id: sessionId })
+    });
   }
+</script>
+<script>
+  document.querySelectorAll('.ver-detalles-btn').forEach(btn => {
+    btn.addEventListener('click', function (e) {
+      e.preventDefault();
+      const productId = this.dataset.id;
+      const sessionId = localStorage.getItem("valac_session_id");
+
+      fetch(`/admin/analytics/track_view/${productId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ session_id: sessionId })
+      }).finally(() => {
+        window.location.href = this.href;
+      });
+    });
+  });
 </script>
 {% include 'partials/tracking.html' %}
 {% endblock %}

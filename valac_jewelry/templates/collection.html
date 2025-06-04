@@ -115,14 +115,12 @@
 
 </style>
 
-<main class="pt-24">
-  <div class="container mx-auto px-4">
-    <!-- Botón para alternar visibilidad de filtros (ocultos por defecto) -->
-    <div class="mb-4 text-right">
-      <button id="toggle-filters" aria-expanded="false" class="bg-[#d5a300] text-white px-4 py-2 rounded hover:bg-[#b38f00] transition-colors focus:outline-none focus:ring-2 focus:ring-[#d5a300]">
-        Mostrar filtros
-      </button>
-    </div>
+<main class="pt-32 md:pt-36">
+
+        <!-- Spinner oculto por defecto -->
+        <div id="loading-spinner">
+          <i class="fas fa-spinner fa-pulse fa-2x text-gray-500"></i>
+        </div>
     <div id="main-container" class="flex flex-col md:flex-row gap-8">
       <!-- Panel de Filtros (oculto inicialmente) -->
       <aside id="filters-panel" class="filters-panel hidden border border-gray-200 rounded-md p-6 sidebar-sticky bg-white transition-all duration-300 ease-in-out">
@@ -236,23 +234,25 @@
       
       <!-- Sección de Productos -->
       <section id="products-section" class="flex-1 border border-gray-200 rounded-md p-6 bg-white">
-        <h1 class="text-3xl font-semibold mb-8 text-[#424242]">Colección de Joyas</h1>
-              <!-- Spinner oculto por defecto -->
-              <div id="loading-spinner">
-                <i class="fas fa-spinner fa-pulse fa-2x text-gray-500"></i>
-              </div>
-              <div class="flex justify-end mb-4">
-                <label for="sort" class="mr-2 font-semibold text-gray-700">Ordenar por:</label>
-                <select id="sort" name="sort"
-                  class="border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[#d5a300]">
-                  <option value="precio_desc" {% if request.args.get('sort') == 'precio_desc' or not request.args.get('sort') %}selected{% endif %}>Precio: Mayor a Menor</option>
-                  <option value="precio_asc" {% if request.args.get('sort') == 'precio_asc' %}selected{% endif %}>Precio: Menor a Mayor</option>
-                  <option value="novedades" {% if request.args.get('sort') == 'novedades' %}selected{% endif %}>Más recientes</option>
-                  <option value="nombre_asc" {% if request.args.get('sort') == 'nombre_asc' %}selected{% endif %}>Nombre: A-Z</option>
-                  <option value="nombre_desc" {% if request.args.get('sort') == 'nombre_desc' %}selected{% endif %}>Nombre: Z-A</option>
-
-                </select>
-              </div>
+        <h1 class="text-3xl md:text-4xl font-bold text-[#333333] mb-8 font-playfair">Colección de Joyas</h1>
+        +  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+    <button id="toggle-filters"
+      aria-expanded="false"
+      class="border border-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-[#d5a300]">
+      <i class="fas fa-sliders-h mr-2"></i> Mostrar filtros
+    </button>
+    <div class="flex items-center">
+      <label for="sort" class="mr-2 font-semibold text-gray-700">Ordenar por:</label>
+      <select id="sort" name="sort"
+        class="border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[#d5a300]">
+        <option value="precio_desc" {% if request.args.get('sort') == 'precio_desc' or not request.args.get('sort') %}selected{% endif %}>Precio: Mayor a Menor</option>
+        <option value="precio_asc" {% if request.args.get('sort') == 'precio_asc' %}selected{% endif %}>Precio: Menor a Mayor</option>
+        <option value="novedades" {% if request.args.get('sort') == 'novedades' %}selected{% endif %}>Más recientes</option>
+        <option value="nombre_asc" {% if request.args.get('sort') == 'nombre_asc' %}selected{% endif %}>Nombre: A-Z</option>
+        <option value="nombre_desc" {% if request.args.get('sort') == 'nombre_desc' %}selected{% endif %}>Nombre: Z-A</option>
+      </select>
+    </div>
+  </div>
               <!-- Aquí se renderizan los productos -->
               <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
           <!-- Los productos se cargarán dinámicamente -->
@@ -411,7 +411,7 @@ if (category) {
               ` : `
                 <p class="text-2xl font-semibold text-gray-800 mt-2">$${product.precio}</p>
               `}
-              <p class="text-gray-600 mt-1 text-sm">Oro: ${product.tipo_oro} | Género: ${product.genero}</p>
+              <p class="text-sm text-gray-600 mt-1 leading-snug font-medium">Oro: ${product.tipo_oro} | Género: ${product.genero}</p>
               <div class="mt-4">
                 <a href="/producto/${product.id}" class="btn-detalles"
                 onclick="fetch('/api/product-view/${product.id}', { method: 'POST' }).catch(console.error);">

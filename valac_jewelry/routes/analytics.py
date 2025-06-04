@@ -40,6 +40,22 @@ class AnalyticsAdmin(BaseView):
                 key=lambda x: x["views"],
                 reverse=True
             )[:10]
+                        # Obtener todos los productos (incluso los que no tienen vistas)
+            logger.debug("Obteniendo todos los productos para lista completa de vistas")
+            all_products_resp = supabase.table("products").select("id, nombre").execute()
+            all_products = all_products_resp.data or []
+
+            all_product_views = []
+            for prod in all_products:
+                view_count = counts.get(prod["id"], 0)
+                all_product_views.append({
+                    "product_id": prod["id"],
+                    "nombre": prod["nombre"],
+                    "views": view_count
+                })
+
+            # Orden ascendente: menos vistos primero
+            all_product_views.sort(key=lambda x: x["views"])
 
             logger.debug("Consultando navegación de usuarios")
             navigation_raw = supabase.table("user_navigation").select("path").execute()
@@ -79,12 +95,13 @@ class AnalyticsAdmin(BaseView):
         except Exception as e:
             logger.error("[AnalyticsAdmin] Error al consultar Supabase: %s", e)
             flash("Error al cargar analíticas. Revisa los logs.", "error")
-            product_views, navigation = [], []
+            product_views, navigation, all_product_views = [], [], []
             total_views, total_buy_clicks, location_set = 0, 0, set()
 
         return self.render(
             "admin/analytics.html",
             product_views=product_views,
+            all_product_views=all_product_views, 
             navigation=navigation,
             total_views=total_views,
             total_buy_clicks=total_buy_clicks,

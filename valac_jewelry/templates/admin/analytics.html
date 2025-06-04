@@ -32,6 +32,34 @@
         <p class="text-2xl font-semibold text-gray-800">{{ total_locations }}</p>
       </div>
     </div>
+<section class="mb-10">
+  <div class="flex justify-between items-center mb-4">
+    <h2 class="text-2xl font-bold flex items-center gap-2">
+      <i data-lucide="list" class="w-5 h-5 text-yellow-600"></i> Vistas de Todos los Productos
+    </h2>
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="min-w-full bg-white rounded-lg shadow-sm">
+      <thead class="bg-gray-100 text-left text-sm font-semibold">
+        <tr>
+          <th class="px-6 py-3">#</th>
+          <th class="px-6 py-3">Producto</th>
+          <th class="px-6 py-3">Vistas</th>
+        </tr>
+      </thead>
+      <tbody class="text-sm divide-y divide-gray-200">
+        {% for prod in all_product_views %}
+        <tr class="hover:bg-gray-50 {% if prod.views == 0 %}bg-red-50{% endif %}">
+          <td class="px-6 py-4">{{ loop.index }}</td>
+          <td class="px-6 py-4">{{ prod.nombre }}</td>
+          <td class="px-6 py-4">{{ prod.views }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</section>
 
     <section class="mb-10">
       <div class="flex justify-between items-center mb-4">

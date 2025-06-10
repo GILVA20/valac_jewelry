@@ -5,9 +5,9 @@
 {% block content %}
 
   {% set banner_images = [
-    {'filename': 'HotSale2.jpeg', 'alt': 'Banner 1'},
-    {'filename': 'HotSale1.jpeg', 'alt': 'Banner 2'},
-    {'filename': 'HotSale3.jpeg', 'alt': 'Banner 3'}
+    {'filename': 'JP11.png', 'alt': 'Banner 1'},
+    {'filename': 'JP11.jpeg', 'alt': 'Banner 2'},
+    {'filename': 'JP3.jpeg', 'alt': 'Banner 3'}
   ] %}
 
   <!-- Estilos específicos para transición suave de carga -->
@@ -38,8 +38,8 @@
     <div class="absolute inset-0 flex items-center justify-center" data-aos="fade-up" data-aos-duration="1000">
       <div class="text-center text-white bg-black bg-opacity-50 px-8 py-6 rounded-lg">
         <h1 class="text-5xl font-playfair">VALAC Joyas</h1>
-        <p class="mt-4 text-2xl">Experimenta la elegancia con un diseño atemporal</p>
-        <p class="mt-2 text-xl">Joyas en oro 10k y 14k para hombre y mujer: cadenas, pulsos, aretes, anillos y dijes</p>
+        <p class="mt-4 text-2xl">Joyas que cuentan tu historia</p>
+        <p class="mt-2 text-xl">Oro auténtico en 10k y 14k para mujeres y hombres que marcan su propio camino.</p>
       </div>
     </div>
   </section>
@@ -47,9 +47,9 @@
    <div id="promo-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden">
      <div class="bg-white max-w-md mx-auto rounded-lg p-6 relative shadow-xl text-center">
        <button onclick="document.getElementById('promo-modal').classList.add('hidden')" class="absolute top-2 right-3 text-gray-600 text-xl">&times;</button>
-       <img src="{{ SUPABASE_STORAGE_URL }}HotSale2.jpeg" alt="Hot Sale VALAC" class="rounded mb-4">
+       <img src="{{ SUPABASE_STORAGE_URL }}JP11.png" alt="Hot Sale VALAC" class="rounded mb-4">
        <h2 class="text-2xl font-semibold text-gray-800 mb-2">¡Hot Sale en VALAC!</h2>
-       <p class="text-gray-600 mb-3">Hasta 35% de descuento + 3, 6 y 9 MSI en artículos seleccionados</p>
+       <p class="text-gray-600 mb-3">Hasta 20% de descuento + 12 MSI en artículos seleccionados</p>
        <a href="/collection" class="bg-[#d5a300] hover:bg-[#b38f00] text-white px-5 py-2 rounded inline-block">Ver promociones</a>
      </div>
    </div>

@@ -31,7 +31,7 @@
         En oferta {{ product.descuento_pct }}%
       </div>
     {% endif %}
-    <div class="flex flex-col md:flex-row gap-8">
+    <div class="flex flex-col lg:flex-row gap-12 lg:gap-20 xl:gap-24">
       <!-- Slider de Imágenes del Producto -->
       <div class="md:w-1/2">
         <div class="product-slider">
@@ -45,7 +45,7 @@
       </div>
 
       <!-- Información del Producto -->
-      <div class="md:w-1/2">
+      <div class="w-full lg:w-1/2">
         <h1 class="text-3xl md:text-4xl font-bold text-[#333333] mb-6 font-playfair break-words min-h-[3rem]">{{ product.nombre }}</h1>
 
 
@@ -87,8 +87,64 @@
               <p class="text-sm text-red-500 mt-2">Última pieza disponible</p>
             {% endif %}
         </div>
+        <!-- Tabs -->
+  <div class="border-b border-gray-200 mb-4">
+    <nav class="-mb-px flex justify-center space-x-8" aria-label="Tabs">
+      <button id="tab-envios" class="tab-button text-gray-600 hover:text-[#d5a300] py-2 font-semibold border-b-2 border-transparent focus:outline-none focus:border-[#d5a300] active">
+        Información de Envíos
+      </button>
+      <button id="tab-politicas" class="tab-button text-gray-600 hover:text-[#d5a300] py-2 font-semibold border-b-2 border-transparent focus:outline-none focus:border-[#d5a300]">
+        Políticas
+      </button>
+    </nav>
+  </div>
+
+  <!-- Contenido de Tabs -->
+  <div id="tab-content-envios" class="tab-content text-gray-700 space-y-4">
+    <p>Todos los envíos cuentan con <strong>seguro ante pérdida o daño</strong>. Si tu paquete no llega, se repondrá con productos del catálogo equivalentes.</p>
+    <p>Procesamos tu pedido de <strong>1 a 3 días hábiles</strong>. El envío tarda de <strong>5 a 8 días hábiles</strong> según la zona.</p>
+    <p><strong>No realizamos envíos los viernes</strong>.</p>
+  </div>
+  <div id="tab-content-politicas" class="tab-content hidden text-gray-700 space-y-4">
+    <p>Los tiempos de procesamiento son de 1 a 3 días hábiles y el envío de 5 a 8 días.</p>
+    <p>Consulta nuestra política completa <a href="/politicas" class="text-[#d5a300] underline hover:text-[#b38f00]">aquí</a>.</p>
+  </div>
+</div>
       </div>
     </div>
+<!-- Sección de Información de Envíos y Políticas -->
+<div class="mt-12">
+  <!-- Íconos de Beneficios -->
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 text-center mb-10">
+    <div>
+      <div class="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+        <i class="fas fa-truck text-[#d5a300] text-xl"></i>
+      </div>
+      <p class="font-semibold text-gray-800">Envíos Nacionales</p>
+      <p class="text-sm text-gray-600">Cobertura en toda la República</p>
+    </div>
+    <div>
+      <div class="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+        <i class="fas fa-certificate text-[#d5a300] text-xl"></i>
+      </div>
+      <p class="font-semibold text-gray-800">Oro Garantizado</p>
+      <p class="text-sm text-gray-600">Certificado 10k y 14k</p>
+    </div>
+    <div>
+      <div class="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+        <i class="fas fa-shield-alt text-[#d5a300] text-xl"></i>
+      </div>
+      <p class="font-semibold text-gray-800">Envío Seguro</p>
+      <p class="text-sm text-gray-600">Piezas aseguradas</p>
+    </div>
+    <div>
+      <div class="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+        <i class="fas fa-wallet text-[#d5a300] text-xl"></i>
+      </div>
+      <p class="font-semibold text-gray-800">Pago Flexible</p>
+      <p class="text-sm text-gray-600">Transferencias y MSI</p>
+    </div>
+  </div>
 
     <!-- Sección: También te puede interesar -->
     <div class="mt-12">
@@ -188,5 +244,20 @@
     });
   });
 </script>
+<script>
+  const tabs = document.querySelectorAll('.tab-button');
+  const tabContents = document.querySelectorAll('.tab-content');
+
+  tabs.forEach((tab, i) => {
+    tab.addEventListener('click', () => {
+      tabs.forEach(t => t.classList.remove('text-[#d5a300]', 'border-[#d5a300]', 'active'));
+      tab.classList.add('text-[#d5a300]', 'border-[#d5a300]', 'active');
+
+      tabContents.forEach(c => c.classList.add('hidden'));
+      tabContents[i].classList.remove('hidden');
+    });
+  });
+</script>
+
 {% include 'partials/tracking.html' %}
 {% endblock %}

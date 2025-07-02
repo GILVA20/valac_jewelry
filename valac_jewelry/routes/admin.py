@@ -8,6 +8,7 @@ from flask_login import current_user
 import logging
 from .admin_bulk_upload import BulkUploadAdminView
 from collections import Counter
+import json
 
 class SupabaseProductAdmin(BaseView):
     def is_accessible(self):
@@ -102,14 +103,15 @@ class SupabaseProductAdmin(BaseView):
     @expose('/new', methods=['GET', 'POST'])
     def new(self):
         if request.method == 'POST':
-            nombre    = request.form.get('nombre')
-            descripcion = request.form.get('descripcion')
-            precio    = request.form.get('precio')
-            descuento_pct = int(request.form.get('descuento_pct', 0))
-            tipo_producto = request.form.get('tipo_producto')
-            genero    = request.form.get('genero')
-            tipo_oro  = request.form.get('tipo_oro')
-            imagen_url = request.form.get('imagen')
+            nombre         = request.form.get('nombre')
+            descripcion    = request.form.get('descripcion')
+            precio         = request.form.get('precio')
+            descuento_pct  = int(request.form.get('descuento_pct', 0))
+            tipo_producto  = request.form.get('tipo_producto')
+            genero         = request.form.get('genero')
+            tipo_oro       = request.form.get('tipo_oro')
+            imagen_url     = request.form.get('imagen')
+            imagenes_raw   = request.form.get('imagenes_multiples', "[]")  # JSON string
 
             if not all([nombre, descripcion, precio, tipo_producto, genero, tipo_oro, imagen_url]):
                 flash("Todos los campos son obligatorios.", "error")
@@ -128,13 +130,42 @@ class SupabaseProductAdmin(BaseView):
                 "tipo_producto": tipo_producto,
                 "genero": genero,
                 "tipo_oro": tipo_oro,
-                "imagen": imagen_url
+                "imagen": imagen_url  # Primera imagen como principal
             }
+
             response = supabase.table("products").insert(data).execute()
+
             if not response.data:
                 flash("Error al agregar el producto: " + str(response), "error")
-            else:
-                flash("Producto agregado exitosamente.", "success")
+                return redirect(url_for('.index'))
+
+            nuevo_producto = response.data[0]
+            producto_id = nuevo_producto["id"]
+
+            # Procesar imágenes múltiples si están disponibles
+            imagenes = []
+            try:
+                if imagenes_raw:
+                    imagenes = json.loads(imagenes_raw)
+                    if not isinstance(imagenes, list):
+                        imagenes = []
+            except Exception as e:
+                imagenes = []
+                current_app.logger.warning("Error al parsear imagenes_multiples: %s", str(e))
+
+            for i, url in enumerate(imagenes):
+                try:
+                    insert_resp = supabase.table("product_images").insert({
+                        "product_id": producto_id,
+                        "imagen": url,
+                        "orden": i
+                    }).execute()
+                    if insert_resp.error:
+                        current_app.logger.error("Error insertando imagen %s para producto %s: %s", url, producto_id, insert_resp.error)
+                except Exception as ex:
+                    current_app.logger.exception("Excepción insertando imagen múltiple: %s", str(ex))
+
+            flash("Producto agregado exitosamente con imágenes.", "success")
             return redirect(url_for('.index'))
 
         return self.render('admin/supabase_new_product.html', config=current_app.config)

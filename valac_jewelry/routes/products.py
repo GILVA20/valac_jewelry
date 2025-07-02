@@ -8,16 +8,21 @@ def product_detail(product_id):
     Muestra la página de detalle de un producto específico.
     """
     supabase = current_app.supabase
-    # Ejecutamos la query y obtenemos la respuesta
     response = supabase.table('products').select('*').eq('id', product_id).single().execute()
     
-    # Solo comprobamos si hay datos; eliminamos la comprobación de "response.error"
     if not response.data:
         abort(404, description="Producto no encontrado")
     
     product = response.data
 
-    # Consultamos productos relacionados (misma categoría, excluyendo el actual)
+    # 🔄 MVP 1: Cargar imágenes múltiples del producto desde product_images
+    images_resp = supabase.table('product_images')\
+        .select('*')\
+        .eq('product_id', product_id)\
+        .order('orden')\
+        .execute()
+    product['images'] = images_resp.data or []
+
     related_resp = supabase.table('products')\
                     .select('*')\
                     .eq('tipo_producto', product['tipo_producto'])\

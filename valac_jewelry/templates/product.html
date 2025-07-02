@@ -36,10 +36,21 @@
       <div class="md:w-1/2">
         <div class="product-slider">
           <div>
-          <img src="{{ product.imagen or url_for('static', filename='images/placeholder.jpg') }}"
-               alt="{{ product.nombre }}"
-               class="rounded-lg {% if product.stock_total == 0 %}opacity-50 grayscale{% endif %}">
-
+         {% if product.images and product.images|length > 0 %}
+           {% for img in product.images %}
+             <div>
+               <img src="{{ img.imagen }}"
+                    alt="{{ product.nombre }}"
+                    class="rounded-lg {% if product.stock_total == 0 %}opacity-50 grayscale{% endif %}">
+             </div>
+           {% endfor %}
+         {% else %}
+           <div>
+             <img src="{{ product.imagen or url_for('static', filename='images/placeholder.jpg') }}"
+                  alt="{{ product.nombre }}"
+                  class="rounded-lg {% if product.stock_total == 0 %}opacity-50 grayscale{% endif %}">
+           </div>
+         {% endif %}
           </div>
         </div>
       </div>

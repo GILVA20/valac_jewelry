@@ -75,7 +75,7 @@
                 </select>
             </div>
 
-            <!-- Subir Imagen -->
+            <!-- Subir Imagen 
             <div class="mb-6">
                 <label for="file-upload" class="block text-gray-700 font-medium mb-2">Subir Imagen:</label>
                 <div class="flex items-center justify-center w-full">
@@ -88,8 +88,17 @@
                 <p id="upload-status" class="text-sm text-gray-500 mt-2"></p>
             </div>
 
-            <!-- Campo oculto para la URL de la imagen -->
-            <input type="hidden" id="imagen" name="imagen">
+             Campo oculto para la URL de la imagen 
+            <input type="hidden" id="imagen" name="imagen"> -->
+
+            +   <!-- Subir Múltiples Imágenes -->
+           <div class="mb-6">
+             <label for="file-upload" class="block text-gray-700 font-medium mb-2">Subir Imágenes:</label>
+             <input type="file" id="file-upload" accept="image/*" multiple class="block w-full border border-gray-300 p-2 rounded-lg">
+             <p id="upload-status" class="text-sm text-gray-500 mt-2">Puedes subir varias imágenes. La primera será la principal.</p>
+           </div>
+           <input type="hidden" id="imagen" name="imagen">  <!-- Principal -->
+           <input type="hidden" id="imagenes_multiples" name="imagenes_multiples">
 
             <!-- Botón de Enviar -->
             <div>
@@ -111,9 +120,13 @@
         // Inicializa el cliente Supabase usando la función importada
         const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
         console.log("Cliente Supabase inicializado:", supabaseClient);
+        const uploadInput = document.getElementById("file-upload");
+        const uploadStatus = document.getElementById("upload-status");
+        const imagenPrincipal = document.getElementById("imagen");
+        const imagenesMultiples = document.getElementById("imagenes_multiples");
 
-        async function uploadImage(file) {
-            const fileName = 'products/' + file.name;
+        async function subirImagen(file) {
+            const fileName = 'products/' + Date.now() + '-' + file.name;
             console.log("Subiendo archivo:", fileName);
             const { data, error } = await supabaseClient
                 .storage
@@ -123,7 +136,6 @@
                 console.error("Error en la subida:", error);
                 throw error;
             }
-            // Obtener la URL pública; agregamos un timestamp para evitar caché.
             const { data: urlData, error: urlError } = supabaseClient
                 .storage
                 .from('CatalogoJoyasValacJoyas')
@@ -136,42 +148,38 @@
             if (!publicURL || publicURL === "undefined") {
                 throw new Error("La URL pública es undefined");
             }
-            // Para evitar caché, agregamos un query string con el timestamp
             publicURL += "?t=" + new Date().getTime();
             console.log("URL de descarga:", publicURL);
             return publicURL;
         }
 
-        async function handleFileUpload(event) {
-            const file = event.target.files[0];
-            const statusEl = document.getElementById("upload-status");
-            const uploadIcon = document.getElementById("upload-icon");
+        uploadInput.addEventListener("change", async (e) => {
+            const files = Array.from(e.target.files);
+            if (!files.length) return;
+            const urls = [];
+            uploadStatus.innerText = "Subiendo imágenes...";
 
-            if (file) {
-                statusEl.innerText = "Subiendo imagen...";
-                uploadIcon.classList.remove("fa-upload");
-                uploadIcon.classList.add("fa-spinner", "fa-spin");
-
+            for (let file of files) {
                 try {
-                    const url = await uploadImage(file);
-                    document.getElementById("imagen").value = url;
-                    statusEl.innerText = "Imagen subida exitosamente!";
-                    statusEl.classList.remove("text-gray-500");
-                    statusEl.classList.add("text-green-500");
-                } catch (error) {
-                    console.error("Error al subir la imagen:", error);
-                    statusEl.innerText = "Error al subir la imagen.";
-                    statusEl.classList.remove("text-gray-500");
-                    statusEl.classList.add("text-red-500");
-                } finally {
-                    uploadIcon.classList.remove("fa-spinner", "fa-spin");
-                    uploadIcon.classList.add("fa-upload");
+                    const url = await subirImagen(file);
+                    urls.push(url);
+                } catch (err) {
+                    console.error("Error subiendo imagen:", err);
+                    uploadStatus.innerText = "Error subiendo alguna imagen.";
+                    uploadStatus.classList.add("text-red-500");
+                    return;
                 }
             }
-        }
 
-        // Hacer que handleFileUpload sea accesible desde el HTML
-        window.handleFileUpload = handleFileUpload;
+            if (urls.length) {
+                imagenPrincipal.value = urls[0];
+                imagenesMultiples.value = JSON.stringify(urls);
+                uploadStatus.innerText = "Imágenes subidas correctamente.";
+                uploadStatus.classList.add("text-green-500");
+                console.log("Imágenes cargadas:", urls);
+            }
+        });
+
     </script>
 </body>
 </html>

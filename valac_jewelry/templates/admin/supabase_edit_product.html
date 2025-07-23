@@ -87,7 +87,27 @@
 
             <!-- Campo oculto para la URL de la imagen -->
             <input type="hidden" id="imagen" name="imagen" value="{{ product.imagen }}">
-
+            <!-- Campo oculto para nuevas imágenes -->
+            <input type="hidden" id="imagenes_multiples" name="imagenes_multiples">
+ 
+            <!-- Galería existente -->
+            <h3 class="text-lg font-semibold mb-4">Galería Actual</h3>
+            <div id="gallery-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              {% for img in gallery %}
+                <div class="border rounded-lg p-2 bg-gray-50 relative">
+                  <img src="{{ img.imagen }}" class="w-full h-32 object-cover rounded mb-2">
+                  <input type="number" class="w-full border rounded px-2 py-1 text-center" data-img-id="{{ img.id }}" value="{{ img.orden }}">
+                  <button type="button" class="delete-img absolute top-1 right-1 bg-red-600 text-white px-2 rounded" data-id="{{ img.id }}">X</button>
+                </div>
+              {% endfor %}
+            </div>
+ 
+            <button type="button" id="save-order" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded mb-6">Guardar Orden</button>
+ 
+            <!-- Subir nuevas imágenes -->
+            <label for="file-upload-multi" class="block text-gray-700 font-medium mb-2">Agregar nuevas imágenes:</label>
+            <input type="file" id="file-upload-multi" accept="image/*" multiple class="block w-full border border-gray-300 p-2 rounded-lg mb-6">
+            <p id="upload-status-multi" class="text-sm text-gray-500 mt-2">Puedes subir varias imágenes adicionales.</p>
             <!-- Botón de Enviar -->
             <div>
                 <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300">
@@ -169,6 +189,61 @@
         }
 
         window.handleFileUpload = handleFileUpload;
+       const supabaseClient = supabase;
+       const multiInput = document.getElementById("file-upload-multi");
+       const uploadStatus = document.getElementById("upload-status-multi");
+       const imagenesMultiples = document.getElementById("imagenes_multiples");
+
+       async function subirImagen(file) {
+         const fileName = 'products/' + Date.now() + '-' + file.name;
+         const { data, error } = await supabaseClient.storage.from('CatalogoJoyasValacJoyas').upload(fileName, file);
+         if (error) throw error;
+         const { data: urlData } = supabaseClient.storage.from('CatalogoJoyasValacJoyas').getPublicUrl(fileName);
+         return urlData.publicUrl + "?t=" + Date.now();
+       }
+
+       multiInput.addEventListener("change", async (e) => {
+         const files = Array.from(e.target.files);
+         if (!files.length) return;
+         const urls = [];
+         uploadStatus.innerText = "Subiendo imágenes...";
+         for (let file of files) {
+           try {
+             const url = await subirImagen(file);
+             urls.push(url);
+           } catch (err) {
+             uploadStatus.innerText = "Error subiendo imágenes.";
+             return;
+           }
+         }
+         if (urls.length) {
+           imagenesMultiples.value = JSON.stringify(urls);
+           uploadStatus.innerText = "Imágenes listas para guardar.";
+           uploadStatus.classList.add("text-green-500");
+         }
+       });
+
+       document.querySelectorAll(".delete-img").forEach(btn => {
+         btn.addEventListener("click", () => {
+           const id = btn.dataset.id;
+           fetch(`/admin/supabase_products/delete_gallery_image/${id}`, {
+             method: "POST",
+             body: new URLSearchParams({ product_id: "{{ product.id }}" })
+           }).then(() => location.reload());
+         });
+       });
+
+       document.getElementById("save-order").addEventListener("click", () => {
+         const orderData = [];
+         document.querySelectorAll("#gallery-grid input[type='number']").forEach(input => {
+           orderData.push({ id: input.dataset.imgId, orden: parseInt(input.value) });
+         });
+         fetch("/admin/supabase_products/update_gallery_order", {
+           method: "POST",
+           headers: { "Content-Type": "application/json" },
+           body: JSON.stringify({ order: orderData })
+         }).then(() => location.reload());
+       });
     </script>
 </body>
 </html>

@@ -9,7 +9,7 @@ import logging
 from .admin_bulk_upload import BulkUploadAdminView
 from collections import Counter
 import json
-
+from flask import jsonify
 class SupabaseProductAdmin(BaseView):
     def is_accessible(self):
         return current_user.is_authenticated and getattr(current_user, 'is_admin', False)
@@ -194,6 +194,7 @@ class SupabaseProductAdmin(BaseView):
             genero    = request.form.get('genero')
             tipo_oro  = request.form.get('tipo_oro')
             imagen_url = request.form.get('imagen')
+            nuevas_imagenes_raw = request.form.get('imagenes_multiples', "[]")
 
             response = supabase.table("products").update({
                 "nombre": nombre,
@@ -206,6 +207,31 @@ class SupabaseProductAdmin(BaseView):
                 "tipo_oro": tipo_oro,
                 "imagen": imagen_url
             }).eq("id", id).execute()
+
+            if not response.data:
+                current_app.logger.error(f"[edit_product] Error al actualizar producto {id}: {response}")
+            else:
+                current_app.logger.info(f"[edit_product] Producto {id} actualizado correctamente")
+
+            # Procesar nuevas imágenes si existen
+            try:
+                nuevas_imagenes = json.loads(nuevas_imagenes_raw)
+            except Exception as e:
+                current_app.logger.warning(f"[edit_product] Error parseando nuevas imágenes: {e}")
+                nuevas_imagenes = []
+
+            if nuevas_imagenes:
+                current_app.logger.info(f"[edit_product] Insertando {len(nuevas_imagenes)} nuevas imágenes para producto {id}")
+                for i, url in enumerate(nuevas_imagenes):
+                    try:
+                        insert_resp = supabase.table("product_images").insert({
+                            "product_id": id,
+                            "imagen": url,
+                            "orden": i + 100
+                        }).execute()
+                        current_app.logger.info(f"[edit_product] Imagen agregada: {url}")
+                    except Exception as ex:
+                        current_app.logger.exception(f"[edit_product] Error insertando imagen {url}: {ex}")            
 
             if not response.data:
                 flash("Error al actualizar el producto.", "error")
@@ -230,6 +256,19 @@ class SupabaseProductAdmin(BaseView):
             gallery=gallery,
             config=current_app.config
         )
+    
+    @expose('/update_gallery_order', methods=['POST'])
+    def update_gallery_order(self):
+        supabase = self.admin.app.supabase
+        try:
+            data = request.json.get("order", [])
+            current_app.logger.info(f"[update_gallery_order] Recibido nuevo orden: {data}")
+            for item in data:
+                supabase.table("product_images").update({"orden": item["orden"]}).eq("id", item["id"]).execute()
+            return jsonify({"status": "success"}), 200
+        except Exception as e:
+            current_app.logger.error(f"[update_gallery_order] Error actualizando orden: {e}")
+            return jsonify({"status": "error", "message": str(e)}), 500
 
     @expose('/delete_gallery_image/<int:image_id>', methods=['POST'])
     def delete_gallery_image(self, image_id):

@@ -28,17 +28,23 @@ class SupabaseProductAdmin(BaseView):
         else:
             products = response.data
 
-            # Enriquecer cada producto con sus imágenes adicionales
-            for prod in products:
-                try:
-                    img_resp = supabase.table("product_images") \
-                        .select("*") \
-                        .eq("product_id", prod["id"]) \
-                        .order("orden") \
-                        .execute()
-                    prod["gallery"] = img_resp.data or []
-                except Exception as e:
-                    current_app.logger.error(f"[index] Error cargando galería para producto {prod['id']}: {e}")
+            # ✅ Cargar imágenes en un solo query
+            product_ids = [p["id"] for p in products]
+            if product_ids:
+                img_resp = supabase.table("product_images") \
+                    .select("*") \
+                    .in_("product_id", product_ids) \
+                    .order("orden") \
+                    .execute()
+
+                images_by_product = {}
+                for img in img_resp.data or []:
+                    images_by_product.setdefault(img["product_id"], []).append(img)
+
+                for prod in products:
+                    prod["gallery"] = images_by_product.get(prod["id"], [])
+            else:
+                for prod in products:
                     prod["gallery"] = []
 
             logging.info("[index] Productos enriquecidos con galería: %d", len(products))

@@ -27,7 +27,22 @@ class SupabaseProductAdmin(BaseView):
             products = []
         else:
             products = response.data
-            logging.info("Productos obtenidos: %d", len(products))
+
+            # Enriquecer cada producto con sus imágenes adicionales
+            for prod in products:
+                try:
+                    img_resp = supabase.table("product_images") \
+                        .select("*") \
+                        .eq("product_id", prod["id"]) \
+                        .order("orden") \
+                        .execute()
+                    prod["gallery"] = img_resp.data or []
+                except Exception as e:
+                    current_app.logger.error(f"[index] Error cargando galería para producto {prod['id']}: {e}")
+                    prod["gallery"] = []
+
+            logging.info("[index] Productos enriquecidos con galería: %d", len(products))
+
         return self.render('admin/supabase_products.html', products=products)
     @expose('/update-stock/<int:product_id>', methods=['POST'])
     def update_stock(self,product_id):
@@ -173,11 +188,22 @@ class SupabaseProductAdmin(BaseView):
     @expose('/delete/<int:product_id>', methods=['POST'])
     def delete_product(self, product_id):
         supabase = self.admin.app.supabase
-        response = supabase.table("products").delete().eq("id", product_id).execute()
-        if not response.data:
-            flash("Error al eliminar el producto.", "error")
-        else:
-            flash("Producto eliminado exitosamente.", "success")
+        try:
+            # ✅ Eliminar dependencias antes del producto
+            supabase.table("product_views").delete().eq("product_id", product_id).execute()
+            supabase.table("product_images").delete().eq("product_id", product_id).execute()
+
+            # ✅ Ahora eliminamos el producto
+            response = supabase.table("products").delete().eq("id", product_id).execute()
+
+            if not response.data:
+                flash("Error al eliminar el producto.", "error")
+            else:
+                flash("Producto y registros relacionados eliminados exitosamente.", "success")
+        except Exception as e:
+            current_app.logger.exception(f"[delete_product] Error eliminando producto {product_id}: {e}")
+            flash("Error al eliminar el producto. Revisa logs.", "error")
+
         return redirect(url_for('.index'))
 
     @expose('/edit/<int:id>', methods=['GET', 'POST'])
@@ -187,26 +213,33 @@ class SupabaseProductAdmin(BaseView):
         if request.method == 'POST':
             nombre    = request.form.get('nombre')
             descripcion = request.form.get('descripcion')
-            precio    = float(request.form.get('precio'))
-            descuento_pct = int(request.form.get('descuento_pct', 0))
-            precio_descuento = round(precio * (1 - descuento_pct/100), 2)
+            precio    = request.form.get('precio')
+            descuento_pct = request.form.get('descuento_pct', 0)
+            precio_descuento = round(float(precio) * (1 - int(descuento_pct)/100), 2) if precio else 0
             tipo_producto = request.form.get('tipo_producto')
             genero    = request.form.get('genero')
             tipo_oro  = request.form.get('tipo_oro')
             imagen_url = request.form.get('imagen')
             nuevas_imagenes_raw = request.form.get('imagenes_multiples', "[]")
 
-            response = supabase.table("products").update({
-                "nombre": nombre,
-                "descripcion": descripcion,
-                "precio": precio,
-                "descuento_pct": descuento_pct,
-                "precio_descuento": precio_descuento,
-                "tipo_producto": tipo_producto,
-                "genero": genero,
-                "tipo_oro": tipo_oro,
-                "imagen": imagen_url
-            }).eq("id", id).execute()
+            # ✅ Normalización y limpieza antes del UPDATE
+            update_data = {
+                "nombre": nombre.strip() if nombre else None,
+                "descripcion": descripcion.strip() if descripcion else None,
+                "precio": float(precio) if precio else None,
+                "descuento_pct": int(descuento_pct) if descuento_pct else 0,
+                "precio_descuento": float(precio_descuento),
+                "tipo_producto": tipo_producto.strip() if tipo_producto else None,
+                "genero": genero.strip() if genero else None,
+                "tipo_oro": tipo_oro.strip() if tipo_oro else None,
+                "imagen": imagen_url if imagen_url and imagen_url != "undefined" else None
+            }
+
+            # ✅ Eliminar claves con None para evitar error 400 en Supabase
+            clean_update_data = {k: v for k, v in update_data.items() if v is not None}
+            current_app.logger.debug("[edit_product] Payload limpio para UPDATE: %s", clean_update_data)
+
+            response = supabase.table("products").update(clean_update_data).eq("id", id).execute()
 
             if not response.data:
                 current_app.logger.error(f"[edit_product] Error al actualizar producto {id}: {response}")
@@ -216,22 +249,33 @@ class SupabaseProductAdmin(BaseView):
             # Procesar nuevas imágenes si existen
             try:
                 nuevas_imagenes = json.loads(nuevas_imagenes_raw)
+                if not isinstance(nuevas_imagenes, list):
+                    current_app.logger.warning("[edit_product] Formato inválido para nuevas imágenes. Se ignora.")
+                    nuevas_imagenes = []
             except Exception as e:
                 current_app.logger.warning(f"[edit_product] Error parseando nuevas imágenes: {e}")
                 nuevas_imagenes = []
 
+            current_app.logger.debug("[edit_product] Total nuevas imágenes: %d", len(nuevas_imagenes))
+
             if nuevas_imagenes:
-                current_app.logger.info(f"[edit_product] Insertando {len(nuevas_imagenes)} nuevas imágenes para producto {id}")
-                for i, url in enumerate(nuevas_imagenes):
+                # Obtener el máximo orden actual para continuar
+                current_max = 0
+                resp_ord = supabase.table("product_images").select("orden").eq("product_id", id).execute()
+                if resp_ord.data:
+                    current_max = max([img["orden"] for img in resp_ord.data])
+
+                for idx, url in enumerate(nuevas_imagenes, start=1):
                     try:
+                        orden_final = current_max + idx
                         insert_resp = supabase.table("product_images").insert({
                             "product_id": id,
                             "imagen": url,
-                            "orden": i + 100
+                            "orden": orden_final
                         }).execute()
-                        current_app.logger.info(f"[edit_product] Imagen agregada: {url}")
+                        current_app.logger.debug("[edit_product] Imagen agregada: %s con orden %d", url, orden_final)
                     except Exception as ex:
-                        current_app.logger.exception(f"[edit_product] Error insertando imagen {url}: {ex}")            
+                        current_app.logger.exception(f"[edit_product] Error insertando imagen {url}: {ex}")
 
             if not response.data:
                 flash("Error al actualizar el producto.", "error")
@@ -246,9 +290,22 @@ class SupabaseProductAdmin(BaseView):
             return redirect(url_for('.index'))
         product = resp.data[0]
 
-        images_response = supabase.table("product_images") \
-            .select("*").eq("product_id", id).order("orden").execute()
-        gallery = images_response.data or []
+        try:
+            images_response = supabase.table("product_images") \
+                .select("*") \
+                .eq("product_id", id) \
+                .order("orden", desc=False) \
+                .execute()
+
+            if images_response.data:
+                gallery = images_response.data
+                current_app.logger.info("[edit_product] Galería cargada: %d imágenes para producto %s", len(gallery), id)
+            else:
+                gallery = []
+                current_app.logger.warning("[edit_product] Sin imágenes para producto %s", id)
+        except Exception as e:
+            current_app.logger.exception("[edit_product] Error al cargar galería para producto %s: %s", id, e)
+            gallery = []
 
         return self.render(
             'admin/supabase_edit_product.html',
@@ -261,13 +318,24 @@ class SupabaseProductAdmin(BaseView):
     def update_gallery_order(self):
         supabase = self.admin.app.supabase
         try:
-            data = request.json.get("order", [])
-            current_app.logger.info(f"[update_gallery_order] Recibido nuevo orden: {data}")
+            payload = request.get_json(force=True)
+            data = payload.get("order", [])
+
+            if not isinstance(data, list):
+                current_app.logger.error("[update_gallery_order] Formato inválido en payload: %s", payload)
+                return jsonify({"status": "error", "message": "Formato inválido"}), 400
+
+            current_app.logger.info("[update_gallery_order] Reordenando %d imágenes", len(data))
+
             for item in data:
-                supabase.table("product_images").update({"orden": item["orden"]}).eq("id", item["id"]).execute()
+                supabase.table("product_images") \
+                    .update({"orden": int(item["orden"])}) \
+                    .eq("id", int(item["id"])) \
+                    .execute()
+
             return jsonify({"status": "success"}), 200
         except Exception as e:
-            current_app.logger.error(f"[update_gallery_order] Error actualizando orden: {e}")
+            current_app.logger.exception("[update_gallery_order] Error actualizando orden")
             return jsonify({"status": "error", "message": str(e)}), 500
 
     @expose('/delete_gallery_image/<int:image_id>', methods=['POST'])

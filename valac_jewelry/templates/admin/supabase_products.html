@@ -114,22 +114,28 @@
               <td class="border p-3 text-gray-700">{{ prod.genero }}</td>
               <td class="border p-3 text-gray-700">{{ prod.tipo_oro }}</td>
               <td class="border p-3">
-                {% if prod.imagen and prod.imagen != 'undefined' %}
-                  <img src="{{ prod.imagen }}" alt="{{ prod.nombre }}" class="w-16 h-16 object-cover rounded-lg cursor-pointer" onclick="openModal('{{ prod.imagen }}')">
+                {% if prod.gallery and prod.gallery|length > 0 %}
+                  <div class="relative w-16 h-16 rounded-lg overflow-hidden group">
+                    <!-- Imagen principal -->
+                    <img src="{{ prod.gallery[0].imagen }}" alt="Imagen principal"
+                         class="w-full h-full object-cover transition-opacity duration-300">
+
+                    <!-- Imagen secundaria en hover -->
+                    {% if prod.gallery|length > 1 %}
+                      <img src="{{ prod.gallery[1].imagen }}" alt="Imagen secundaria"
+                           class="w-full h-full object-cover absolute top-0 left-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    {% endif %}
+
+                    <!-- Badge para imágenes adicionales -->
+                    {% if prod.gallery|length > 2 %}
+                      <span class="absolute bottom-1 right-1 bg-black bg-opacity-60 text-white text-xs px-1 rounded">
+                        +{{ prod.gallery|length - 2 }}
+                      </span>
+                    {% endif %}
+                  </div>
                 {% else %}
-                  <span class="text-red-500">No disponible</span>
+                  <img src="{{ prod.imagen }}" alt="Imagen única" class="h-16 w-16 object-cover rounded">
                 {% endif %}
-              </td>
-              <td class="border p-3">
-                <div class="flex overflow-x-auto space-x-2 max-w-[200px]">
-                  {% if prod.gallery %}
-                    {% for img in prod.gallery %}
-                      <img src="{{ img.imagen }}" class="h-16 w-16 object-cover rounded">
-                    {% endfor %}
-                  {% else %}
-                    <img src="{{ prod.imagen }}" class="h-16 w-16 object-cover rounded">
-                  {% endif %}
-                </div>
               </td>
               <td class="border p-3">
                 <a href="{{ url_for('.edit_product', id=prod.id) }}" class="text-blue-500 hover:text-blue-600 mr-2">

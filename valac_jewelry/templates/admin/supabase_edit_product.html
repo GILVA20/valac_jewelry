@@ -90,18 +90,16 @@
             <!-- Campo oculto para nuevas imágenes -->
             <input type="hidden" id="imagenes_multiples" name="imagenes_multiples">
  
-            <!-- Galería existente -->
             <h3 class="text-lg font-semibold mb-4">Galería Actual</h3>
             <div id="gallery-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
               {% for img in gallery %}
-                <div class="border rounded-lg p-2 bg-gray-50 relative">
+                <div class="border rounded-lg p-2 bg-gray-50 relative shadow-sm">
                   <img src="{{ img.imagen }}" class="w-full h-32 object-cover rounded mb-2">
                   <input type="number" class="w-full border rounded px-2 py-1 text-center" data-img-id="{{ img.id }}" value="{{ img.orden }}">
-                  <button type="button" class="delete-img absolute top-1 right-1 bg-red-600 text-white px-2 rounded" data-id="{{ img.id }}">X</button>
+                  <button type="button" class="delete-img absolute top-1 right-1 bg-red-600 hover:bg-red-700 text-white px-2 rounded" data-id="{{ img.id }}">X</button>
                 </div>
               {% endfor %}
             </div>
- 
             <button type="button" id="save-order" class="bg-yellow-500 hover:bg-yellow-600 text-white px-4 py-2 rounded mb-6">Guardar Orden</button>
  
             <!-- Subir nuevas imágenes -->
@@ -244,6 +242,28 @@
            body: JSON.stringify({ order: orderData })
          }).then(() => location.reload());
        });
+      document.querySelectorAll(".delete-img").forEach(btn => {
+  btn.addEventListener("click", () => {
+    if(confirm("¿Seguro que deseas eliminar esta imagen?")) {
+      fetch(`/admin/supabase_products/delete_gallery_image/${btn.dataset.id}`, {
+        method: "POST",
+        body: new URLSearchParams({ product_id: "{{ product.id }}" })
+      }).then(() => location.reload());
+    }
+  });
+});
+
+document.getElementById("save-order").addEventListener("click", () => {
+  const orderData = [];
+  document.querySelectorAll("#gallery-grid input[type='number']").forEach(input => {
+    orderData.push({ id: input.dataset.imgId, orden: parseInt(input.value) });
+  });
+  fetch("/admin/supabase_products/update_gallery_order", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ order: orderData })
+  }).then(() => location.reload());
+});
     </script>
 </body>
 </html>

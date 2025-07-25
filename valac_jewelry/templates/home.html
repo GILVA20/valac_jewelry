@@ -181,8 +181,11 @@
         console.log("DEBUG: Supabase initialized in home.html:", supabaseClient);
 
         const { data: products, error } = await supabaseClient
-                .from('products')
-                .select('id, nombre, descripcion, precio, descuento_pct, precio_descuento, tipo_producto, genero, tipo_oro, imagen, created_at');
+          .from('products')
+          .select(`
+            id, nombre, descripcion, precio, descuento_pct, precio_descuento, tipo_producto, genero, tipo_oro, imagen, created_at,
+            product_images ( imagen, orden )
+          `);
         if (error) {
           console.error("DEBUG: Error loading products from Supabase:", error);
           return;
@@ -196,26 +199,54 @@
         if (productGrid) {
           productGrid.innerHTML = "";
           top3.forEach((product, index) => {
-            const imageUrl = product.imagen && product.imagen !== 'undefined' ? product.imagen : `${SUPABASE_STORAGE_URL}placeholder.jpg`;
-          productGrid.innerHTML += `
-            <div class="relative bg-white p-5 rounded-lg shadow-md product-card" data-aos="fade-up" data-aos-delay="${index * 50}">
-              ${product.descuento_pct > 0 ? `
-                <div class="discount-badge">-${product.descuento_pct}%</div>
-              ` : ``}
-              <img src="${imageUrl}" loading="lazy" alt="${product.nombre}" class="w-full h-64 object-cover mb-4 rounded">
-              <h3 class="text-xl font-semibold text-[#424242]">${product.nombre}</h3>
-              ${product.descuento_pct > 0 ? `
-                <p class="text-gray-500 line-through mt-2">$${product.precio.toFixed(2)}</p>
-                <p class="text-2xl font-bold text-red-600 mt-1">$${product.precio_descuento.toFixed(2)}</p>
-              ` : `
-                <p class="text-2xl font-semibold text-gray-800 mt-2">$${product.precio.toFixed(2)}</p>
-              `}
-              <p class="text-gray-600 mt-1 text-sm">Oro: ${product.tipo_oro} | Género: ${product.genero}</p>
-              <a href="/producto/${product.id}" class="mt-4 inline-block bg-[#d5a300] text-white px-4 py-2 rounded hover:bg-[#b38f00] transition-colors">
-                Ver detalles
-              </a>
-            </div>
-          `;
+            const placeholder = "{{ config['SUPABASE_STORAGE_URL'] }}placeholder.jpg";
+
+            // ✅ Determinar imágenes
+            let mainImage = placeholder;
+            let hoverImage = null;
+
+            if (product.product_images && product.product_images.length > 0) {
+              const sorted = [...product.product_images].sort((a, b) => a.orden - b.orden);
+              mainImage = sorted[0]?.imagen || placeholder;
+              hoverImage = sorted.length > 1 ? sorted[1].imagen : null;
+            } else if (product.imagen && product.imagen !== 'undefined') {
+              mainImage = product.imagen;
+            }
+
+            // ✅ HTML con efecto hover
+            productGrid.innerHTML += `
+              <div class="relative bg-white p-5 rounded-lg shadow-md overflow-hidden group" data-aos="fade-up" data-aos-delay="${index * 50}">
+                ${product.descuento_pct > 0 ? `
+                  <div class="absolute top-4 left-4 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
+                    -${product.descuento_pct}%
+                  </div>
+                ` : ``}
+
+                <div class="relative w-full h-64 overflow-hidden">
+                  <img src="${mainImage}" alt="${product.nombre}" loading="lazy"
+                       class="w-full h-full object-cover transition-opacity duration-300 ${hoverImage ? 'group-hover:opacity-0' : ''}">
+                  ${hoverImage ? `
+                    <img src="${hoverImage}" alt="${product.nombre} hover" loading="lazy"
+                         class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                  ` : ``}
+                </div>
+
+                <h3 class="text-xl font-semibold text-[#424242] mt-4">${product.nombre}</h3>
+
+                ${product.descuento_pct > 0 ? `
+                  <p class="text-gray-500 line-through mt-2">$${product.precio.toFixed(2)}</p>
+                  <p class="text-2xl font-bold text-red-600 mt-1">$${product.precio_descuento.toFixed(2)}</p>
+                ` : `
+                  <p class="text-2xl font-semibold text-gray-800 mt-2">$${product.precio.toFixed(2)}</p>
+                `}
+
+                <p class="text-gray-600 mt-1 text-sm">Oro: ${product.tipo_oro} | Género: ${product.genero}</p>
+
+                <a href="/producto/${product.id}" class="mt-4 inline-block bg-[#d5a300] text-white px-4 py-2 rounded hover:bg-[#b38f00] transition-colors">
+                  Ver detalles
+                </a>
+              </div>
+            `;
           });
           console.log("DEBUG: Top 3 products rendered in home.html.");
         } else {

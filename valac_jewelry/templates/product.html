@@ -33,26 +33,65 @@
     {% endif %}
     <div class="flex flex-col lg:flex-row gap-12 lg:gap-20 xl:gap-24">
       <!-- Slider de Imágenes del Producto -->
-      <div class="md:w-1/2">
-        <div class="product-slider">
-          <div>
-         {% if product.images and product.images|length > 0 %}
-           {% for img in product.images %}
-             <div>
-               <img src="{{ img.imagen }}"
-                    alt="{{ product.nombre }}"
-                    class="rounded-lg {% if product.stock_total == 0 %}opacity-50 grayscale{% endif %}">
-             </div>
-           {% endfor %}
-         {% else %}
-           <div>
-             <img src="{{ product.imagen or url_for('static', filename='images/placeholder.jpg') }}"
-                  alt="{{ product.nombre }}"
-                  class="rounded-lg {% if product.stock_total == 0 %}opacity-50 grayscale{% endif %}">
-           </div>
-         {% endif %}
-          </div>
+      <div class="md:w-1/2 flex flex-col lg:flex-row gap-4">
+        <!-- GALERÍA DE IMÁGENES: miniaturas + principal -->
+        <div class="hidden lg:flex flex-col gap-2">
+          {% for img in product.images %}
+            <button
+              class="thumbnail w-16 h-16 rounded-lg overflow-hidden border-2 border-transparent focus:outline-none focus:border-[#d5a300] transition-colors"
+              data-index="{{ loop.index0 }}"
+              aria-label="Ver imagen {{ loop.index }}"
+            >
+              <img
+                src="{{ img.imagen }}"
+                alt="{{ product.nombre }} (vista {{ loop.index }})"
+                class="object-cover w-full h-full"
+                loading="lazy"
+              >
+            </button>
+          {% endfor %}
         </div>
+
+        <div class="relative w-full aspect-[4/5] bg-gray-100 rounded-lg overflow-hidden group">
+          <!-- Flechas -->
+          <button
+            class="prev absolute left-2 top-1/2 transform -translate-y-1/2 bg-white/70 p-2 rounded-full shadow focus:outline-none"
+            aria-label="Imagen anterior"
+          >&larr;</button>
+          <button
+            class="next absolute right-2 top-1/2 transform -translate-y-1/2 bg-white/70 p-2 rounded-full shadow focus:outline-none"
+            aria-label="Siguiente imagen"
+          >&rarr;</button>
+
+          <!-- Imagen principal -->
+          {% for img in product.images %}
+            <img
+              src="{{ img.imagen }}"
+              alt="{{ product.nombre }} (vista {{ loop.index }})"
+              class="main-img absolute inset-0 w-full h-full object-cover transition-opacity duration-300 ease-in-out
+                     {% if not loop.first %} opacity-0 {% endif %}"
+              data-index="{{ loop.index0 }}"
+              loading="lazy"
+              srcset="{{ img.imagen }} 400w, {{ img.imagen }} 800w"
+              sizes="(max-width: 640px) 100vw, 50vw"
+            >
+          {% endfor %}
+        </div>
+        <!-- miniaturas mobile: fila horizontal swipeable -->
+        <div class="lg:hidden flex overflow-x-auto space-x-2 mb-4 py-2">
+          {% for img in product.images %}
+            <button
+              class="thumbnail w-20 h-20 flex-shrink-0 rounded-lg overflow-hidden border-2 border-transparent focus:outline-none focus:border-[#d5a300]"
+              data-index="{{ loop.index0 }}"
+              aria-label="Ver imagen {{ loop.index }}"
+            >
+              <img src="{{ img.imagen }}"
+                   alt="{{ product.nombre }} (miniatura {{ loop.index }})"
+                   class="object-cover w-full h-full"
+                   loading="lazy">
+            </button>
+          {% endfor %}
+        </div>       
       </div>
 
       <!-- Información del Producto -->
@@ -186,15 +225,51 @@
 <script>
   // Inicializar Slick Slider para el slider de producto
   $(document).ready(function(){
-    $('.product-slider').slick({
-      autoplay: false,
-      arrows: true,
-      dots: true
-    });
-  });
+    const thumbs = document.querySelectorAll('.thumbnail');
+    const mains  = document.querySelectorAll('.main-img');
+    let current = 0;
 
-  // Inicializar AOS
-  AOS.init();
+    function showImage(idx) {
+      mains.forEach(img => img.classList.add('opacity-0'));
+      mains[idx].classList.remove('opacity-0');
+      thumbs.forEach(btn => btn.classList.remove('border-[#d5a300]'));
+      thumbs[idx].classList.add('border-[#d5a300]');
+      current = idx;
+    }
+
+    // Click en miniatura
+    thumbs.forEach(btn => {
+      btn.addEventListener('click', () => showImage(+btn.dataset.index));
+    });
+
+    // Flechas prev/next
+    document.querySelector('.prev').addEventListener('click', () => {
+      showImage((current - 1 + mains.length) % mains.length);
+    });
+    document.querySelector('.next').addEventListener('click', () => {
+      showImage((current + 1) % mains.length);
+    });
+
+    // Teclado
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowLeft')  showImage((current - 1 + mains.length) % mains.length);
+      if (e.key === 'ArrowRight') showImage((current + 1) % mains.length);
+    });
+
+    // Swipe (touch) móvil
+    // Swipe (touch) móvil
+    let startX = 0;
+    const container = document.querySelector('.relative.w-full');
+    container.addEventListener('touchstart', e => { startX = e.touches[0].clientX; });
+    container.addEventListener('touchend',   e => {
+      let diff = e.changedTouches[0].clientX - startX;
+      if (diff > 50)   showImage((current - 1 + mains.length) % mains.length);
+      if (diff < -50)  showImage((current + 1) % mains.length);
+    });
+
+    // Inicializar AOS (ahora dentro del mismo ready)
+    AOS.init();
+  });
 </script>
 
 <script>

@@ -24,7 +24,7 @@ def product_detail(product_id):
     product['images'] = images_resp.data or []
 
     related_resp = supabase.table('products')\
-                    .select('*')\
+                    .select('*, product_images(imagen,orden)')\
                     .eq('tipo_producto', product['tipo_producto'])\
                     .neq('id', product_id)\
                     .limit(4)\

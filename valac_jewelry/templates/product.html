@@ -59,17 +59,16 @@
       <div class="w-full lg:w-1/2">
         <h1 class="text-3xl md:text-4xl font-bold text-[#333333] mb-6 font-playfair break-words min-h-[3rem]">{{ product.nombre }}</h1>
 
-
         {% if product.descuento_pct and product.descuento_pct > 0 %}
           <p class="text-gray-500 line-through mt-4 text-lg">
-            ${{ "%.2f"|format(product.precio) }}
+            ${{ '%.2f'|format(product.precio) }}
           </p>
           <p class="text-3xl font-bold text-red-600 mt-1">
-            ${{ "%.2f"|format(product.precio_descuento) }}
+            ${{ '%.2f'|format(product.precio_descuento) }}
           </p>
         {% else %}
           <p class="text-3xl font-semibold text-gray-800 mt-4">
-            ${{ "%.2f"|format(product.precio) }}
+            ${{ '%.2f'|format(product.precio) }}
           </p>
         {% endif %}
 
@@ -124,70 +123,57 @@
       </div>
     </div>
 <!-- Sección de Información de Envíos y Políticas -->
-<div class="mt-12">
-  <!-- Íconos de Beneficios -->
-  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 text-center mb-10">
-    <div>
-      <div class="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
-        <i class="fas fa-truck text-[#d5a300] text-xl"></i>
-      </div>
-      <p class="font-semibold text-gray-800">Envíos Nacionales</p>
-      <p class="text-sm text-gray-600">Cobertura en toda la República</p>
-    </div>
-    <div>
-      <div class="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
-        <i class="fas fa-certificate text-[#d5a300] text-xl"></i>
-      </div>
-      <p class="font-semibold text-gray-800">Oro Garantizado</p>
-      <p class="text-sm text-gray-600">Certificado 10k y 14k</p>
-    </div>
-    <div>
-      <div class="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
-        <i class="fas fa-shield-alt text-[#d5a300] text-xl"></i>
-      </div>
-      <p class="font-semibold text-gray-800">Envío Seguro</p>
-      <p class="text-sm text-gray-600">Piezas aseguradas</p>
-    </div>
-    <div>
-      <div class="mx-auto w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
-        <i class="fas fa-wallet text-[#d5a300] text-xl"></i>
-      </div>
-      <p class="font-semibold text-gray-800">Pago Flexible</p>
-      <p class="text-sm text-gray-600">Transferencias y MSI</p>
-    </div>
-  </div>
-
-    <!-- Sección: También te puede interesar -->
     <div class="mt-12">
       <h2 class="text-2xl font-semibold text-[#424242] mb-6">También te puede interesar</h2>
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
         {% for rp in related_products %}
-          <div class="bg-white p-5 rounded-lg shadow-lg transition-transform transform hover:scale-105 hover:shadow-xl"
+          {# Preparar imágenes #}
+          {% set imgs      = rp.product_images|sort(attribute='orden') %}
+          {% set main_img  = imgs[0].imagen if imgs|length > 0 else (rp.imagen or None) %}
+          {% set hover_img = imgs[1].imagen if imgs|length > 1 else None %}
+
+          <div class="bg-white p-5 rounded-lg shadow-lg transform transition-transform hover:scale-105 hover:shadow-xl group"
                data-aos="fade-up" data-aos-delay="{{ loop.index0 * 50 }}">
-            <div class="relative">
+            <div class="relative w-full h-64 overflow-hidden rounded-lg bg-gray-100">
               {% if rp.descuento_pct and rp.descuento_pct > 0 %}
                 <div class="discount-badge">-{{ rp.descuento_pct }}%</div>
               {% endif %}
-              <img src="{{ rp.imagen or url_for('static', filename='images/placeholder.jpg') }}"
-                   alt="{{ rp.nombre }}"
-                   class="w-full h-64 object-cover mb-4 rounded">
+
+              {# Imagen principal o fallback #}
+              {% if main_img %}
+                <img
+                  src="{{ main_img }}" alt="{{ rp.nombre }}"
+                  class="absolute inset-0 w-full h-full object-cover transition-opacity duration-300 {% if hover_img %}group-hover:opacity-0{% endif %}"
+                  loading="lazy"
+                >
+              {% else %}
+                <div class="absolute inset-0 flex items-center justify-center bg-gray-200 text-gray-400 text-sm">
+                  Sin imagen
+                </div>
+              {% endif %}
+
+              {# Imagen hover #}
+              {% if hover_img %}
+                <img
+                  src="{{ hover_img }}" alt="{{ rp.nombre }} hover"
+                  class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                  loading="lazy"
+                >
+              {% endif %}
+
+              {# DEBUG en consola #}
+              <script>console.log("RP {{ rp.id }} → main_img:", "{{ main_img }}", " hover_img:", "{{ hover_img }}");</script>
             </div>
-            <h3 class="text-xl font-semibold text-[#424242]">{{ rp.nombre }}</h3>
+
+            <h3 class="mt-4 text-xl font-semibold text-[#424242]">{{ rp.nombre }}</h3>
             {% if rp.descuento_pct and rp.descuento_pct > 0 %}
-              <p class="text-gray-500 line-through mt-1">
-                ${{ "%.2f"|format(rp.precio) }}
-              </p>
-              <p class="text-lg font-bold text-red-600">
-                ${{ "%.2f"|format(rp.precio_descuento) }}
-              </p>
+              <p class="text-gray-500 line-through mt-1">${{ '%.2f'|format(rp.precio) }}</p>
+              <p class="text-lg font-bold text-red-600">${{ '%.2f'|format(rp.precio_descuento) }}</p>
             {% else %}
-              <p class="text-lg font-semibold text-gray-800 mt-2">
-                ${{ "%.2f"|format(rp.precio) }}
-              </p>
+              <p class="text-lg font-semibold text-gray-800 mt-2">${{ '%.2f'|format(rp.precio) }}</p>
             {% endif %}
             <a href="{{ url_for('products.product_detail', product_id=rp.id) }}"
-              class="ver-detalles-btn mt-4 inline-block bg-[#d5a300] text-white px-4 py-2 rounded hover:bg-[#b38f00] transition-colors"
-              data-id="{{ rp.id }}">
+               class="inline-block mt-4 bg-[#d5a300] text-white px-4 py-2 rounded hover:bg-[#b38f00] transition-colors">
               Ver detalles
             </a>
           </div>

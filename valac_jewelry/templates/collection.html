@@ -319,7 +319,10 @@
         showSpinner();
         let query = supabaseClient
           .from('products')
-          .select('id, nombre, descripcion, precio, descuento_pct, precio_descuento, tipo_producto, genero, tipo_oro, imagen, stock_total, created_at')
+         .select(`
+           id, nombre, descripcion, precio, descuento_pct, precio_descuento, tipo_producto, genero, tipo_oro, imagen, stock_total, created_at,
+           product_images ( imagen, orden )
+         `)
           .gte('precio', parseInt(price_min))
           .lte('precio', parseInt(price_max));
 
@@ -392,34 +395,54 @@ if (category) {
         if (productGrid) {
           productGrid.innerHTML = "";
           filteredProducts.forEach((product, index) => {
-            const imageUrl = (product.imagen && product.imagen !== 'undefined') ? product.imagen : '/static/images/placeholder.jpg';
-                      productGrid.innerHTML += `
-            <div class="relative bg-white p-5 rounded-lg shadow-md overflow-hidden" data-aos="fade-up" data-aos-delay="${index * 50}">
-              ${product.descuento_pct > 0 ? `
-                <div class="discount-badge">En oferta ${product.descuento_pct}%</div>
-              ` : ``}
-              ${product.stock_total === 0 ? `
-              <div class="absolute top-2 left-2 bg-red-600 text-white px-2 py-1 rounded text-sm z-10">AGOTADO</div>
-            ` : ``}
+ const placeholder = '/static/images/placeholder.jpg';
+ let mainImage = placeholder;
+ let hoverImage = null;
 
-            <img src="${imageUrl}" alt="${product.nombre}"
-                class="${product.stock_total === 0 ? 'opacity-50 grayscale' : ''} w-full h-64 object-cover mb-4 rounded">
-              <h3 class="text-xl font-semibold text-[#424242] mt-2">${product.nombre}</h3>
-              ${product.descuento_pct > 0 ? `
-                <p class="text-gray-500 line-through mt-1">$${product.precio}</p>
-                <p class="text-2xl font-bold text-red-600">$${product.precio_descuento}</p>
-              ` : `
-                <p class="text-2xl font-semibold text-gray-800 mt-2">$${product.precio}</p>
-              `}
-              <p class="text-sm text-gray-600 mt-1 leading-snug font-medium">Oro: ${product.tipo_oro} | Género: ${product.genero}</p>
-              <div class="mt-4">
-                <a href="/producto/${product.id}" class="btn-detalles"
-                onclick="fetch('/api/product-view/${product.id}', { method: 'POST' }).catch(console.error);">
-                Ver detalles
-              </a>
-              </div>
-            </div>
-          `;
+ if (product.product_images && product.product_images.length > 0) {
+   const sorted = [...product.product_images].sort((a, b) => a.orden - b.orden);
+   mainImage = sorted[0]?.imagen || placeholder;
+   hoverImage = sorted.length > 1 ? sorted[1].imagen : null;
+ } else if (product.imagen && product.imagen !== 'undefined') {
+   mainImage = product.imagen;
+ }
+
+ productGrid.innerHTML += `
+   <div class="relative bg-white p-5 rounded-lg shadow-md overflow-hidden group" data-aos="fade-up" data-aos-delay="${index * 50}">
+     ${product.descuento_pct > 0 ? `
+       <div class="discount-badge">En oferta ${product.descuento_pct}%</div>
+     ` : ``}
+     ${product.stock_total === 0 ? `
+       <div class="absolute top-2 left-2 bg-red-600 text-white px-2 py-1 rounded text-sm z-10">AGOTADO</div>
+     ` : ``}
+
+     <div class="relative w-full h-64 overflow-hidden">
+       <img src="${mainImage}" alt="${product.nombre}"
+            class="w-full h-full object-cover transition-opacity duration-300 ${hoverImage ? 'group-hover:opacity-0' : ''}">
+       ${hoverImage ? `
+         <img src="${hoverImage}" alt="${product.nombre} hover"
+              class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+       ` : ``}
+     </div>
+
+     <h3 class="text-xl font-semibold text-[#424242] mt-2">${product.nombre}</h3>
+
+     ${product.descuento_pct > 0 ? `
+       <p class="text-gray-500 line-through mt-1">$${product.precio}</p>
+       <p class="text-2xl font-bold text-red-600">$${product.precio_descuento}</p>
+     ` : `
+       <p class="text-2xl font-semibold text-gray-800 mt-2">$${product.precio}</p>
+     `}
+
+     <p class="text-sm text-gray-600 mt-1 leading-snug font-medium">Oro: ${product.tipo_oro} | Género: ${product.genero}</p>
+     <div class="mt-4">
+       <a href="/producto/${product.id}" class="btn-detalles"
+          onclick="fetch('/api/product-view/${product.id}', { method: 'POST' }).catch(console.error);">
+         Ver detalles
+       </a>
+     </div>
+   </div>
+ `;
           });
           console.log("DEBUG: Products rendered in collection.html.");
           AOS.refresh();

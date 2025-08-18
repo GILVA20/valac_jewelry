@@ -1,185 +1,354 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Agregar Producto - Supabase</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
-    <!-- Incluye FontAwesome para iconos -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <meta charset="UTF-8">
+  <title>Agregar Producto - Supabase</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body class="bg-gray-100 p-6">
-    <div class="max-w-xl mx-auto bg-white p-8 rounded-lg shadow-lg">
-        <h1 class="text-3xl font-bold mb-6 text-center text-gray-800">Agregar Nuevo Producto</h1>
-        {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
-            <div class="mb-4">
-              {% for category, message in messages %}
-                <div class="p-4 mb-2 rounded-lg {% if category == 'error' %}bg-red-200 text-red-800{% elif category == 'success' %}bg-green-200 text-green-800{% else %}bg-gray-200 text-gray-800{% endif %}">
-                  {{ message }}
-                </div>
-              {% endfor %}
+  <div class="max-w-xl mx-auto bg-white p-8 rounded-lg shadow-lg">
+    <h1 class="text-3xl font-bold mb-6 text-center text-gray-800">Agregar Nuevo Producto</h1>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="mb-4">
+          {% for category, message in messages %}
+            <div class="p-4 mb-2 rounded-lg {% if category == 'error' %}bg-red-200 text-red-800{% elif category == 'success' %}bg-green-200 text-green-800{% else %}bg-gray-200 text-gray-800{% endif %}">
+              {{ message }}
             </div>
-          {% endif %}
-        {% endwith %}
-        <form method="POST">
-            <!-- Nombre -->
-            <div class="mb-6">
-                <label for="nombre" class="block text-gray-700 font-medium mb-2">Nombre:</label>
-                <input type="text" id="nombre" name="nombre" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-            </div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
 
-            <!-- Descripción -->
-            <div class="mb-6">
-                <label for="descripcion" class="block text-gray-700 font-medium mb-2">Descripción:</label>
-                <textarea id="descripcion" name="descripcion" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" rows="4" required></textarea>
-            </div>
+    <form method="POST" id="new-form">
+      <!-- Nombre -->
+      <div class="mb-6">
+        <label for="nombre" class="block text-gray-700 font-medium mb-2">Nombre:</label>
+        <input type="text" id="nombre" name="nombre" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+      </div>
 
-            <!-- Precio -->
-            <div class="mb-6">
-                <label for="precio" class="block text-gray-700 font-medium mb-2">Precio:</label>
-                <input type="number" step="0.01" id="precio" name="precio" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-            </div>
+      <!-- Descripción -->
+      <div class="mb-6">
+        <label for="descripcion" class="block text-gray-700 font-medium mb-2">Descripción:</label>
+        <textarea id="descripcion" name="descripcion" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" rows="4" required></textarea>
+      </div>
 
-            <!-- Tipo de Producto -->
-            <div class="mb-6">
-                <label for="tipo_producto" class="block text-gray-700 font-medium mb-2">Tipo de Producto:</label>
-                <select id="tipo_producto" name="tipo_producto" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                    <option value="" disabled selected>Selecciona un tipo de producto</option>
-                    <option value="Anillos">Anillos</option>
-                    <option value="Collares">Collares</option>
-                    <option value="Pulsos">Pulsos</option>
-                    <option value="Cadenas">Cadenas</option>
-                    <option value="Dijes">Dijes</option>
-                    <option value="Aretes">Aretes</option>
-                </select>
-            </div>
+      <!-- Precio -->
+      <div class="mb-6">
+        <label for="precio" class="block text-gray-700 font-medium mb-2">Precio:</label>
+        <input type="number" step="0.01" id="precio" name="precio" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+      </div>
 
-            <!-- Categoría (Género) -->
-            <div class="mb-6">
-                <label for="genero" class="block text-gray-700 font-medium mb-2">Categoría:</label>
-                <select id="genero" name="genero" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                    <option value="" disabled selected>Selecciona el género</option>
-                    <option value="Hombre">Hombre</option>
-                    <option value="Mujer">Mujer</option>
-                    <option value="Unisex">Unisex</option>
-                </select>
-            </div>
+      <!-- Descuento (%) -->
+      <div class="mb-6">
+        <label for="descuento_pct" class="block text-gray-700 font-medium mb-2">Descuento (%):</label>
+        <input type="number" id="descuento_pct" name="descuento_pct" min="0" max="100" step="1"
+               class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+               value="0">
+        <p class="text-xs text-gray-500 mt-1">El precio con descuento se calcula automáticamente en backend.</p>
+      </div>
 
-            <!-- Tipo de Oro -->
-            <div class="mb-6">
-                <label for="tipo_oro" class="block text-gray-700 font-medium mb-2">Tipo de Oro:</label>
-                <select id="tipo_oro" name="tipo_oro" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                    <option value="" disabled selected>Selecciona el tipo de oro</option>
-                    <option value="10k">10k</option>
-                    <option value="14k">14k</option>
-                </select>
-            </div>
+      <!-- Tipo de Producto -->
+      <div class="mb-6">
+        <label for="tipo_producto" class="block text-gray-700 font-medium mb-2">Tipo de Producto:</label>
+        <select id="tipo_producto" name="tipo_producto" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+          <option value="" disabled selected>Selecciona un tipo de producto</option>
+          <option value="Anillos">Anillos</option>
+          <option value="Dijes">Dijes</option>
+          <option value="Collares">Collares</option>
+          <option value="Pulsos">Pulsos</option>
+          <option value="Cadenas">Cadenas</option>
+          <option value="Aretes">Aretes</option>
+        </select>
+      </div>
 
-            <!-- Subir Imagen 
-            <div class="mb-6">
-                <label for="file-upload" class="block text-gray-700 font-medium mb-2">Subir Imagen:</label>
-                <div class="flex items-center justify-center w-full">
-                    <label for="file-upload" class="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500">
-                        <i id="upload-icon" class="fas fa-upload text-gray-500 text-2xl mb-2"></i>
-                        <p class="text-gray-500">Haz clic para subir una imagen</p>
-                    </label>
-                    <input type="file" id="file-upload" accept="image/*" onchange="handleFileUpload(event)" class="hidden">
-                </div>
-                <p id="upload-status" class="text-sm text-gray-500 mt-2"></p>
-            </div>
+      <!-- Categoría (Género) -->
+      <div class="mb-6">
+        <label for="genero" class="block text-gray-700 font-medium mb-2">Categoría:</label>
+        <select id="genero" name="genero" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+          <option value="" disabled selected>Selecciona el género</option>
+          <option value="Hombre">Hombre</option>
+          <option value="Mujer">Mujer</option>
+          <option value="Unisex">Unisex</option>
+        </select>
+      </div>
 
-             Campo oculto para la URL de la imagen 
-            <input type="hidden" id="imagen" name="imagen"> -->
+      <!-- Tipo de Oro -->
+      <div class="mb-6">
+        <label for="tipo_oro" class="block text-gray-700 font-medium mb-2">Tipo de Oro:</label>
+        <select id="tipo_oro" name="tipo_oro" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+          <option value="" disabled selected>Selecciona el tipo de oro</option>
+          <option value="10k">10k</option>
+          <option value="14k">14k</option>
+        </select>
+      </div>
 
-            +   <!-- Subir Múltiples Imágenes -->
-           <div class="mb-6">
-             <label for="file-upload" class="block text-gray-700 font-medium mb-2">Subir Imágenes:</label>
-             <input type="file" id="file-upload" accept="image/*" multiple class="block w-full border border-gray-300 p-2 rounded-lg">
-             <p id="upload-status" class="text-sm text-gray-500 mt-2">Puedes subir varias imágenes. La primera será la principal.</p>
-           </div>
-           <input type="hidden" id="imagen" name="imagen">  <!-- Principal -->
-           <input type="hidden" id="imagenes_multiples" name="imagenes_multiples">
+      <!-- Ocultos (portada + lista) -->
+      <input type="hidden" id="imagen" name="imagen">
+      <input type="hidden" id="imagenes_multiples" name="imagenes_multiples">
 
-            <!-- Botón de Enviar -->
-            <div>
-                <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300">
-                    Agregar Producto
-                </button>
-            </div>
-        </form>
-    </div>
+      <!-- Dropzone -->
+      <h3 class="text-lg font-semibold mb-2">Imágenes del producto</h3>
+      <p class="text-xs text-gray-500 mb-2">Se suben ahora al almacenamiento, pero <b>solo se guardan en el producto cuando presiones “Agregar Producto”</b>.</p>
 
-    <!-- Bloque de JavaScript: Coloca esto justo antes del cierre de </body> -->
-    <script type="module">
-        import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
+      <div id="pg-dropzone"
+           class="mb-4 border-2 border-dashed rounded-lg p-4 text-center text-gray-500 hover:border-blue-400 transition cursor-pointer">
+        Arrastra imágenes aquí o haz clic para seleccionar
+        <input
+          type="file"
+          id="file-upload-multi"
+          accept="image/jpeg,image/png,image/webp"
+          multiple
+          class="hidden">
+      </div>
 
-        // Inyecta las variables de configuración desde Flask
-        const SUPABASE_URL = "{{ config['SUPABASE_URL'] }}";
-        const SUPABASE_KEY = "{{ config['SUPABASE_KEY'] }}";
-        
-        // Inicializa el cliente Supabase usando la función importada
-        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
-        console.log("Cliente Supabase inicializado:", supabaseClient);
-        const uploadInput = document.getElementById("file-upload");
-        const uploadStatus = document.getElementById("upload-status");
-        const imagenPrincipal = document.getElementById("imagen");
-        const imagenesMultiples = document.getElementById("imagenes_multiples");
+      <!-- Grid de previews -->
+      <div id="gallery-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <!-- Previews temporales se insertan aquí -->
+      </div>
 
-        async function subirImagen(file) {
-            const fileName = 'products/' + Date.now() + '-' + file.name;
-            console.log("Subiendo archivo:", fileName);
-            const { data, error } = await supabaseClient
-                .storage
-                .from('CatalogoJoyasValacJoyas')
-                .upload(fileName, file);
-            if (error) {
-                console.error("Error en la subida:", error);
-                throw error;
-            }
-            const { data: urlData, error: urlError } = supabaseClient
-                .storage
-                .from('CatalogoJoyasValacJoyas')
-                .getPublicUrl(fileName);
-            if (urlError) {
-                console.error("Error obteniendo URL pública:", urlError);
-                throw urlError;
-            }
-            let publicURL = urlData.publicURL || urlData.publicUrl;
-            if (!publicURL || publicURL === "undefined") {
-                throw new Error("La URL pública es undefined");
-            }
-            publicURL += "?t=" + new Date().getTime();
-            console.log("URL de descarga:", publicURL);
-            return publicURL;
+      <p id="upload-status-multi" class="text-sm text-gray-500 mt-2">
+        Imágenes cargadas (pendientes de guardar). Arrastra para reordenar, elige la portada.
+      </p>
+
+      <div>
+        <button type="submit"
+                class="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300">
+          Agregar Producto
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Toasts -->
+  <div id="pg-toasts" aria-live="polite" class="fixed bottom-4 right-4 space-y-2 z-50"></div>
+
+  <script type="module">
+    const Sortable = await import('https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/modular/sortable.esm.js')
+      .then(m => m.default);
+
+    // ---------- UI helpers ----------
+    function showToast(msg, type="info") {
+      const box = document.getElementById("pg-toasts");
+      if (!box) return;
+      const el = document.createElement("div");
+      el.className = `px-4 py-2 rounded shadow text-white ${
+        type==="success" ? "bg-green-600" : type==="error" ? "bg-red-600" : "bg-gray-800"
+      }`;
+      el.textContent = msg;
+      box.appendChild(el);
+      setTimeout(()=> el.remove(), 2500);
+    }
+
+    function isValidImage(file, maxMB = 5) {
+      const okType = /image\/(jpeg|png|webp)/.test(file.type);
+      const okSize = file.size <= maxMB * 1024 * 1024;
+      return okType && okSize;
+    }
+
+    async function subirImagen(file, onProgress) {
+      if (!isValidImage(file)) throw new Error("JPG/PNG/WEBP hasta 5MB");
+      onProgress?.(10);
+      const fd = new FormData();
+      fd.append("file", file);
+      const resp = await fetch("{{ url_for('supabase_products.storage_upload') }}", { method: "POST", body: fd });
+      const data = await resp.json().catch(()=> ({}));
+      if (!resp.ok || !data.url) throw new Error(data.error || "Falló la subida");
+      onProgress?.(100);
+      return data.url;
+    }
+
+    function createProgressCard() {
+      const el = document.createElement("div");
+      el.className = "relative border rounded-lg p-2 bg-gray-50 shadow-sm overflow-hidden";
+      el.innerHTML = `
+        <div class="absolute top-2 left-2 text-xs bg-gray-700 text-white px-1.5 py-0.5 rounded opacity-70">subiendo…</div>
+        <div class="h-32 bg-gray-100 rounded mb-2 animate-pulse"></div>
+        <div class="w-full h-1 bg-gray-200 rounded overflow-hidden">
+          <div class="h-full w-0 bg-blue-500" id="bar"></div>
+        </div>`;
+      return el;
+    }
+
+    function appendTempCard(url) {
+      const card = document.createElement("div");
+      card.className = "relative border rounded-lg p-2 bg-gray-50 shadow-sm select-none";
+      card.dataset.url = url;
+      card.innerHTML = `
+        <!-- badge portada -->
+        <span class="card-badge hidden absolute top-2 left-2 text-xs bg-blue-600 text-white px-1.5 py-0.5 rounded">★ Portada</span>
+        <!-- orden -->
+        <span class="order-badge absolute top-2 right-2 text-xs bg-gray-800 text-white/90 px-1 py-0.5 rounded">#</span>
+        <!-- handle -->
+        <button type="button" class="drag-handle absolute -left-2 top-1/2 -translate-y-1/2 bg-white border rounded-full p-1 shadow"
+                title="Arrastrar para reordenar">
+          <i class="fa-solid fa-grip-lines"></i>
+        </button>
+        <img src="${url}" class="w-full h-32 object-cover rounded mb-2">
+        <div class="flex items-center justify-between gap-2">
+          <button type="button" class="set-temp-primary flex-1 text-sm border rounded py-1 bg-white hover:bg-gray-100">☆ Usar como portada</button>
+          <button type="button" class="temp-remove bg-red-600 hover:bg-red-700 text-white px-2 rounded" title="Eliminar"><i class="fa-solid fa-trash-can"></i></button>
+        </div>`;
+      document.getElementById("gallery-grid").appendChild(card);
+      renumberCards();
+    }
+
+    function markPrimaryUI(url) {
+      const cards = Array.from(document.querySelectorAll("#gallery-grid [data-url]"));
+      cards.forEach(c => {
+        const isPrimary = c.dataset.url === url;
+        c.classList.toggle("ring-2", isPrimary);
+        c.classList.toggle("ring-blue-500", isPrimary);
+        const badge = c.querySelector(".card-badge");
+        const btn = c.querySelector(".set-temp-primary");
+        if (badge) badge.classList.toggle("hidden", !isPrimary);
+        if (btn) {
+          btn.textContent = isPrimary ? "★ Portada" : "☆ Usar como portada";
+          btn.disabled = isPrimary;
+          btn.classList.toggle("opacity-70", isPrimary);
+          btn.classList.toggle("cursor-not-allowed", isPrimary);
         }
+      });
+    }
 
-        uploadInput.addEventListener("change", async (e) => {
-            const files = Array.from(e.target.files);
-            if (!files.length) return;
-            const urls = [];
-            uploadStatus.innerText = "Subiendo imágenes...";
+    function renumberCards() {
+      const cards = Array.from(document.querySelectorAll("#gallery-grid [data-url]"));
+      cards.forEach((c, i) => {
+        const badge = c.querySelector(".order-badge");
+        if (badge) badge.textContent = String(i+1);
+      });
+    }
 
-            for (let file of files) {
-                try {
-                    const url = await subirImagen(file);
-                    urls.push(url);
-                } catch (err) {
-                    console.error("Error subiendo imagen:", err);
-                    uploadStatus.innerText = "Error subiendo alguna imagen.";
-                    uploadStatus.classList.add("text-red-500");
-                    return;
-                }
-            }
+    // ---- Estado ocultos ----
+    const grid = document.getElementById("gallery-grid");
+    const imagenInput = document.getElementById("imagen");
+    const imagenesMultiples = document.getElementById("imagenes_multiples");
 
-            if (urls.length) {
-                imagenPrincipal.value = urls[0];
-                imagenesMultiples.value = JSON.stringify(urls);
-                uploadStatus.innerText = "Imágenes subidas correctamente.";
-                uploadStatus.classList.add("text-green-500");
-                console.log("Imágenes cargadas:", urls);
-            }
-        });
+    function getUrls() { try { return JSON.parse(imagenesMultiples.value || "[]"); } catch { return []; } }
+    function setUrls(arr) { imagenesMultiples.value = JSON.stringify(arr); }
+    function pushUrl(url) { const arr = getUrls(); arr.push(url); setUrls(arr); }
+    function removeUrl(url) {
+      const arr = getUrls().filter(u => u !== url);
+      setUrls(arr);
+      if (imagenInput.value === url) {
+        imagenInput.value = arr[0] || "";
+        markPrimaryUI(imagenInput.value);
+      }
+    }
+    function rebuildUrlsFromGrid() {
+      const urls = Array.from(grid.querySelectorAll("[data-url]")).map(c => c.dataset.url);
+      setUrls(urls);
+      renumberCards();
+      if (!imagenInput.value && urls.length) {
+        imagenInput.value = urls[0];
+        markPrimaryUI(imagenInput.value);
+      }
+    }
 
-    </script>
+    // ---- Dropzone / subida ----
+    const dropzone = document.getElementById("pg-dropzone");
+    const multiInput = document.getElementById("file-upload-multi");
+    const uploadStatus = document.getElementById("upload-status-multi");
+
+    dropzone.addEventListener("click", () => multiInput.click());
+    dropzone.addEventListener("dragover", (e)=>{ e.preventDefault(); dropzone.classList.add("border-blue-500"); });
+    dropzone.addEventListener("dragleave", ()=> dropzone.classList.remove("border-blue-500"));
+    dropzone.addEventListener("drop", (e)=>{
+      e.preventDefault();
+      dropzone.classList.remove("border-blue-500");
+      if (e.dataTransfer?.files?.length) queueFiles(e.dataTransfer.files);
+    });
+    multiInput.addEventListener("change", (e)=>{
+      if (e.target.files?.length) queueFiles(e.target.files);
+      e.target.value = "";
+    });
+
+    function queueFiles(fileList) {
+      const files = Array.from(fileList);
+      if (!files.length) return;
+      uploadStatus.textContent = "Subiendo imágenes… (pendientes de guardar)";
+
+      (async ()=>{
+        const newUrls = [];
+        for (const file of files) {
+          const shell = createProgressCard();
+          grid.appendChild(shell);
+          const bar = shell.querySelector("#bar");
+          try {
+            const url = await subirImagen(file, p => { bar.style.width = p + "%"; });
+            shell.remove();
+            appendTempCard(url);
+            pushUrl(url);
+            newUrls.push(url);
+          } catch (err) {
+            shell.innerHTML = `<div class="text-red-600 text-sm">Error subiendo: ${file.name}</div>`;
+          }
+        }
+        if (newUrls.length) {
+          if (!imagenInput.value) imagenInput.value = newUrls[0];
+          markPrimaryUI(imagenInput.value);
+          uploadStatus.textContent = "Imágenes cargadas (pendientes de guardar). Recuerda crear el producto.";
+          showToast("Imágenes subidas", "success");
+        } else {
+          uploadStatus.textContent = "No se añadieron imágenes.";
+        }
+      })();
+    }
+
+    // Sortable (con handle dedicado)
+    if (grid) {
+      new Sortable(grid, {
+        handle: ".drag-handle",
+        animation: 150,
+        ghostClass: "opacity-60",
+        onEnd: () => {
+          rebuildUrlsFromGrid();
+          showToast("Orden actualizado", "success");
+        }
+      });
+    }
+
+    // Delegación para eliminar / portada
+    document.addEventListener("click", (e) => {
+      const rm = e.target.closest(".temp-remove");
+      if (rm) {
+        const card = rm.closest("[data-url]");
+        if (!card) return;
+        const url = card.dataset.url;
+        card.remove();
+        removeUrl(url);
+        renumberCards();
+        showToast("Imagen eliminada del lote", "success");
+        return;
+      }
+      const setP = e.target.closest(".set-temp-primary");
+      if (setP) {
+        const card = setP.closest("[data-url]");
+        if (!card) return;
+        imagenInput.value = card.dataset.url;
+        markPrimaryUI(imagenInput.value);
+        showToast("Portada seleccionada (se guardará al crear)", "success");
+      }
+    });
+
+    // Envío
+    const form = document.getElementById("new-form");
+    form?.addEventListener("submit", (e) => {
+      rebuildUrlsFromGrid();
+      // normalizar campo hidden
+      try {
+        const raw = (imagenesMultiples.value || "").trim();
+        if (!raw || !Array.isArray(JSON.parse(raw))) imagenesMultiples.value = "[]";
+      } catch { imagenesMultiples.value = "[]"; }
+
+      if (!imagenInput.value) {
+        e.preventDefault();
+        showToast("Sube al menos una imagen y define la portada", "error");
+        document.getElementById("pg-dropzone").scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    });
+  </script>
 </body>
 </html>

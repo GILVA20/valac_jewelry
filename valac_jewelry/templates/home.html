@@ -10,36 +10,77 @@
     {'filename': 'jasmin-chew-UBeNYvk6ED0-unsplash.jpg', 'alt': 'Banner 3'}
   ] %}
 
-  <!-- Estilos específicos para transición suave de carga -->
+  <!-- Estilos específicos para transición suave de carga + paleta lujo/urgencia -->
   <style>
     .banner-slider img {
       opacity: 0;
       transition: opacity 0.5s ease-in-out;
     }
-    .banner-slider img.loaded {
-      opacity: 1;
+    .banner-slider img.loaded { opacity: 1; }
+
+    /* =================== PALETA VALAC · Ofertas ===================
+       Elegancia (marfil/carbón) + Urgencia sobria (borgoña/oro). */
+    :root{
+      --lux-bg:#FAF8F4; --lux-surface:#FFFFFF; --lux-text:#1F2937; --lux-muted:#6B7280;
+      --lux-gold:#D5A300; --lux-gold-600:#B38F00;
+      --lux-oxblood:#7A0019; --lux-oxblood-600:#5E0013;
+      --lux-ivory:#FFFBF2;
     }
-    /* Badge Oferta (look lujo sobrio) */
-    .discount-badge {
-      position: absolute;
-      top: 0.5rem;
-      right: 0.5rem;
-      background-color: #fef3c7;   /* amber-100 */
-      color: #92400e;              /* amber-800 */
-      border: 1px solid #fcd34d;   /* amber-300 */
-      font-size: 0.75rem;
-      font-weight: 600;
-      text-transform: uppercase;
-      padding: 0.25rem 0.75rem;
-      border-radius: 9999px;
-      pointer-events: none;
-      z-index: 10;
+
+    #productos-destacados h2{ color:var(--lux-text); }
+    #product-grid h3{ color:var(--lux-text); }
+    #product-grid .text-gray-600{ color:var(--lux-muted) !important; }
+
+    /* Precio tachado discreto */
+    #product-grid .line-through{ color:#8B9097 !important; }
+    /* Precio actual (oferta) en oro profundo */
+    #product-grid .text-amber-800{ color:var(--lux-gold-600) !important; }
+
+    /* Badge “OFERTA” borgoña */
+    .discount-badge{
+      position:absolute; top:0.5rem; right:0.5rem;
+      background:var(--lux-oxblood) !important; color:#fff !important;
+      border:1px solid var(--lux-oxblood-600) !important;
+      font-size:.75rem; font-weight:700; text-transform:uppercase;
+      padding:.25rem .75rem; border-radius:9999px; pointer-events:none; z-index:10;
+      box-shadow:0 2px 10px rgba(122,0,25,.18);
     }
-    /* Chips de información */
-    .offer-chip { font-size: .70rem; padding: .125rem .5rem; border-radius: 9999px; display:inline-block; }
-    .chip-emi   { background:#eef2ff; color:#3730a3; border:1px solid #c7d2fe; }   /* MSI */
-    .chip-time  { background:#ecfccb; color:#365314; border:1px solid #d9f99d; }   /* Oferta limitada */
-    .cta-offer  { background:#d5a300; color:#fff; }
+
+    /* Chips coherentes (sin verdes) */
+    .offer-chip{
+      font-size:.70rem; padding:.125rem .5rem; border-radius:9999px; display:inline-block;
+      background:var(--lux-ivory); color:var(--lux-text); border:1px solid #E5D6A3;
+    }
+    .chip-emi{ font-weight:700; color:var(--lux-gold-600); border-color:var(--lux-gold); }
+    .chip-time{ font-weight:700; color:var(--lux-oxblood); border-color:var(--lux-oxblood); }
+
+    /* Ahorro en dorado (no verde) */
+    .ahorro-text{ color:var(--lux-gold-600); font-weight:600; }
+
+    /* CTA premium: oro con hover invertido */
+    .cta-offer{
+      background:linear-gradient(90deg, var(--lux-gold) 0%, #FACC15 100%) !important;
+      color:#111 !important; font-weight:800;
+      border:1px solid #E6B800 !important; border-radius:.5rem;
+      padding:.5rem 1rem; box-shadow:0 4px 12px rgba(213,163,0,.25);
+      transition:all .25s ease-in-out;
+    }
+    .cta-offer:hover, .cta-offer:focus{
+      background:#111 !important; color:var(--lux-gold) !important;
+      border-color:var(--lux-gold-600) !important;
+      box-shadow:0 6px 18px rgba(0,0,0,.30);
+    }
+
+    /* Botón secundario (sin oferta) */
+    #product-grid a:not(.cta-offer).bg-gray-900{
+      background:#1F2937 !important; color:#FFFFFF !important;
+    }
+    #product-grid a:not(.cta-offer).bg-gray-900:hover{
+      background:#0B0B0B !important;
+    }
+
+    /* Hover sutil en tarjetas */
+    #product-grid .group:hover{ box-shadow:0 8px 24px rgba(31,41,55,0.08); }
   </style>
 
   <!-- Sección: Banner y Slider de Banner -->
@@ -141,40 +182,22 @@
         const onLoad = () => {
           img.classList.add('loaded');
           loadedBannerCount++;
-
           if (loadedBannerCount === 1) {
             adjustSliderHeight(img);
             window.addEventListener('resize', () => adjustSliderHeight(img));
           }
-
           if (loadedBannerCount === bannerImages.length) {
-            $('.banner-slider').slick({
-              autoplay: true,
-              autoplaySpeed: 3000,
-              arrows: true,
-              dots: true
-            });
+            $('.banner-slider').slick({ autoplay: true, autoplaySpeed: 3000, arrows: true, dots: true });
             console.log("DEBUG: Slick Slider para banner inicializado tras carga completa.");
           }
         };
-
-        if (img.complete) {
-          onLoad();
-        } else {
-          img.addEventListener('load', onLoad);
-        }
+        if (img.complete) { onLoad(); } else { img.addEventListener('load', onLoad); }
       });
 
       if (typeof $ !== "undefined" && $.fn.slick) {
         $('.review-slider').slick({
-          autoplay: true,
-          autoplaySpeed: 3000,
-          arrows: true,
-          dots: true,
-          slidesToShow: 3,
-          responsive: [
-            { breakpoint: 768, settings: { slidesToShow: 1 } }
-          ]
+          autoplay: true, autoplaySpeed: 3000, arrows: true, dots: true,
+          slidesToShow: 3, responsive: [{ breakpoint: 768, settings: { slidesToShow: 1 } }]
         });
         console.log("DEBUG: Slick Slider para reseñas inicializado.");
       } else {
@@ -225,13 +248,8 @@
         // Decisión de bloque inicial
         let lista = [];
         let titulo = '';
-        if (ofertasConStock.length > 0) {
-          titulo = 'Ofertas';
-          lista = ofertasConStock.slice(0,3);
-        } else {
-          titulo = 'Productos Destacados';
-          lista = destacadosConStock.slice(0,3);
-        }
+        if (ofertasConStock.length > 0) { titulo = 'Ofertas'; lista = ofertasConStock.slice(0,3); }
+        else { titulo = 'Productos Destacados'; lista = destacadosConStock.slice(0,3); }
 
         // Render tarjetas
         const productGrid = document.getElementById('product-grid');
@@ -241,8 +259,7 @@
           lista.forEach((product, index) => {
             const placeholder = "{{ config['SUPABASE_STORAGE_URL'] }}placeholder.jpg";
 
-            let mainImage = placeholder;
-            let hoverImage = null;
+            let mainImage = placeholder, hoverImage = null;
             if (product.product_images && product.product_images.length > 0) {
               const sorted = [...product.product_images].sort((a,b)=> a.orden - b.orden);
               mainImage = sorted[0]?.imagen || placeholder;
@@ -254,6 +271,11 @@
             const ahorroAbs = hasOffer(product)
               ? (Number(product.precio) - Number(product.precio_descuento))
               : 0;
+
+            const stockMsg = Number(product.stock_total) <= 3
+              ? `<p class="mt-1 text-sm" style="color: var(--lux-oxblood); font-weight:600;">
+                   🔥 ¡Últimas ${product.stock_total} piezas!
+                 </p>` : ``;
 
             productGrid.innerHTML += `
               <div class="relative bg-white p-5 rounded-lg shadow-md overflow-hidden group" data-aos="fade-up" data-aos-delay="${index*50}">
@@ -279,9 +301,9 @@
                     <p class="text-gray-500 line-through mt-2">${mxn(product.precio)}</p>
                     <div class="flex items-baseline gap-2">
                       <p class="text-2xl font-semibold text-amber-800 mt-0.5">${mxn(product.precio_descuento)}</p>
-                      <span class="offer-chip chip-emi" aria-label="Meses sin intereses">Hasta 6 MSI</span>
+                      <span class="offer-chip chip-emi" aria-label="Meses sin intereses">3 y 6 MSI</span>
                     </div>
-                    <p class="text-sm text-emerald-700 mt-1">
+                    <p class="text-sm ahorro-text mt-1">
                       Ahorras ${mxn(ahorroAbs)} (${Number(product.descuento_pct)}%) •
                       <span class="offer-chip chip-time">Oferta limitada</span>
                     </p>
@@ -291,11 +313,13 @@
                   `
                 }
 
+                ${stockMsg}
+
                 <p class="text-gray-600 mt-1 text-sm">Oro: ${product.tipo_oro} | Género: ${product.genero}</p>
 
                 <a href="/producto/${product.id}" class="mt-4 inline-block px-4 py-2 rounded transition-colors
-                   ${hasOffer(product) ? 'cta-offer hover:bg-[#b38f00]' : 'bg-gray-900 text-white hover:bg-black'}">
-                  ${hasOffer(product) ? 'Ver oferta' : 'Ver detalles'}
+                   ${hasOffer(product) ? 'cta-offer' : 'bg-gray-900 text-white hover:bg-black'}">
+                  ${hasOffer(product) ? 'Comprar ahora • 3 y 6 MSI' : 'Ver detalles'}
                 </a>
               </div>
             `;

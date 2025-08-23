@@ -2,6 +2,11 @@
 
 {% block title %}VALAC Joyas{% endblock %}
 
+{# Si tu base.html tiene un bloque de head extra, aprovechamos para asegurar el viewport #}
+{% block head_extra %}
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+{% endblock %}
+
 {% block content %}
 
   {% set banner_images = [
@@ -10,33 +15,43 @@
     {'filename': 'jasmin-chew-UBeNYvk6ED0-unsplash.jpg', 'alt': 'Banner 3'}
   ] %}
 
-  <!-- Estilos específicos para transición suave de carga + paleta lujo/urgencia -->
+  <!-- Estilos: responsive + paleta VALAC -->
   <style>
+    /* Evita “zoom out” por desbordes horizontales */
+    body { overflow-x: hidden; }
+
+    /* Banner responsive */
+    .hero-wrap { width: 100%; max-width: 100vw; }
+    .hero-media { width: 100%; height: clamp(240px, 56vw, 640px); }
+    @supports (aspect-ratio: 16/9) {
+      .hero-media { aspect-ratio: 16/9; height: auto; }
+    }
+    .banner-slider { position: relative; overflow: hidden; }
     .banner-slider img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      max-width: 100%;
+      object-fit: cover;
+      object-position: center;
       opacity: 0;
-      transition: opacity 0.5s ease-in-out;
+      transition: opacity 0.4s ease-in-out;
     }
     .banner-slider img.loaded { opacity: 1; }
 
-    /* =================== PALETA VALAC · Ofertas ===================
-       Elegancia (marfil/carbón) + Urgencia sobria (borgoña/oro). */
+    /* =================== PALETA VALAC · Ofertas =================== */
     :root{
       --lux-bg:#FAF8F4; --lux-surface:#FFFFFF; --lux-text:#1F2937; --lux-muted:#6B7280;
       --lux-gold:#D5A300; --lux-gold-600:#B38F00;
       --lux-oxblood:#7A0019; --lux-oxblood-600:#5E0013;
       --lux-ivory:#FFFBF2;
     }
-
     #productos-destacados h2{ color:var(--lux-text); }
     #product-grid h3{ color:var(--lux-text); }
     #product-grid .text-gray-600{ color:var(--lux-muted) !important; }
-
-    /* Precio tachado discreto */
     #product-grid .line-through{ color:#8B9097 !important; }
-    /* Precio actual (oferta) en oro profundo */
     #product-grid .text-amber-800{ color:var(--lux-gold-600) !important; }
 
-    /* Badge “OFERTA” borgoña */
     .discount-badge{
       position:absolute; top:0.5rem; right:0.5rem;
       background:var(--lux-oxblood) !important; color:#fff !important;
@@ -45,19 +60,14 @@
       padding:.25rem .75rem; border-radius:9999px; pointer-events:none; z-index:10;
       box-shadow:0 2px 10px rgba(122,0,25,.18);
     }
-
-    /* Chips coherentes (sin verdes) */
     .offer-chip{
       font-size:.70rem; padding:.125rem .5rem; border-radius:9999px; display:inline-block;
       background:var(--lux-ivory); color:var(--lux-text); border:1px solid #E5D6A3;
     }
     .chip-emi{ font-weight:700; color:var(--lux-gold-600); border-color:var(--lux-gold); }
     .chip-time{ font-weight:700; color:var(--lux-oxblood); border-color:var(--lux-oxblood); }
-
-    /* Ahorro en dorado (no verde) */
     .ahorro-text{ color:var(--lux-gold-600); font-weight:600; }
 
-    /* CTA premium: oro con hover invertido */
     .cta-offer{
       background:linear-gradient(90deg, var(--lux-gold) 0%, #FACC15 100%) !important;
       color:#111 !important; font-weight:800;
@@ -70,95 +80,92 @@
       border-color:var(--lux-gold-600) !important;
       box-shadow:0 6px 18px rgba(0,0,0,.30);
     }
-
-    /* Botón secundario (sin oferta) */
     #product-grid a:not(.cta-offer).bg-gray-900{
       background:#1F2937 !important; color:#FFFFFF !important;
     }
     #product-grid a:not(.cta-offer).bg-gray-900:hover{
       background:#0B0B0B !important;
     }
-
-    /* Hover sutil en tarjetas */
     #product-grid .group:hover{ box-shadow:0 8px 24px rgba(31,41,55,0.08); }
   </style>
 
-  <!-- Sección: Banner y Slider de Banner -->
-  <section class="relative mt-24">
-    <div class="banner-slider relative overflow-hidden" style="height:auto;">
-      {% for image in banner_images %}
-        <img
-          src="{{ SUPABASE_STORAGE_URL }}{{ image.filename }}"
-          alt="{{ image.alt }}"
-          class="w-full object-cover object-center"
-          loading="eager"
-          width="1920"
-          height="600"
-        >
-      {% endfor %}
-    </div>
-    <div class="absolute inset-0 flex items-center justify-center" data-aos="fade-up" data-aos-duration="1000">
-      <div class="text-center text-white bg-black bg-opacity-50 px-8 py-6 rounded-lg">
-        <h1 class="text-5xl font-playfair">VALAC Joyas</h1>
-        <p class="mt-4 text-2xl">Joyas que cuentan tu historia</p>
-        <p class="mt-2 text-xl">Oro auténtico en 10k y 14k para mujeres y hombres que marcan su propio camino.</p>
-      </div>
-    </div>
-  </section>
+  <main class="pt-24 md:pt-28 lg:pt-32">
 
-  <!-- Sección de Productos -->
-  <section id="productos-destacados" class="py-12 bg-white">
-    <div class="container mx-auto text-center">
-      <h2 class="text-3xl font-semibold mb-8 text-gray-800" data-aos="fade-up" data-aos-duration="1000">
-        Productos Destacados
-      </h2>
-      <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
+    <!-- HERO / Banner -->
+    <section class="relative hero-wrap">
+      <div class="banner-slider hero-media rounded-none sm:rounded-lg">
+        {% for image in banner_images %}
+          <img
+            src="{{ SUPABASE_STORAGE_URL }}{{ image.filename }}"
+            alt="{{ image.alt }}"
+            loading="eager">
+        {% endfor %}
       </div>
-      <div class="mt-8">
-        <a href="/collection" class="bg-yellow-500 text-white px-6 py-3 rounded-lg text-xl hover:bg-yellow-600 transition-colors">
-          Ver Colección Completa
-        </a>
-      </div>
-    </div>
-  </section>
 
-  <!-- Sección Nuestra Historia -->
-  <section class="py-12 bg-white text-gray-800">
-    <div class="container mx-auto flex flex-col md:flex-row items-center">
-      <div class="md:w-1/2" data-aos="fade-right" data-aos-duration="1000">
-        <img src="{{ SUPABASE_STORAGE_URL }}our-story.jpg" alt="Nuestra Historia" class="rounded-lg shadow-lg">
-      </div>
-      <div class="md:w-1/2 md:pl-8 mt-6 md:mt-0" data-aos="fade-left" data-aos-duration="1000">
-        <h2 class="text-3xl font-semibold mb-6">Nuestra Historia</h2>
-        <p class="text-lg">
-          En VALAC Joyas, la tradición y la pasión por el oro se transmiten de generación en generación. Con una sólida herencia familiar, cada pieza es el reflejo de compromiso, calidad y elegancia.
-        </p>
-      </div>
-    </div>
-  </section>
-
-  <!-- Sección Reseñas de Clientes -->
-  <section class="bg-white py-12">
-    <div class="container mx-auto text-center">
-      <h2 class="text-3xl font-semibold mb-8 text-gray-800" data-aos="fade-up" data-aos-duration="1000">
-        Reseñas de Clientes
-      </h2>
-      <div class="review-slider">
-        <div class="bg-white p-5 rounded-lg shadow-lg w-64 mx-4" data-aos="fade-up" data-aos-duration="1000">
-          <p>"Estoy encantada con mi compra en VALAC Joyas. La calidad es insuperable y el servicio excepcional."</p>
-          <p class="mt-2 font-semibold">- Joss G.</p>
-        </div>
-        <div class="bg-white p-5 rounded-lg shadow-lg w-64 mx-4" data-aos="fade-up" data-aos-duration="1200">
-          <p>"Piezas hermosas y entrega rápida. Definitivamente volveré a comprar."</p>
-          <p class="mt-2 font-semibold">- Daniel O.</p>
-        </div>
-        <div class="bg-white p-5 rounded-lg shadow-lg w-64 mx-4" data-aos="fade-up" data-aos-duration="1400">
-          <p>"La elegancia y el detalle en cada pieza son realmente impresionantes. ¡Lo recomiendo encarecidamente!"</p>
-          <p class="mt-2 font-semibold">- Marco M.</p>
+      <!-- Texto sobre el banner -->
+      <div class="absolute inset-0 flex items-center justify-center px-4">
+        <div class="text-center text-white bg-black/45 px-6 py-5 sm:px-8 sm:py-6 rounded-lg max-w-[980px] w-full">
+          <h1 class="text-3xl sm:text-4xl md:text-5xl font-playfair">VALAC Joyas</h1>
+          <p class="mt-3 sm:mt-4 text-lg sm:text-xl md:text-2xl">Joyas que cuentan tu historia</p>
+          <p class="mt-2 text-base sm:text-lg md:text-xl">Oro auténtico en 10k y 14k para mujeres y hombres que marcan su propio camino.</p>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
+
+    <!-- Productos (Ofertas primero) -->
+    <section id="productos-destacados" class="py-10 sm:py-12 bg-white">
+      <div class="container mx-auto px-4">
+        <h2 class="text-2xl sm:text-3xl font-semibold mb-6 sm:mb-8 text-center text-gray-800" data-aos="fade-up" data-aos-duration="1000">
+          Productos Destacados
+        </h2>
+        <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8"></div>
+        <div class="mt-8 text-center">
+          <a href="/collection" class="bg-yellow-500 text-white px-5 sm:px-6 py-3 rounded-lg text-lg sm:text-xl hover:bg-yellow-600 transition-colors inline-block">
+            Ver Colección Completa
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Nuestra historia -->
+    <section class="py-10 sm:py-12 bg-white text-gray-800">
+      <div class="container mx-auto px-4 flex flex-col md:flex-row items-center gap-6 md:gap-8">
+        <div class="md:w-1/2" data-aos="fade-right" data-aos-duration="1000">
+          <img src="{{ SUPABASE_STORAGE_URL }}our-story.jpg" alt="Nuestra Historia" class="rounded-lg shadow-lg w-full h-auto object-cover">
+        </div>
+        <div class="md:w-1/2 md:pl-2" data-aos="fade-left" data-aos-duration="1000">
+          <h2 class="text-2xl sm:text-3xl font-semibold mb-4 sm:mb-6">Nuestra Historia</h2>
+          <p class="text-base sm:text-lg leading-relaxed">
+            En VALAC Joyas, la tradición y la pasión por el oro se transmiten de generación en generación.
+            Con una sólida herencia familiar, cada pieza es el reflejo de compromiso, calidad y elegancia.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Reseñas -->
+    <section class="bg-white py-10 sm:py-12">
+      <div class="container mx-auto px-4 text-center">
+        <h2 class="text-2xl sm:text-3xl font-semibold mb-6 sm:mb-8 text-gray-800" data-aos="fade-up" data-aos-duration="1000">
+          Reseñas de Clientes
+        </h2>
+        <div class="review-slider">
+          <div class="bg-white p-5 rounded-lg shadow-lg w-64 mx-4" data-aos="fade-up" data-aos-duration="1000">
+            <p>"Estoy encantada con mi compra en VALAC Joyas. La calidad es insuperable y el servicio excepcional."</p>
+            <p class="mt-2 font-semibold">- Joss G.</p>
+          </div>
+          <div class="bg-white p-5 rounded-lg shadow-lg w-64 mx-4" data-aos="fade-up" data-aos-duration="1200">
+            <p>"Piezas hermosas y entrega rápida. Definitivamente volveré a comprar."</p>
+            <p class="mt-2 font-semibold">- Daniel O.</p>
+          </div>
+          <div class="bg-white p-5 rounded-lg shadow-lg w-64 mx-4" data-aos="fade-up" data-aos-duration="1400">
+            <p>"La elegancia y el detalle en cada pieza son realmente impresionantes. ¡Lo recomiendo encarecidamente!"</p>
+            <p class="mt-2 font-semibold">- Marco M.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
 {% endblock %}
 
 {% block scripts_extra %}
@@ -167,41 +174,26 @@
     document.addEventListener("DOMContentLoaded", async function(){
       console.log("DEBUG: DOM fully loaded, starting initialization in home.html...");
 
+      // Carga progresiva del banner (sin forzar alturas ni romper viewport)
       const bannerImages = document.querySelectorAll('.banner-slider img');
-      const bannerContainer = document.querySelector('.banner-slider');
-      let loadedBannerCount = 0;
-
-      const adjustSliderHeight = (img) => {
-        const aspectRatio = img.naturalWidth / img.naturalHeight;
-        const containerWidth = bannerContainer.clientWidth;
-        const targetHeight = containerWidth / aspectRatio;
-        bannerContainer.style.height = `${targetHeight}px`;
-      };
-
       bannerImages.forEach(img => {
-        const onLoad = () => {
-          img.classList.add('loaded');
-          loadedBannerCount++;
-          if (loadedBannerCount === 1) {
-            adjustSliderHeight(img);
-            window.addEventListener('resize', () => adjustSliderHeight(img));
-          }
-          if (loadedBannerCount === bannerImages.length) {
-            $('.banner-slider').slick({ autoplay: true, autoplaySpeed: 3000, arrows: true, dots: true });
-            console.log("DEBUG: Slick Slider para banner inicializado tras carga completa.");
-          }
-        };
-        if (img.complete) { onLoad(); } else { img.addEventListener('load', onLoad); }
+        const onLoad = () => img.classList.add('loaded');
+        if (img.complete) onLoad(); else img.addEventListener('load', onLoad);
       });
 
+      // Slick sliders
       if (typeof $ !== "undefined" && $.fn.slick) {
+        $('.banner-slider').slick({
+          autoplay: true, autoplaySpeed: 3000, arrows: true, dots: true,
+          pauseOnHover: true, adaptiveHeight: true
+        });
         $('.review-slider').slick({
           autoplay: true, autoplaySpeed: 3000, arrows: true, dots: true,
-          slidesToShow: 3, responsive: [{ breakpoint: 768, settings: { slidesToShow: 1 } }]
+          slidesToShow: 3, responsive: [{ breakpoint: 1024, settings: { slidesToShow: 2 } }, { breakpoint: 640, settings: { slidesToShow: 1 } }]
         });
-        console.log("DEBUG: Slick Slider para reseñas inicializado.");
+        console.log("DEBUG: Slick sliders inicializados.");
       } else {
-        console.error("DEBUG: Slick Slider no se encontró. Verifica que jQuery y Slick estén cargados.");
+        console.warn("DEBUG: Slick no encontrado; banner/reviews quedan estáticos.");
       }
 
       AOS.init();
@@ -212,7 +204,6 @@
         const SUPABASE_URL = "{{ config['SUPABASE_URL'] }}";
         const SUPABASE_KEY = "{{ config['SUPABASE_KEY'] }}";
         const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
-        console.log("DEBUG: Supabase initialized in home.html:", supabaseClient);
 
         const { data: products, error } = await supabaseClient
           .from('products')
@@ -221,14 +212,13 @@
             tipo_producto, genero, tipo_oro, imagen, created_at, stock_total,
             product_images ( imagen, orden )
           `);
+
         if (error) {
           console.error("DEBUG: Error loading products from Supabase:", error);
           return;
         }
 
-        console.log("DEBUG: Products loaded:", products);
-
-        // Helpers UX y formato MXN
+        // Helpers
         const hasOffer = (p) =>
           Number(p.descuento_pct) > 0 &&
           Number(p.precio_descuento) > 0 &&
@@ -245,13 +235,13 @@
           .filter(p => !hasOffer(p) && Number(p.stock_total) > 0)
           .sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
 
-        // Decisión de bloque inicial
+        // Qué mostramos primero
         let lista = [];
         let titulo = '';
         if (ofertasConStock.length > 0) { titulo = 'Ofertas'; lista = ofertasConStock.slice(0,3); }
         else { titulo = 'Productos Destacados'; lista = destacadosConStock.slice(0,3); }
 
-        // Render tarjetas
+        // Render
         const productGrid = document.getElementById('product-grid');
         if (productGrid) {
           document.querySelector('#productos-destacados h2').textContent = titulo;
@@ -260,10 +250,10 @@
             const placeholder = "{{ config['SUPABASE_STORAGE_URL'] }}placeholder.jpg";
 
             let mainImage = placeholder, hoverImage = null;
-            if (product.product_images && product.product_images.length > 0) {
+            if (product.product_images?.length) {
               const sorted = [...product.product_images].sort((a,b)=> a.orden - b.orden);
               mainImage = sorted[0]?.imagen || placeholder;
-              hoverImage = sorted.length > 1 ? sorted[1].imagen : null;
+              hoverImage = sorted[1]?.imagen || null;
             } else if (product.imagen && product.imagen !== 'undefined') {
               mainImage = product.imagen;
             }
@@ -280,18 +270,16 @@
             productGrid.innerHTML += `
               <div class="relative bg-white p-5 rounded-lg shadow-md overflow-hidden group" data-aos="fade-up" data-aos-delay="${index*50}">
                 ${hasOffer(product) ? `
-                  <span class="discount-badge" title="¡MIRA! Te estás llevando un ofertón" aria-label="Producto en oferta">
+                  <span class="discount-badge" aria-label="Producto en oferta">
                     OFERTA ${Number(product.descuento_pct)}%
-                  </span>
-                ` : ``}
+                  </span>` : ``}
 
                 <div class="relative w-full h-64 overflow-hidden">
                   <img src="${mainImage}" alt="${product.nombre}" loading="lazy"
                        class="w-full h-full object-cover transition-opacity duration-300 ${hoverImage ? 'group-hover:opacity-0' : ''}">
                   ${hoverImage ? `
                     <img src="${hoverImage}" alt="${product.nombre} hover" loading="lazy"
-                         class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-                  ` : ``}
+                         class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-300 group-hover:opacity-100">` : ``}
                 </div>
 
                 <h3 class="text-xl font-semibold text-[#424242] mt-4">${product.nombre}</h3>
@@ -330,23 +318,24 @@
         console.error("DEBUG: Error initializing Supabase in home.html:", err);
       }
     });
-  // 💡 Mostrar modal tras 1.5s
-  setTimeout(() => {
-    const modal = document.getElementById("promo-modal");
-    if (modal) modal.classList.remove("hidden");
-  }, 1500);
+
+    // Mostrar promo modal (si existe)
+    setTimeout(() => {
+      const modal = document.getElementById("promo-modal");
+      if (modal) modal.classList.remove("hidden");
+    }, 1500);
   </script>
 
   <script>
-  const sessionId = localStorage.getItem("valac_session_id") || crypto.randomUUID();
-  localStorage.setItem("valac_session_id", sessionId);
+    const sessionId = localStorage.getItem("valac_session_id") || crypto.randomUUID();
+    localStorage.setItem("valac_session_id", sessionId);
 
-  // TRACK general de navegación
-  fetch("/api/track-route", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ path: window.location.pathname, session_id: sessionId })
-  });
+    // TRACK general de navegación
+    fetch("/api/track-route", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ path: window.location.pathname, session_id: sessionId })
+    });
   </script>
 
   {% include 'partials/tracking.html' %}

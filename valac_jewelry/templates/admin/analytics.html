@@ -1,19 +1,81 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Panel de Analítica - VALAC Joyas</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet"/>
   <script src="https://unpkg.com/lucide@latest"></script>
+  <style>
+    .table-section h2 .sub { font-weight:600; font-size:.85rem; color:#6b7280 }
+    th.sortable { cursor: pointer; }
+    th.sortable .dir { opacity:.5; }
+    .badge { display:inline-flex; align-items:center; padding:.15rem .5rem; font-size:.75rem; border-radius:.5rem; background:#F3F4F6; }
+    .chip { padding:.35rem .6rem; border:1px solid #e5e7eb; border-radius:.5rem; font-size:.85rem; }
+    .btn { display:inline-flex; align-items:center; gap:.4rem; padding:.5rem .8rem; border:1px solid #e5e7eb; border-radius:.5rem; }
+    .btn:hover { background:#F9FAFB; }
+    .sticky-top { position: sticky; top: 0; z-index: 50; background: #f9fafb; }
+    .heat-0 { background: #fff; }
+    .heat-1 { background: #fff7ed; }   /* low */
+    .heat-2 { background: #ffedd5; }   /* mid */
+    .heat-3 { background: #fde68a; }   /* high */
+  </style>
 </head>
 <body class="bg-gray-50 text-gray-900 font-sans">
-  <div class="max-w-7xl mx-auto px-4 py-8">
+  <div class="max-w-7xl mx-auto px-4 py-6">
 
-    <h1 class="text-4xl font-bold mb-6 flex items-center gap-2">
-      <i data-lucide="bar-chart-3" class="w-6 h-6 text-indigo-600"></i> Analítica de VALAC Joyas
-    </h1>
+    <!-- HEADER -->
+    <div class="flex items-center justify-between mb-4">
+      <h1 class="text-3xl sm:text-4xl font-bold flex items-center gap-2">
+        <i data-lucide="bar-chart-3" class="w-7 h-7 text-yellow-600"></i>
+        Analítica de VALAC Joyas
+      </h1>
+      <a href="/" class="btn">
+        <i data-lucide="home" class="w-4 h-4"></i> Ir al sitio
+      </a>
+    </div>
 
+    <!-- CONTROL BAR (sticky) -->
+    <div class="sticky-top border border-gray-200 rounded-xl p-3 sm:p-4 shadow-sm mb-8">
+      <form id="filtersForm" class="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4 items-end">
+        <!-- Presets -->
+        <div>
+          <label class="block text-sm text-gray-500 mb-1">Rango rápido</label>
+          <div class="flex gap-2">
+            <button type="button" class="chip" data-preset="7">7 días</button>
+            <button type="button" class="chip" data-preset="30">30 días</button>
+            <button type="button" class="chip" data-preset="all">Todo</button>
+          </div>
+        </div>
+
+        <!-- Date range (cosmético por ahora) -->
+        <div>
+          <label class="block text-sm text-gray-500 mb-1">Desde</label>
+          <input type="date" id="fromDate" name="from" class="w-full border rounded px-3 py-2" />
+        </div>
+        <div>
+          <label class="block text-sm text-gray-500 mb-1">Hasta</label>
+          <div class="flex gap-2">
+            <input type="date" id="toDate" name="to" class="w-full border rounded px-3 py-2"/>
+            <button type="submit" class="btn">
+              <i data-lucide="refresh-ccw" class="w-4 h-4"></i> Aplicar
+            </button>
+          </div>
+        </div>
+      </form>
+
+      <!-- Quick nav -->
+      <div class="mt-3 flex flex-wrap items-center gap-2 text-sm">
+        <span class="text-gray-500 mr-1">Ir a:</span>
+        <a href="#all-views" class="badge">Todos los productos</a>
+        <a href="#top-views" class="badge">Top vistos</a>
+        <a href="#funnel" class="badge">Embudo</a>
+        <a href="#routes" class="badge">Rutas</a>
+        <a href="#no-views" class="badge">Sin vistas</a>
+      </div>
+    </div>
+
+    <!-- KPI CARDS -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
       <div class="bg-white p-6 rounded-xl shadow-sm text-center">
         <p class="text-sm text-gray-500 mb-1">🔍 Total de vistas</p>
@@ -21,10 +83,10 @@
       </div>
       <div class="bg-white p-6 rounded-xl shadow-sm text-center">
         <p class="text-sm text-gray-500 mb-1">🛒 Clicks en comprar</p>
-         <p class="text-2xl font-semibold text-gray-800">{{ total_buy_clicks }}</p>
+        <p class="text-2xl font-semibold text-gray-800">{{ total_buy_clicks }}</p>
       </div>
       <div class="bg-white p-6 rounded-xl shadow-sm text-center">
-        <p class="text-sm text-gray-500 mb-1">🧭 Navegaciones</p>
+        <p class="text-sm text-gray-500 mb-1">🧭 Rutas agregadas</p>
         <p class="text-2xl font-semibold text-gray-800">{{ navigation|length }}</p>
       </div>
       <div class="bg-white p-6 rounded-xl shadow-sm text-center">
@@ -32,121 +94,333 @@
         <p class="text-2xl font-semibold text-gray-800">{{ total_locations }}</p>
       </div>
     </div>
-<section class="mb-10">
-  <div class="flex justify-between items-center mb-4">
-    <h2 class="text-2xl font-bold flex items-center gap-2">
-      <i data-lucide="list" class="w-5 h-5 text-yellow-600"></i> Vistas de Todos los Productos
-    </h2>
-  </div>
 
-  <div class="overflow-x-auto">
-    <table class="min-w-full bg-white rounded-lg shadow-sm">
-      <thead class="bg-gray-100 text-left text-sm font-semibold">
-        <tr>
-          <th class="px-6 py-3">#</th>
-          <th class="px-6 py-3">Producto</th>
-          <th class="px-6 py-3">Vistas</th>
-        </tr>
-      </thead>
-      <tbody class="text-sm divide-y divide-gray-200">
-        {% for prod in all_product_views %}
-        <tr class="hover:bg-gray-50 {% if prod.views == 0 %}bg-red-50{% endif %}">
-          <td class="px-6 py-4">{{ loop.index }}</td>
-          <td class="px-6 py-4">{{ prod.nombre }}</td>
-          <td class="px-6 py-4">{{ prod.views }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-</section>
-
-    <section class="mb-10">
-      <div class="flex justify-between items-center mb-4">
+    <!-- ALL PRODUCTS VIEWS -->
+    <section id="all-views" class="table-section mb-12">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
         <h2 class="text-2xl font-bold flex items-center gap-2">
-          <i data-lucide="eye" class="w-5 h-5 text-blue-600"></i> Productos más vistos
+          <i data-lucide="list" class="w-5 h-5 text-yellow-600"></i>
+          Vistas de Todos los Productos
+          <span class="sub">(incluye 0 vistas: oportunidades)</span>
         </h2>
-        <select class="border border-gray-300 rounded px-3 py-1 text-sm focus:outline-none">
-          <option value="7">Últimos 7 días</option>
-          <option value="30">Últimos 30 días</option>
-          <option value="all">Todo el tiempo</option>
-        </select>
+        <div class="flex items-center gap-2">
+          <input id="searchAll" type="search" placeholder="Buscar producto…" class="border rounded px-3 py-2 w-56" />
+          <button class="btn" data-export="#tblAll">
+            <i data-lucide="download" class="w-4 h-4"></i> Exportar CSV
+          </button>
+        </div>
       </div>
 
       <div class="overflow-x-auto">
-        <table class="min-w-full bg-white rounded-lg shadow-sm">
+        <table id="tblAll" class="min-w-full bg-white rounded-lg shadow-sm">
           <thead class="bg-gray-100 text-left text-sm font-semibold">
             <tr>
-              <th class="px-6 py-3">#</th>
-              <th class="px-6 py-3">Producto</th>
-              <th class="px-6 py-3">Vistas</th>
+              <th class="px-6 py-3 w-14 sortable" data-type="num"># <span class="dir">↕</span></th>
+              <th class="px-6 py-3 sortable" data-type="text">Producto <span class="dir">↕</span></th>
+              <th class="px-6 py-3 w-32 sortable" data-type="num">Vistas <span class="dir">↕</span></th>
+              <th class="px-6 py-3 w-28">Acciones</th>
             </tr>
           </thead>
           <tbody class="text-sm divide-y divide-gray-200">
-            {% for pv in product_views %}
-<tr class="hover:bg-gray-50">
-  <td class="px-6 py-4">{{ loop.index }}</td>
-   <td class="px-6 py-4">{{ pv.nombre }}</td>
-  <td class="px-6 py-4">{{ pv.views }}</td>
-</tr>
-{% endfor %}
+            {% for prod in all_product_views %}
+            {% set heat = (3 if prod.views|int >= 50 else (2 if prod.views|int >= 10 else (1 if prod.views|int > 0 else 0))) %}
+            <tr class="hover:bg-gray-50 heat-{{ heat }}">
+              <td class="px-6 py-3">{{ loop.index }}</td>
+              <td class="px-6 py-3">{{ prod.nombre }}</td>
+              <td class="px-6 py-3">{{ prod.views }}</td>
+              <td class="px-6 py-3">
+                {% if prod.product_id is defined %}
+                  <a class="text-indigo-600 hover:underline" target="_blank" href="/producto/{{ prod.product_id }}">Ver</a>
+                {% else %}
+                  <span class="text-gray-400">—</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+            {% if not all_product_views or all_product_views|length == 0 %}
+            <tr><td colspan="4" class="px-6 py-6 text-center text-gray-500">Sin datos</td></tr>
+            {% endif %}
           </tbody>
         </table>
       </div>
     </section>
 
-    <section>
-      <h2 class="text-2xl font-bold mb-4 flex items-center gap-2">
-        <i data-lucide="trending-up" class="w-5 h-5 text-emerald-600"></i> Embudo de Conversión
-      </h2>
+    <!-- TOP PRODUCTS -->
+    <section id="top-views" class="table-section mb-12">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-3">
+        <h2 class="text-2xl font-bold flex items-center gap-2">
+          <i data-lucide="eye" class="w-5 h-5 text-blue-600"></i>
+          Productos más vistos
+          <span class="sub">(Top {{ product_views|length if product_views else 0 }})</span>
+        </h2>
+        <div class="flex items-center gap-2">
+          <select id="presetTop" class="border rounded px-3 py-2">
+            <option value="7">Últimos 7 días</option>
+            <option value="30" selected>Últimos 30 días</option>
+            <option value="all">Todo el tiempo</option>
+          </select>
+          <button class="btn" data-export="#tblTop">
+            <i data-lucide="download" class="w-4 h-4"></i> Exportar CSV
+          </button>
+        </div>
+      </div>
 
       <div class="overflow-x-auto">
-        <table class="min-w-full bg-white rounded-lg shadow-sm">
+        <table id="tblTop" class="min-w-full bg-white rounded-lg shadow-sm">
+          <thead class="bg-gray-100 text-left text-sm font-semibold">
+            <tr>
+              <th class="px-6 py-3 w-14 sortable" data-type="num"># <span class="dir">↕</span></th>
+              <th class="px-6 py-3 sortable" data-type="text">Producto <span class="dir">↕</span></th>
+              <th class="px-6 py-3 w-32 sortable" data-type="num">Vistas <span class="dir">↕</span></th>
+              <th class="px-6 py-3 w-24">Share</th>
+              <th class="px-6 py-3 w-28">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="text-sm divide-y divide-gray-200">
+            {% set tv = (total_views or 0) %}
+            {% for pv in product_views %}
+            {% set share = ( (pv.views|float / (tv if tv>0 else 1)) * 100.0 ) | round(1) %}
+            <tr class="hover:bg-gray-50">
+              <td class="px-6 py-3">{{ loop.index }}</td>
+              <td class="px-6 py-3">{{ pv.nombre }}</td>
+              <td class="px-6 py-3">{{ pv.views }}</td>
+              <td class="px-6 py-3">
+                <div class="flex items-center gap-2">
+                  <div class="w-24 bg-gray-200 rounded h-2 overflow-hidden">
+                    <div class="bg-blue-500 h-2" style="width: {{ share }}%"></div>
+                  </div>
+                  <span class="text-gray-600 text-xs">{{ share }}%</span>
+                </div>
+              </td>
+              <td class="px-6 py-3">
+                {% if pv.product_id is defined %}
+                  <a class="text-indigo-600 hover:underline" target="_blank" href="/producto/{{ pv.product_id }}">Ver</a>
+                {% else %}
+                  <span class="text-gray-400">—</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+            {% if not product_views or product_views|length == 0 %}
+            <tr><td colspan="5" class="px-6 py-6 text-center text-gray-500">Sin datos</td></tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- FUNNEL -->
+    <section id="funnel" class="mb-12">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-2xl font-bold flex items-center gap-2">
+          <i data-lucide="trending-up" class="w-5 h-5 text-emerald-600"></i> Embudo de Conversión
+        </h2>
+        <button class="btn" data-export="#tblFunnel">
+          <i data-lucide="download" class="w-4 h-4"></i> Exportar CSV
+        </button>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table id="tblFunnel" class="min-w-full bg-white rounded-lg shadow-sm">
           <thead class="bg-gray-100 text-left text-sm font-semibold">
             <tr>
               <th class="px-6 py-3">Etapa</th>
               <th class="px-6 py-3">Usuarios</th>
+              <th class="px-6 py-3">Tasa vs etapa anterior</th>
             </tr>
           </thead>
           <tbody class="text-sm divide-y divide-gray-200">
             {% for stage in funnel_data %}
             <tr class="hover:bg-gray-50">
-              <td class="px-6 py-4">{{ stage.name }}</td>
-              <td class="px-6 py-4">{{ stage.count }}</td>
+              <td class="px-6 py-3">{{ stage.name }}</td>
+              <td class="px-6 py-3 funnel-count">{{ stage.count }}</td>
+              <td class="px-6 py-3 funnel-rate text-gray-600">—</td>
             </tr>
             {% endfor %}
+            {% if not funnel_data or funnel_data|length == 0 %}
+            <tr><td colspan="3" class="px-6 py-6 text-center text-gray-500">Sin datos</td></tr>
+            {% endif %}
           </tbody>
         </table>
       </div>
     </section>
-<section class="mt-12">
-  <h2 class="text-2xl font-bold mb-4 flex items-center gap-2">
-    <i data-lucide="map" class="w-5 h-5 text-purple-600"></i> Rutas más navegadas
-  </h2>
 
-  <div class="overflow-x-auto">
-    <table class="min-w-full bg-white rounded-lg shadow-sm">
-      <thead class="bg-gray-100 text-left text-sm font-semibold">
-        <tr>
-          <th class="px-6 py-3">Ruta</th>
-          <th class="px-6 py-3">Veces visitada</th>
-        </tr>
-      </thead>
-      <tbody class="text-sm divide-y divide-gray-200">
-        {% for nav in navigation %}
-        <tr class="hover:bg-gray-50">
-          <td class="px-6 py-4">{{ nav.path }}</td>
-          <td class="px-6 py-4">{{ nav.count }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-</section>
+    <!-- ROUTES -->
+    <section id="routes" class="mb-12">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-2xl font-bold flex items-center gap-2">
+          <i data-lucide="map" class="w-5 h-5 text-purple-600"></i> Rutas más navegadas
+        </h2>
+        <div class="flex items-center gap-2">
+          <button class="btn" data-export="#tblRoutes">
+            <i data-lucide="download" class="w-4 h-4"></i> Exportar CSV
+          </button>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table id="tblRoutes" class="min-w-full bg-white rounded-lg shadow-sm">
+          <thead class="bg-gray-100 text-left text-sm font-semibold">
+            <tr>
+              <th class="px-6 py-3 sortable" data-type="text">Ruta <span class="dir">↕</span></th>
+              <th class="px-6 py-3 w-40 sortable" data-type="num">Veces visitada <span class="dir">↕</span></th>
+            </tr>
+          </thead>
+          <tbody class="text-sm divide-y divide-gray-200">
+            {% for nav in navigation %}
+            <tr class="hover:bg-gray-50">
+              <td class="px-6 py-3">{{ nav.path }}</td>
+              <td class="px-6 py-3">{{ nav.count }}</td>
+            </tr>
+            {% endfor %}
+            {% if not navigation or navigation|length == 0 %}
+            <tr><td colspan="2" class="px-6 py-6 text-center text-gray-500">Sin datos</td></tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- ZERO VIEWS -->
+    <section id="no-views" class="mb-8">
+      <h2 class="text-2xl font-bold mb-3 flex items-center gap-2">
+        <i data-lucide="alert-triangle" class="w-5 h-5 text-red-600"></i>
+        Productos sin vistas (último dataset)
+      </h2>
+      <div class="bg-white rounded-xl border border-red-100 p-4">
+        <ul class="list-disc list-inside text-sm">
+          {% set zeros = all_product_views | selectattr('views','equalto',0) | list %}
+          {% for prod in zeros %}
+            <li>
+              {% if prod.product_id is defined %}
+                <a class="text-indigo-600 hover:underline" target="_blank" href="/producto/{{ prod.product_id }}">{{ prod.nombre }}</a>
+              {% else %}
+                {{ prod.nombre }}
+              {% endif %}
+            </li>
+          {% endfor %}
+          {% if zeros|length == 0 %}
+            <li class="text-gray-500">No hay productos con 0 vistas 🎉</li>
+          {% endif %}
+        </ul>
+      </div>
+    </section>
+
   </div>
 
   <script>
+    // Icons
     lucide.createIcons();
+
+    // --- Helpers: export CSV ---
+    function tableToCSV(table) {
+      const rows = Array.from(table.querySelectorAll('tr'));
+      return rows.map(row => {
+        const cells = Array.from(row.querySelectorAll('th,td')).map(c => {
+          let t = (c.innerText || '').trim().replace(/\s+/g,' ');
+          // wrap if contains comma or quotes
+          if (/[",\n]/.test(t)) t = '"' + t.replace(/"/g,'""') + '"';
+          return t;
+        });
+        return cells.join(',');
+      }).join('\n');
+    }
+    document.querySelectorAll('[data-export]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const table = document.querySelector(btn.getAttribute('data-export'));
+        if (!table) return;
+        const csv = tableToCSV(table);
+        const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = (table.id || 'table') + '.csv';
+        document.body.appendChild(a); a.click(); a.remove();
+        URL.revokeObjectURL(url);
+      });
+    });
+
+    // --- Search (All products) ---
+    const searchAll = document.getElementById('searchAll');
+    if (searchAll) {
+      searchAll.addEventListener('input', () => {
+        const q = searchAll.value.toLowerCase();
+        const rows = document.querySelectorAll('#tblAll tbody tr');
+        rows.forEach(r => {
+          const text = r.children[1]?.innerText.toLowerCase() || '';
+          r.style.display = text.includes(q) ? '' : 'none';
+        });
+      });
+    }
+
+    // --- Sortable columns ---
+    function sortTable(table, colIndex, type, asc) {
+      const tbody = table.tBodies[0];
+      const rows = Array.from(tbody.querySelectorAll('tr')).filter(r => r.children.length);
+      const parse = (el) => {
+        const t = (el.innerText || '').trim();
+        return type === 'num' ? parseFloat(t.replace(/[^0-9.\-]/g,'')) || 0 : t.toLowerCase();
+      };
+      rows.sort((a,b) => {
+        const va = parse(a.children[colIndex]); const vb = parse(b.children[colIndex]);
+        if (va < vb) return asc ? -1 : 1;
+        if (va > vb) return asc ? 1 : -1;
+        return 0;
+      });
+      rows.forEach(r => tbody.appendChild(r));
+    }
+    document.querySelectorAll('table thead th.sortable').forEach(th => {
+      let asc = true;
+      th.addEventListener('click', () => {
+        const table = th.closest('table');
+        const idx = Array.from(th.parentNode.children).indexOf(th);
+        sortTable(table, idx, th.dataset.type || 'text', asc);
+        asc = !asc;
+      });
+    });
+
+    // --- Funnel step rates (vs etapa anterior) ---
+    (function computeFunnelRates(){
+      const rows = Array.from(document.querySelectorAll('#tblFunnel tbody tr'));
+      for (let i=0;i<rows.length;i++){
+        const count = parseInt(rows[i].querySelector('.funnel-count')?.innerText || '0', 10);
+        if (i === 0) {
+          rows[i].querySelector('.funnel-rate').innerText = '—';
+        } else {
+          const prev = parseInt(rows[i-1].querySelector('.funnel-count')?.innerText || '0', 10);
+          const rate = prev > 0 ? ((count/prev)*100).toFixed(1) + '%' : '—';
+          rows[i].querySelector('.funnel-rate').innerText = rate;
+        }
+      }
+    })();
+
+    // --- Presets / filtros (actualiza querystring; server puede leerlos después) ---
+    const form = document.getElementById('filtersForm');
+    form?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const from = document.getElementById('fromDate').value;
+      const to   = document.getElementById('toDate').value;
+      const url  = new URL(window.location.href);
+      if (from) url.searchParams.set('from', from); else url.searchParams.delete('from');
+      if (to)   url.searchParams.set('to', to);     else url.searchParams.delete('to');
+      window.location.href = url.toString();
+    });
+    document.querySelectorAll('[data-preset]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const v = btn.getAttribute('data-preset');
+        const url = new URL(window.location.href);
+        url.searchParams.set('days', v);
+        url.searchParams.delete('from'); url.searchParams.delete('to');
+        window.location.href = url.toString();
+      });
+    });
+
+    // --- Top preset (no-op visual, prepara para servidor) ---
+    const presetTop = document.getElementById('presetTop');
+    presetTop?.addEventListener('change', () => {
+      const url = new URL(window.location.href);
+      url.searchParams.set('top_days', presetTop.value);
+      window.location.href = url.toString();
+    });
   </script>
 </body>
 </html>

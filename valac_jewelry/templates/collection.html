@@ -80,185 +80,193 @@
     background-color: #6c757d;
     color: #fff;
   }
-    /* Badge de descuento */
-    .discount-badge {
-  position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  background-color: #000;     /* Negro */
-  color: #fff;                /* Blanco */
-  font-size: 0.75rem;         /* Texto pequeño */
-  font-weight: 600;
-  text-transform: uppercase;  /* “-20%” o “en oferta” en mayúsculas */
-  padding: 0.25rem 0.75rem;    /* Alto y ancho */
-  border-radius: 9999px;      /* Pill */
-  pointer-events: none;       /* No interfiere con clicks */
-  z-index: 10;                /* Por encima de la imagen */
-}
-  /* Si no usas @apply, simplemente estas clases inline funcionan igual:
-     .discount-badge {
-       position: absolute; top: 0.75rem; left: 0.75rem;
-       background-color: #dc2626; color: white;
-       font-size: .75rem; font-weight: 600;
-       padding: .25rem .5rem; border-radius: .25rem;
-     }
-  */
+
+  /* Badge de descuento */
+  .discount-badge {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    background-color: #000;     /* Negro */
+    color: #fff;                /* Blanco */
+    font-size: 0.75rem;         /* Texto pequeño */
+    font-weight: 600;
+    text-transform: uppercase;  /* “-20%” o “OFERTA 20%” en mayúsculas */
+    padding: 0.25rem 0.75rem;   /* Alto y ancho */
+    border-radius: 9999px;      /* Pill */
+    pointer-events: none;       /* No interfiere con clicks */
+    z-index: 10;                /* Por encima de la imagen */
+  }
 
   /* Asegúrate de que tus tarjetas sean relativas para posicionar bien el badge */
   .product-card {
     position: relative;
     overflow: hidden;
-    /* ya tenías bg-white p-5 rounded-lg shadow-md overflow-hidden */
   }
-  
-  /* —————————————————————————————— */
 
+  /* === Chips y textos para ofertas (mismo look & feel que Home) === */
+  .offer-chip{font-size:.70rem;padding:.125rem .5rem;border-radius:9999px;display:inline-block;background:#FFFBF2;color:#1F2937;border:1px solid #E5D6A3}
+  .chip-emi{font-weight:700;color:#B38F00;border-color:#D5A300}
+  .chip-time{font-weight:700;color:#7A0019;border-color:#7A0019}
+  .ahorro-text{color:#B38F00;font-weight:600}
+
+  /* CTA para ofertas */
+  .cta-offer{
+    background:linear-gradient(90deg,#D5A300 0%,#FACC15 100%);
+    color:#111;font-weight:800;border:1px solid #E6B800;border-radius:.5rem;
+    padding:.5rem 1rem;box-shadow:0 4px 12px rgba(213,163,0,.25);transition:all .25s
+  }
+  .cta-offer:hover{background:#111;color:#D5A300;border-color:#B38F00;box-shadow:0 6px 18px rgba(0,0,0,.30)}
 </style>
 
 <main class="pt-32 md:pt-36">
-
-        <!-- Spinner oculto por defecto -->
-        <div id="loading-spinner">
-          <i class="fas fa-spinner fa-pulse fa-2x text-gray-500"></i>
-        </div>
-    <div id="main-container" class="flex flex-col md:flex-row gap-8">
-      <!-- Panel de Filtros (oculto inicialmente) -->
-      <aside id="filters-panel" class="filters-panel hidden border border-gray-200 rounded-md p-6 sidebar-sticky bg-white transition-all duration-300 ease-in-out">
-        <h3 class="text-lg font-semibold mb-4">Filtrar por</h3>
-        <form id="filters-form" action="" method="GET" class="space-y-6" aria-label="Formulario de filtros">
-          <!-- Bloque de filtros para categoría, tipo_oro, género y rango de precios -->
-          <!-- Categoría -->
-          <div>
-            <label class="block font-semibold mb-2">Categoría</label>
-            <div class="grid grid-cols-2 gap-2">
-              <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if not request.args.get('category') %}active{% endif %}" data-group="category">
-                <input type="radio" name="category" value="" class="hidden" {% if not request.args.get('category') %}checked{% endif %} aria-label="Todas">
-                Todas
-              </label>
-              <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if request.args.get('category') == 'anillos' %}active{% endif %}" data-group="category">
-                <input type="radio" name="category" value="anillos" class="hidden" {% if request.args.get('category') == 'anillos' %}checked{% endif %} aria-label="Anillos">
-                Anillos
-              </label>
-              <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if request.args.get('category') == 'aretes' %}active{% endif %}" data-group="category">
-                <input type="radio" name="category" value="aretes" class="hidden" {% if request.args.get('category') == 'aretes' %}checked{% endif %} aria-label="Aretes">
-                Aretes
-              </label>
-              <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if request.args.get('category') == 'pulsos' %}active{% endif %}" data-group="category">
-                <input type="radio" name="category" value="pulsos" class="hidden" {% if request.args.get('category') == 'pulsos' %}checked{% endif %} aria-label="Pulsos">
-                Pulsos
-              </label>
-              <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if request.args.get('category') == 'cadenas' %}active{% endif %}" data-group="category">
-                <input type="radio" name="category" value="cadenas" class="hidden" {% if request.args.get('category') == 'cadenas' %}checked{% endif %} aria-label="Cadenas">
-                Cadenas
-              </label>
-              <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if request.args.get('category') == 'dijes' %}active{% endif %}" data-group="category">
-                <input type="radio" name="category" value="dijes" class="hidden" {% if request.args.get('category') == 'dijes' %}checked{% endif %} aria-label="Dijes">
-                Dijes
-              </label>
-            </div>
-          </div>
-          <!-- Tipo de Oro -->
-          <div>
-            <label class="block font-semibold mb-2">Tipo de Oro</label>
-            <div class="grid grid-cols-2 gap-2">
-              <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if not request.args.get('type_oro') %}active{% endif %}" data-group="type_oro">
-                <input type="radio" name="type_oro" value="" class="hidden" {% if not request.args.get('type_oro') %}checked{% endif %} aria-label="Todos">
-                Todos
-              </label>
-              <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if request.args.get('type_oro') == '10k' %}active{% endif %}" data-group="type_oro">
-                <input type="radio" name="type_oro" value="10k" class="hidden" {% if request.args.get('type_oro') == '10k' %}checked{% endif %} aria-label="10k">
-                10k
-              </label>
-              <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if request.args.get('type_oro') == '14k' %}active{% endif %}" data-group="type_oro">
-                <input type="radio" name="type_oro" value="14k" class="hidden" {% if request.args.get('type_oro') == '14k' %}checked{% endif %} aria-label="14k">
-                14k
-              </label>
-            </div>
-          </div>
-          <!-- Género -->
-          <div>
-            <label class="block font-semibold mb-2">Género</label>
-            <div class="grid grid-cols-2 gap-2">
-              <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if not request.args.get('genero') %}active{% endif %}" data-group="genero">
-                <input type="radio" name="genero" value="" class="hidden" {% if not request.args.get('genero') %}checked{% endif %} aria-label="Todos">
-                Todos
-              </label>
-              <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if request.args.get('genero') == 'Hombre' %}active{% endif %}" data-group="genero">
-                <input type="radio" name="genero" value="Hombre" class="hidden" {% if request.args.get('genero') == 'Hombre' %}checked{% endif %} aria-label="Hombre">
-                Hombre
-              </label>
-              <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if request.args.get('genero') == 'Mujer' %}active{% endif %}" data-group="genero">
-                <input type="radio" name="genero" value="Mujer" class="hidden" {% if request.args.get('genero') == 'Mujer' %}checked{% endif %} aria-label="Mujer">
-                Mujer
-              </label>
-              <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if request.args.get('genero') == 'Unisex' %}active{% endif %}" data-group="genero">
-                <input type="radio" name="genero" value="Unisex" class="hidden" {% if request.args.get('genero') == 'Unisex' %}checked{% endif %} aria-label="Unisex">
-                Unisex
-              </label>
-            </div>
-          </div>
-          <!-- Rango de Precios -->
-          <div>
-            <label class="block font-semibold mb-2">Rango de Precios</label>
-            <div class="flex flex-col sm:flex-row gap-4 items-center">
-              <div class="flex-1">
-                <label class="block text-sm mb-1">Mínimo</label>
-                <input type="range" name="price_min" min="0" max="250000" value="{{ request.args.get('price_min', 0) }}" class="slider w-full" id="priceMin" aria-label="Precio mínimo">
-                <div class="mt-1 flex items-center gap-2">
-                  <span class="text-sm">Valor:</span>
-                  <input type="number" id="priceMinNumber" class="price-input" value="{{ request.args.get('price_min', 0) }}" min="0" max="250000">
-                </div>
-              </div>
-              <div class="flex-1">
-                <label class="block text-sm mb-1">Máximo</label>
-                <input type="range" name="price_max" min="0" max="250000" value="{{ request.args.get('price_max', 250000) }}" class="slider w-full" id="priceMax" aria-label="Precio máximo">
-                <div class="mt-1 flex items-center gap-2">
-                  <span class="text-sm">Valor:</span>
-                  <input type="number" id="priceMaxNumber" class="price-input" value="{{ request.args.get('price_max', 250000) }}" min="0" max="250000">
-                </div>
-              </div>
-            </div>
-            <p id="priceError" class="text-sm text-red-500 mt-1 hidden">El precio máximo debe ser mayor o igual al mínimo.</p>
-          </div>
-          <!-- Botones para aplicar y resetear filtros -->
-          <div class="flex gap-4">
-            <button type="submit" class="bg-[#d5a300] text-white w-full py-2 rounded hover:bg-[#b38f00] transition-colors focus:outline-none focus:ring-2 focus:ring-[#d5a300]">
-              Aplicar
-            </button>
-            <button type="reset" id="reset-filters" class="bg-gray-300 text-gray-800 w-full py-2 rounded hover:bg-gray-400 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400">
-              Resetear
-            </button>
-          </div>
-        </form>
-      </aside>
-      
-      <!-- Sección de Productos -->
-      <section id="products-section" class="flex-1 border border-gray-200 rounded-md p-6 bg-white">
-        <h1 class="text-3xl md:text-4xl font-bold text-[#333333] mb-8 font-playfair">Colección de Joyas</h1>
-        +  <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-    <button id="toggle-filters"
-      aria-expanded="false"
-      class="border border-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-[#d5a300]">
-      <i class="fas fa-sliders-h mr-2"></i> Mostrar filtros
-    </button>
-    <div class="flex items-center">
-      <label for="sort" class="mr-2 font-semibold text-gray-700">Ordenar por:</label>
-      <select id="sort" name="sort"
-        class="border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[#d5a300]">
-        <option value="precio_desc" {% if request.args.get('sort') == 'precio_desc' or not request.args.get('sort') %}selected{% endif %}>Precio: Mayor a Menor</option>
-        <option value="precio_asc" {% if request.args.get('sort') == 'precio_asc' %}selected{% endif %}>Precio: Menor a Mayor</option>
-        <option value="novedades" {% if request.args.get('sort') == 'novedades' %}selected{% endif %}>Más recientes</option>
-        <option value="nombre_asc" {% if request.args.get('sort') == 'nombre_asc' %}selected{% endif %}>Nombre: A-Z</option>
-        <option value="nombre_desc" {% if request.args.get('sort') == 'nombre_desc' %}selected{% endif %}>Nombre: Z-A</option>
-      </select>
-    </div>
+  <!-- Spinner oculto por defecto -->
+  <div id="loading-spinner">
+    <i class="fas fa-spinner fa-pulse fa-2x text-gray-500"></i>
   </div>
-              <!-- Aquí se renderizan los productos -->
-              <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
-          <!-- Los productos se cargarán dinámicamente -->
+
+  <div id="main-container" class="flex flex-col md:flex-row gap-8">
+    <!-- Panel de Filtros (oculto inicialmente) -->
+    <aside id="filters-panel" class="filters-panel hidden border border-gray-200 rounded-md p-6 sidebar-sticky bg-white transition-all duration-300 ease-in-out">
+      <h3 class="text-lg font-semibold mb-4">Filtrar por</h3>
+      <form id="filters-form" action="" method="GET" class="space-y-6" aria-label="Formulario de filtros">
+        <!-- Categoría -->
+        <div>
+          <label class="block font-semibold mb-2">Categoría</label>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if not request.args.get('category') %}active{% endif %}" data-group="category">
+              <input type="radio" name="category" value="" class="hidden" {% if not request.args.get('category') %}checked{% endif %} aria-label="Todas">
+              Todas
+            </label>
+            <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if request.args.get('category') == 'anillos' %}active{% endif %}" data-group="category">
+              <input type="radio" name="category" value="anillos" class="hidden" {% if request.args.get('category') == 'anillos' %}checked{% endif %} aria-label="Anillos">
+              Anillos
+            </label>
+            <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if request.args.get('category') == 'aretes' %}active{% endif %}" data-group="category">
+              <input type="radio" name="category" value="aretes" class="hidden" {% if request.args.get('category') == 'aretes' %}checked{% endif %} aria-label="Aretes">
+              Aretes
+            </label>
+            <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if request.args.get('category') == 'pulsos' %}active{% endif %}" data-group="category">
+              <input type="radio" name="category" value="pulsos" class="hidden" {% if request.args.get('category') == 'pulsos' %}checked{% endif %} aria-label="Pulsos">
+              Pulsos
+            </label>
+            <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if request.args.get('category') == 'cadenas' %}active{% endif %}" data-group="category">
+              <input type="radio" name="category" value="cadenas" class="hidden" {% if request.args.get('category') == 'cadenas' %}checked{% endif %} aria-label="Cadenas">
+              Cadenas
+            </label>
+            <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if request.args.get('category') == 'dijes' %}active{% endif %}" data-group="category">
+              <input type="radio" name="category" value="dijes" class="hidden" {% if request.args.get('category') == 'dijes' %}checked{% endif %} aria-label="Dijes">
+              Dijes
+            </label>
+          </div>
         </div>
-      </section>
-    </div>
+
+        <!-- Tipo de Oro -->
+        <div>
+          <label class="block font-semibold mb-2">Tipo de Oro</label>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if not request.args.get('type_oro') %}active{% endif %}" data-group="type_oro">
+              <input type="radio" name="type_oro" value="" class="hidden" {% if not request.args.get('type_oro') %}checked{% endif %} aria-label="Todos">
+              Todos
+            </label>
+            <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if request.args.get('type_oro') == '10k' %}active{% endif %}" data-group="type_oro">
+              <input type="radio" name="type_oro" value="10k" class="hidden" {% if request.args.get('type_oro') == '10k' %}checked{% endif %} aria-label="10k">
+              10k
+            </label>
+            <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if request.args.get('type_oro') == '14k' %}active{% endif %}" data-group="type_oro">
+              <input type="radio" name="type_oro" value="14k" class="hidden" {% if request.args.get('type_oro') == '14k' %}checked{% endif %} aria-label="14k">
+              14k
+            </label>
+          </div>
+        </div>
+
+        <!-- Género -->
+        <div>
+          <label class="block font-semibold mb-2">Género</label>
+          <div class="grid grid-cols-2 gap-2">
+            <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if not request.args.get('genero') %}active{% endif %}" data-group="genero">
+              <input type="radio" name="genero" value="" class="hidden" {% if not request.args.get('genero') %}checked{% endif %} aria-label="Todos">
+              Todos
+            </label>
+            <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if request.args.get('genero') == 'Hombre' %}active{% endif %}" data-group="genero">
+              <input type="radio" name="genero" value="Hombre" class="hidden" {% if request.args.get('genero') == 'Hombre' %}checked{% endif %} aria-label="Hombre">
+              Hombre
+            </label>
+            <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if request.args.get('genero') == 'Mujer' %}active{% endif %}" data-group="genero">
+              <input type="radio" name="genero" value="Mujer" class="hidden" {% if request.args.get('genero') == 'Mujer' %}checked{% endif %} aria-label="Mujer">
+              Mujer
+            </label>
+            <label class="chip-label cursor-pointer transition-transform duration-200 transform hover:scale-105 {% if request.args.get('genero') == 'Unisex' %}active{% endif %}" data-group="genero">
+              <input type="radio" name="genero" value="Unisex" class="hidden" {% if request.args.get('genero') == 'Unisex' %}checked{% endif %} aria-label="Unisex">
+              Unisex
+            </label>
+          </div>
+        </div>
+
+        <!-- Rango de Precios -->
+        <div>
+          <label class="block font-semibold mb-2">Rango de Precios</label>
+          <div class="flex flex-col sm:flex-row gap-4 items-center">
+            <div class="flex-1">
+              <label class="block text-sm mb-1">Mínimo</label>
+              <input type="range" name="price_min" min="0" max="250000" value="{{ request.args.get('price_min', 0) }}" class="slider w-full" id="priceMin" aria-label="Precio mínimo">
+              <div class="mt-1 flex items-center gap-2">
+                <span class="text-sm">Valor:</span>
+                <input type="number" id="priceMinNumber" class="price-input" value="{{ request.args.get('price_min', 0) }}" min="0" max="250000">
+              </div>
+            </div>
+            <div class="flex-1">
+              <label class="block text-sm mb-1">Máximo</label>
+              <input type="range" name="price_max" min="0" max="250000" value="{{ request.args.get('price_max', 250000) }}" class="slider w-full" id="priceMax" aria-label="Precio máximo">
+              <div class="mt-1 flex items-center gap-2">
+                <span class="text-sm">Valor:</span>
+                <input type="number" id="priceMaxNumber" class="price-input" value="{{ request.args.get('price_max', 250000) }}" min="0" max="250000">
+              </div>
+            </div>
+          </div>
+          <p id="priceError" class="text-sm text-red-500 mt-1 hidden">El precio máximo debe ser mayor o igual al mínimo.</p>
+        </div>
+
+        <!-- Botones -->
+        <div class="flex gap-4">
+          <button type="submit" class="bg-[#d5a300] text-white w-full py-2 rounded hover:bg-[#b38f00] transition-colors focus:outline-none focus:ring-2 focus:ring-[#d5a300]">
+            Aplicar
+          </button>
+          <button type="reset" id="reset-filters" class="bg-gray-300 text-gray-800 w-full py-2 rounded hover:bg-gray-400 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400">
+            Resetear
+          </button>
+        </div>
+      </form>
+    </aside>
+    
+    <!-- Sección de Productos -->
+    <section id="products-section" class="flex-1 border border-gray-200 rounded-md p-6 bg-white">
+      <h1 class="text-3xl md:text-4xl font-bold text-[#333333] mb-8 font-playfair">Colección de Joyas</h1>
+
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+        <button id="toggle-filters"
+          aria-expanded="false"
+          class="border border-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-[#d5a300]">
+          <i class="fas fa-sliders-h mr-2"></i> Mostrar filtros
+        </button>
+        <div class="flex items-center">
+          <label for="sort" class="mr-2 font-semibold text-gray-700">Ordenar por:</label>
+          <select id="sort" name="sort"
+            class="border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[#d5a300]">
+            <option value="precio_desc" {% if request.args.get('sort') == 'precio_desc' or not request.args.get('sort') %}selected{% endif %}>Precio: Mayor a Menor</option>
+            <option value="precio_asc" {% if request.args.get('sort') == 'precio_asc' %}selected{% endif %}>Precio: Menor a Mayor</option>
+            <option value="novedades" {% if request.args.get('sort') == 'novedades' %}selected{% endif %}>Más recientes</option>
+            <option value="nombre_asc" {% if request.args.get('sort') == 'nombre_asc' %}selected{% endif %}>Nombre: A-Z</option>
+            <option value="nombre_desc" {% if request.args.get('sort') == 'nombre_desc' %}selected{% endif %}>Nombre: Z-A</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Aquí se renderizan los productos -->
+      <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
+        <!-- Los productos se cargarán dinámicamente -->
+      </div>
+    </section>
+  </div>
   </div>
 </main>
 
@@ -284,49 +292,55 @@
   document.addEventListener("DOMContentLoaded", async function(){
     console.log("DEBUG: DOM fully loaded, starting initialization for collection.html...");
     AOS.init();
-    console.log("DEBUG: AOS initialized in collection.html.");
 
-    // Funciones para mostrar/ocultar spinner
+    // Spinner helpers
     function showSpinner() {
       const spinner = document.getElementById('loading-spinner');
-      if (spinner) { spinner.style.display = 'block'; }
+      if (spinner) spinner.style.display = 'block';
     }
     function hideSpinner() {
       const spinner = document.getElementById('loading-spinner');
-      if (spinner) { spinner.style.display = 'none'; }
+      if (spinner) spinner.style.display = 'none';
     }
 
     try {
       const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm");
       const SUPABASE_URL = "{{ config['SUPABASE_URL'] }}";
       const SUPABASE_KEY = "{{ config['SUPABASE_KEY'] }}";
-      console.log("DEBUG: Initializing Supabase with URL:", SUPABASE_URL);
       const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
-      console.log("DEBUG: Supabase initialized in collection.html:", supabaseClient);
 
       const urlParams = new URLSearchParams(window.location.search);
-      const category = urlParams.get('category') || '';
-      const type_oro = urlParams.get('type_oro') || '';
-      const genero = urlParams.get('genero') || '';
-      const price_min = urlParams.get('price_min') || 0;
-      const price_max = urlParams.get('price_max') || 250000;
-      const search = urlParams.get('search') || '';
-      const sort = urlParams.get('sort') || 'precio_desc';
+      const category  = urlParams.get('category')   || '';
+      const type_oro  = urlParams.get('type_oro')   || '';
+      const genero    = urlParams.get('genero')     || '';
+      const price_min = urlParams.get('price_min')  || 0;
+      const price_max = urlParams.get('price_max')  || 250000;
+      const search    = urlParams.get('search')     || '';
+      const sort      = urlParams.get('sort')       || 'precio_desc'; // visible, pero el orden efectivo es ofertas→resto
 
-      console.log("DEBUG: Filter parameters:", { category, type_oro, genero, price_min, price_max, search, sort });
+      // Helpers
+      const hasOffer = (p) =>
+        Number(p.descuento_pct) > 0 &&
+        Number(p.precio_descuento) > 0 &&
+        Number(p.precio) > 0 &&
+        Number(p.precio_descuento) < Number(p.precio);
+
+      const mxn = (n) => Number(n).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
 
       loadProducts = async function(){
         showSpinner();
+
         let query = supabaseClient
           .from('products')
-         .select(`
-           id, nombre, descripcion, precio, descuento_pct, precio_descuento, tipo_producto, genero, tipo_oro, imagen, stock_total, created_at,
-           product_images ( imagen, orden )
-         `)
+          .select(`
+            id, nombre, descripcion, precio, descuento_pct, precio_descuento, tipo_producto,
+            genero, tipo_oro, imagen, stock_total, created_at,
+            product_images ( imagen, orden )
+          `)
           .gte('precio', parseInt(price_min))
           .lte('precio', parseInt(price_max));
 
-          const mapCategoria = {
+        const mapCategoria = {
           anillos: 'Anillos',
           aretes:  'Aretes',
           cadenas: 'Cadenas',
@@ -334,139 +348,152 @@
           dijes:   'Dijes'
         };
 
-// y dejas todo el HTML tal cual
-if (category) {
-  query = query.eq('tipo_producto', mapCategoria[category] || category);
-}
+        if (category) {
+          query = query.eq('tipo_producto', mapCategoria[category] || category);
+        }
         if (type_oro) {
           query = query.eq('tipo_oro', type_oro);
-          console.log("DEBUG: Filtering by type of gold:", type_oro);
         }
         if (genero) {
-      if (genero !== 'Unisex') {
-        // Para Hombre o Mujer mostramos también productos Unisex
-        query = query.in('genero', [genero, 'Unisex']);
-      } else {
-        // Para Unisex mantenemos el filtro directo
-        query = query.eq('genero', 'Unisex');
-      }
-      console.log('DEBUG: Filtering by gender w/ unisex:', genero);
-    }
-        console.log("DEBUG: Filtering by price range:", price_min, price_max);
+          if (genero !== 'Unisex') {
+            // Para Hombre o Mujer mostramos también productos Unisex
+            query = query.in('genero', [genero, 'Unisex']);
+          } else {
+            // Para Unisex mantenemos el filtro directo
+            query = query.eq('genero', 'Unisex');
+          }
+        }
 
         const { data: products, error } = await query;
         if (error) {
           console.error("DEBUG: Error loading products from Supabase:", error);
+          hideSpinner();
           return;
         }
-        console.log("DEBUG: Products loaded:", products);
 
+        // Búsqueda en cliente
         let filteredProducts = products;
         if (search) {
+          const needle = search.toLowerCase();
           filteredProducts = products.filter(product => {
-            const combinedText = (product.nombre + ' ' + product.descripcion).toLowerCase();
-            return combinedText.includes(search.toLowerCase());
+            const combinedText = ((product.nombre || '') + ' ' + (product.descripcion || '')).toLowerCase();
+            return combinedText.includes(needle);
           });
-          console.log("DEBUG: Products filtered by search:", filteredProducts);
         }
 
-        if (sort === 'precio_asc') {
-        filteredProducts.sort((a, b) => parseFloat(a.precio) - parseFloat(b.precio));
-        console.log("DEBUG: Products sorted by ascending price");
-      } else if (sort === 'precio_desc') {
-        filteredProducts.sort((a, b) => parseFloat(b.precio) - parseFloat(a.precio));
-        console.log("DEBUG: Products sorted by descending price");
+        // === ORDEN SIEMPRE: Ofertas (asc por precio_descuento), luego Normales (asc por precio) ===
+        const ofertas = filteredProducts
+          .filter(p => hasOffer(p))
+          .sort((a, b) => Number(a.precio_descuento) - Number(b.precio_descuento));
 
-        } else if (sort === 'novedades') {
-          filteredProducts.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-          console.log("DEBUG: Products sorted by newest");
-        }
-        else if (sort === 'nombre_asc') {
-          filteredProducts.sort((a, b) => a.nombre.localeCompare(b.nombre));
-          console.log("DEBUG: Products sorted by name A-Z");
-        } else if (sort === 'nombre_desc') {
-          filteredProducts.sort((a, b) => b.nombre.localeCompare(a.nombre));
-          console.log("DEBUG: Products sorted by name Z-A");
-        }
+        const normales = filteredProducts
+          .filter(p => !hasOffer(p))
+          .sort((a, b) => Number(a.precio) - Number(b.precio));
 
-        console.log("DEBUG: Final products to render:", filteredProducts);
+        const ordered = [...ofertas, ...normales];
 
+        // === Render ===
         const productGrid = document.getElementById('product-grid');
-        if (productGrid) {
-          productGrid.innerHTML = "";
-          filteredProducts.forEach((product, index) => {
- const placeholder = '/static/images/placeholder.jpg';
- let mainImage = placeholder;
- let hoverImage = null;
-
- if (product.product_images && product.product_images.length > 0) {
-   const sorted = [...product.product_images].sort((a, b) => a.orden - b.orden);
-   mainImage = sorted[0]?.imagen || placeholder;
-   hoverImage = sorted.length > 1 ? sorted[1].imagen : null;
- } else if (product.imagen && product.imagen !== 'undefined') {
-   mainImage = product.imagen;
- }
-
- productGrid.innerHTML += `
-   <div class="relative bg-white p-5 rounded-lg shadow-md overflow-hidden group" data-aos="fade-up" data-aos-delay="${index * 50}">
-     ${product.descuento_pct > 0 ? `
-       <div class="discount-badge">En oferta ${product.descuento_pct}%</div>
-     ` : ``}
-     ${product.stock_total === 0 ? `
-       <div class="absolute top-2 left-2 bg-red-600 text-white px-2 py-1 rounded text-sm z-10">AGOTADO</div>
-     ` : ``}
-
-     <div class="relative w-full h-64 overflow-hidden">
-       <img src="${mainImage}" alt="${product.nombre}"
-            class="w-full h-full object-cover transition-opacity duration-300 ${hoverImage ? 'group-hover:opacity-0' : ''}">
-       ${hoverImage ? `
-         <img src="${hoverImage}" alt="${product.nombre} hover"
-              class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-       ` : ``}
-     </div>
-
-     <h3 class="text-xl font-semibold text-[#424242] mt-2">${product.nombre}</h3>
-
-     ${product.descuento_pct > 0 ? `
-       <p class="text-gray-500 line-through mt-1">$${product.precio}</p>
-       <p class="text-2xl font-bold text-red-600">$${product.precio_descuento}</p>
-     ` : `
-       <p class="text-2xl font-semibold text-gray-800 mt-2">$${product.precio}</p>
-     `}
-
-     <p class="text-sm text-gray-600 mt-1 leading-snug font-medium">Oro: ${product.tipo_oro} | Género: ${product.genero}</p>
-     <div class="mt-4">
-       <a href="/producto/${product.id}" class="btn-detalles"
-          onclick="fetch('/api/product-view/${product.id}', { method: 'POST' }).catch(console.error);">
-         Ver detalles
-       </a>
-     </div>
-   </div>
- `;
-          });
-          console.log("DEBUG: Products rendered in collection.html.");
-          AOS.refresh();
-          console.log("DEBUG: AOS refreshed after rendering products.");
-        } else {
-          console.error("DEBUG: Product grid container not found in collection.html.");
+        if (!productGrid) {
+          console.error("DEBUG: Product grid container not found.");
+          hideSpinner();
+          return;
         }
+
+        productGrid.innerHTML = "";
+
+        ordered.forEach((product, index) => {
+          const placeholder = '/static/images/placeholder.jpg';
+          let mainImage = placeholder, hoverImage = null;
+
+          if (product.product_images && product.product_images.length > 0) {
+            const sorted = [...product.product_images].sort((a, b) => a.orden - b.orden);
+            mainImage = sorted[0]?.imagen || placeholder;
+            hoverImage = sorted.length > 1 ? sorted[1].imagen : null;
+          } else if (product.imagen && product.imagen !== 'undefined') {
+            mainImage = product.imagen;
+          }
+
+          const oferta = hasOffer(product);
+          const ahorroAbs = oferta ? (Number(product.precio) - Number(product.precio_descuento)) : 0;
+
+          const stockBadge = Number(product.stock_total) === 0
+            ? `<div class="absolute top-2 left-2 bg-red-600 text-white px-2 py-1 rounded text-sm z-10">AGOTADO</div>`
+            : ``;
+
+          const lowStock = (Number(product.stock_total) > 0 && Number(product.stock_total) <= 3)
+            ? `<p class="mt-1 text-sm" style="color:#7A0019;font-weight:600;">🔥 ¡Últimas ${product.stock_total} piezas!</p>`
+            : ``;
+
+          productGrid.innerHTML += `
+            <div class="relative bg-white p-5 rounded-lg shadow-md overflow-hidden group product-card" data-aos="fade-up" data-aos-delay="${index * 50}">
+              ${oferta ? `
+                <span class="discount-badge" aria-label="Producto en oferta">
+                  OFERTA ${Number(product.descuento_pct)}%
+                </span>
+              ` : ``}
+              ${stockBadge}
+
+              <div class="relative w-full h-64 overflow-hidden">
+                <img src="${mainImage}" alt="${product.nombre}"
+                     class="w-full h-full object-cover transition-opacity duration-300 ${hoverImage ? 'group-hover:opacity-0' : ''}">
+                ${hoverImage ? `
+                  <img src="${hoverImage}" alt="${product.nombre} hover"
+                       class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                ` : ``}
+              </div>
+
+              <h3 class="text-xl font-semibold text-[#424242] mt-2">${product.nombre}</h3>
+
+              ${oferta ? `
+                <p class="text-gray-500 line-through mt-1">${mxn(product.precio)}</p>
+                <div class="flex items-baseline gap-2">
+                  <p class="text-2xl font-bold text-red-600">${mxn(product.precio_descuento)}</p>
+                  <span class="offer-chip chip-emi" aria-label="Meses sin intereses">3 y 6 MSI</span>
+                </div>
+                <p class="text-sm ahorro-text mt-1">
+                  Ahorras ${mxn(ahorroAbs)} (${Number(product.descuento_pct)}%) ·
+                  <span class="offer-chip chip-time">Oferta limitada</span>
+                </p>
+              ` : `
+                <p class="text-2xl font-semibold text-gray-800 mt-2">${mxn(product.precio)}</p>
+              `}
+
+              ${lowStock}
+
+              <p class="text-sm text-gray-600 mt-1 leading-snug font-medium">Oro: ${product.tipo_oro} | Género: ${product.genero}</p>
+              <div class="mt-4">
+                <a href="/producto/${product.id}" class="btn-detalles ${oferta ? 'cta-offer' : ''}"
+                   onclick="fetch('/api/product-view/${product.id}', { method: 'POST' }).catch(console.error);">
+                  ${oferta ? 'Comprar ahora • 3 y 6 MSI' : 'Ver detalles'}
+                </a>
+              </div>
+            </div>
+          `;
+        });
+
+        AOS.refresh();
         hideSpinner();
       };
 
+      // Carga inicial
       loadProducts();
 
+      // Filtros reactivan la carga
       document.querySelectorAll('#filters-form input').forEach(input => {
         input.addEventListener('change', () => {
           console.log("DEBUG: Filter change detected, reloading products.");
           loadProducts();
         });
       });
+
+      // El selector visual "Ordenar por" permanece, pero el orden efectivo es ofertas→resto
       const sortSelect = document.getElementById('sort');
       if (sortSelect) {
         sortSelect.addEventListener('change', () => {
           const currentUrl = new URL(window.location.href);
           currentUrl.searchParams.set('sort', sortSelect.value);
-          window.location.href = currentUrl.toString(); // recarga con nuevo orden
+          window.location.href = currentUrl.toString(); // recarga con nuevo valor (no afecta el orden global ofertas→resto)
         });
       }
     } catch (err) {
@@ -569,8 +596,7 @@ if (category) {
       }
     });
 
-    // Se removió el evento click anterior para "Agregar al Carrito"
-    // ya que ahora se utiliza un formulario que redirige a cart.html
+    // Cerrar modal
     const closeModalBtn = document.getElementById('close-modal');
     if (closeModalBtn) {
       closeModalBtn.addEventListener('click', () => {

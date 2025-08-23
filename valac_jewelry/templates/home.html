@@ -17,11 +17,11 @@
   .gender-card{
     position: relative; border-radius: 1rem; overflow: hidden;
     box-shadow: 0 10px 30px rgba(0,0,0,.12);
-    isolation:isolate; /* overlay por encima */
+    isolation:isolate;
   }
   .gender-card img{
     width:100%; height:100%; object-fit:cover; display:block;
-    aspect-ratio: 3/2; /* estable en móvil */
+    aspect-ratio: 3/2;
   }
   .gender-overlay{
     position:absolute; inset:0; display:flex; flex-direction:column; justify-content:flex-end;
@@ -30,8 +30,7 @@
   }
   .gender-cta{
     display:inline-block; margin-top:.5rem; padding:.6rem 1rem; font-weight:700; border-radius:.5rem;
-    background:#fff; color:#111; border:1px solid #eee;
-    transition:all .2s ease;
+    background:#fff; color:#111; border:1px solid #eee; transition:all .2s ease;
   }
   .gender-cta:hover{ background:#111; color:var(--lux-gold); border-color:#000; }
 
@@ -61,7 +60,7 @@
   #product-grid .text-gray-600{ color:var(--lux-muted) !important; }
   #product-grid .line-through{ color:#8B9097 !important; }
 
-  /* ---------- CATEGORÍAS QUICK NAV ---------- */
+  /* ---------- CATEGORÍAS QUICK NAV CON FONDO ---------- */
   .gender-toggle button{
     border:1px solid #e5e7eb; padding:.5rem .9rem; border-radius:.5rem; font-weight:600;
   }
@@ -74,6 +73,10 @@
     box-shadow: 0 6px 18px rgba(0,0,0,.06);
   }
   .cat-tile span{ font-weight:700; letter-spacing:.2px; }
+
+  /* Fondo con fade */
+  #cat-bg{ position:absolute; inset:0; background-size:cover; background-position:center; transition:opacity .35s ease; }
+  .opacity-0{ opacity:0 !important; }
 </style>
 {% endblock %}
 
@@ -116,9 +119,18 @@
     </div>
   </section>
 
-  {# ---------- ACCESOS RÁPIDOS POR CATEGORÍA + TOGGLE GÉNERO ---------- #}
-  <section class="py-8 sm:py-10 bg-white">
-    <div class="container mx-auto px-4">
+  {# ---------- ACCESOS RÁPIDOS POR CATEGORÍA + TOGGLE GÉNERO CON FONDO ---------- #}
+  <section
+    id="cat-section"
+    class="relative my-12 rounded-2xl overflow-hidden ring-1 ring-black/5 shadow-lg"
+    data-bg-mujer="{{ SUPABASE_STORAGE_URL }}bg-categorias-mujer.jpg"
+    data-bg-hombre="{{ SUPABASE_STORAGE_URL }}bg-categorias-hombre.jpg"
+  >
+    <!-- Fondo intercambiable + velo -->
+    <div id="cat-bg"></div>
+    <div class="absolute inset-0 bg-white/78 md:bg-white/70"></div>
+
+    <div class="relative z-10 container mx-auto px-4 py-6 md:py-8">
       <div class="flex items-center justify-between mb-4">
         <h3 class="text-xl sm:text-2xl font-semibold">Explora por categoría</h3>
         <div class="gender-toggle space-x-2">
@@ -135,6 +147,7 @@
         <a class="cat-tile flex-col" data-cat="dijes"    href="#"><span>Dijes</span></a>
         <a class="cat-tile flex-col" data-cat="pulsos"   href="#"><span>Pulsos</span></a>
       </div>
+
       <p class="text-sm text-gray-500 mt-2">* Unisex aparece en ambos.</p>
     </div>
   </section>
@@ -180,23 +193,42 @@
 
 {% block scripts_extra %}
 <script type="module">
-  // --------- Quick Categories: toggle género y construcción de links ---------
+  // --------- Helpers: construir links de categoría ---------
   const setCategoryLinks = (genero) => {
     document.querySelectorAll('#cats-grid a[data-cat]').forEach(a => {
       const cat = a.getAttribute('data-cat');
       a.href = `/collection?genero=${encodeURIComponent(genero)}&category=${encodeURIComponent(cat)}&mix_unisex=1&sort=novedades`;
     });
   };
+
+  // --------- Fondo por género (fade) + toggle ---------
+  const catSection = document.getElementById('cat-section');
+  const catBg      = document.getElementById('cat-bg');
+  const btns       = document.querySelectorAll('.gender-toggle button');
+
+  function setGeneroCategorias(gen){
+    // Links
+    setCategoryLinks(gen);
+    // Botones activos
+    btns.forEach(b => b.classList.toggle('active', b.dataset.gender === gen));
+    // Fondo (con pequeño fade)
+    const url = gen === 'Mujer' ? catSection.dataset.bgMujer : catSection.dataset.bgHombre;
+    catBg.classList.add('opacity-0');
+    setTimeout(() => {
+      catBg.style.backgroundImage = `url('${url}')`;
+      catBg.classList.remove('opacity-0');
+    }, 120);
+  }
+
   // Estado inicial
   let currentGender = 'Mujer';
-  setCategoryLinks(currentGender);
+  setGeneroCategorias(currentGender);
 
-  document.querySelectorAll('.gender-toggle button').forEach(btn => {
+  // Eventos
+  btns.forEach(btn => {
     btn.addEventListener('click', () => {
       currentGender = btn.dataset.gender;
-      document.querySelectorAll('.gender-toggle button').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      setCategoryLinks(currentGender);
+      setGeneroCategorias(currentGender);
     });
   });
 

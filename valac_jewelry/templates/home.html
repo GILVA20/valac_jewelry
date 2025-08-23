@@ -2,341 +2,282 @@
 
 {% block title %}VALAC Joyas{% endblock %}
 
-{# Si tu base.html tiene un bloque de head extra, aprovechamos para asegurar el viewport #}
 {% block head_extra %}
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<style>
+  :root{
+    --lux-gold:#D5A300; --lux-gold-600:#B38F00;
+    --lux-oxblood:#7A0019; --lux-oxblood-600:#5E0013;
+    --lux-text:#1F2937; --lux-muted:#6B7280; --lux-ivory:#FFFBF2;
+  }
+  /* Evitar scroll horizontal accidental */
+  html, body { overflow-x: hidden; }
+
+  /* ---------- GATEWAY GÉNERO ---------- */
+  .gender-card{
+    position: relative; border-radius: 1rem; overflow: hidden;
+    box-shadow: 0 10px 30px rgba(0,0,0,.12);
+    isolation:isolate; /* overlay por encima */
+  }
+  .gender-card img{
+    width:100%; height:100%; object-fit:cover; display:block;
+    aspect-ratio: 3/2; /* estable en móvil */
+  }
+  .gender-overlay{
+    position:absolute; inset:0; display:flex; flex-direction:column; justify-content:flex-end;
+    padding:1rem 1rem 1.25rem; background:linear-gradient(180deg, rgba(0,0,0,0) 30%, rgba(0,0,0,.55) 100%);
+    color:#fff; z-index:1;
+  }
+  .gender-cta{
+    display:inline-block; margin-top:.5rem; padding:.6rem 1rem; font-weight:700; border-radius:.5rem;
+    background:#fff; color:#111; border:1px solid #eee;
+    transition:all .2s ease;
+  }
+  .gender-cta:hover{ background:#111; color:var(--lux-gold); border-color:#000; }
+
+  /* ---------- BADGE OFERTA + CHIPS ---------- */
+  .discount-badge{
+    position:absolute; top:.5rem; right:.5rem; z-index:10;
+    background:var(--lux-oxblood); color:#fff; border:1px solid var(--lux-oxblood-600);
+    font-size:.75rem; font-weight:700; text-transform:uppercase;
+    padding:.25rem .75rem; border-radius:9999px; box-shadow:0 2px 10px rgba(122,0,25,.18);
+  }
+  .offer-chip{ font-size:.70rem; padding:.125rem .5rem; border-radius:9999px; display:inline-block; background:var(--lux-ivory); color:var(--lux-text); border:1px solid #E5D6A3; }
+  .chip-emi{ font-weight:700; color:var(--lux-gold-600); border-color:var(--lux-gold); }
+  .chip-time{ font-weight:700; color:var(--lux-oxblood); border-color:var(--lux-oxblood); }
+  .ahorro-text{ color:var(--lux-gold-600); font-weight:600; }
+
+  /* CTA oferta */
+  .cta-offer{
+    background:linear-gradient(90deg, var(--lux-gold) 0%, #FACC15 100%) !important;
+    color:#111 !important; font-weight:800; border:1px solid #E6B800 !important; border-radius:.5rem;
+    padding:.5rem 1rem; box-shadow:0 4px 12px rgba(213,163,0,.25); transition:all .25s ease-in-out;
+  }
+  .cta-offer:hover{ background:#111 !important; color:var(--lux-gold) !important; border-color:var(--lux-gold-600) !important; }
+
+  /* Tarjetas producto */
+  #product-grid .group:hover{ box-shadow:0 8px 24px rgba(31,41,55,0.08); }
+  #product-grid h3{ color:var(--lux-text); }
+  #product-grid .text-gray-600{ color:var(--lux-muted) !important; }
+  #product-grid .line-through{ color:#8B9097 !important; }
+
+  /* ---------- CATEGORÍAS QUICK NAV ---------- */
+  .gender-toggle button{
+    border:1px solid #e5e7eb; padding:.5rem .9rem; border-radius:.5rem; font-weight:600;
+  }
+  .gender-toggle button.active{
+    background:#111; color:var(--lux-gold); border-color:#000;
+  }
+  .cat-tile{
+    position:relative; border-radius:.75rem; overflow:hidden; background:#f7f7f7;
+    display:flex; align-items:center; justify-content:center; aspect-ratio: 5/4;
+    box-shadow: 0 6px 18px rgba(0,0,0,.06);
+  }
+  .cat-tile span{ font-weight:700; letter-spacing:.2px; }
+</style>
 {% endblock %}
 
 {% block content %}
+<main class="pt-24 md:pt-28 lg:pt-32">
 
-  {% set banner_images = [
-    {'filename': 'sapphire-ring.jpg', 'alt': 'Banner 1'},
-    {'filename': 'mangoldchain.jpg', 'alt': 'Banner 2'},
-    {'filename': 'jasmin-chew-UBeNYvk6ED0-unsplash.jpg', 'alt': 'Banner 3'}
-  ] %}
+  {# ---------- GATEWAY POR GÉNERO (sin slider) ---------- #}
+  <section class="container mx-auto px-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+      <a href="/collection?genero=Mujer&mix_unisex=1" class="gender-card group" aria-label="Entrar a Colección Mujer">
+        <img src="{{ SUPABASE_STORAGE_URL }}jasmin-chew-UBeNYvk6ED0-unsplash.jpg" alt="Colección Mujer">
+        <div class="gender-overlay">
+          <h2 class="text-2xl sm:text-3xl font-playfair drop-shadow">Colección Mujer</h2>
+          <p class="opacity-90">Anillos, cadenas, aretes, dijes y pulsos en oro 10k y 14k.</p>
+          <span class="gender-cta">Ver piezas</span>
+        </div>
+      </a>
 
-  <!-- Estilos: responsive + paleta VALAC -->
-  <style>
-    /* Evita “zoom out” por desbordes horizontales */
-    body { overflow-x: hidden; }
+      <a href="/collection?genero=Hombre&mix_unisex=1" class="gender-card group" aria-label="Entrar a Colección Hombre">
+        <img src="{{ SUPABASE_STORAGE_URL }}mangoldchain.jpg" alt="Colección Hombre">
+        <div class="gender-overlay">
+          <h2 class="text-2xl sm:text-3xl font-playfair drop-shadow">Colección Hombre</h2>
+          <p class="opacity-90">Cadenas, dijes, pulsos y más. Unisex incluido.</p>
+          <span class="gender-cta">Ver piezas</span>
+        </div>
+      </a>
+    </div>
+  </section>
 
-    /* Banner responsive */
-    .hero-wrap { width: 100%; max-width: 100vw; }
-    .hero-media { width: 100%; height: clamp(240px, 56vw, 640px); }
-    @supports (aspect-ratio: 16/9) {
-      .hero-media { aspect-ratio: 16/9; height: auto; }
-    }
-    .banner-slider { position: relative; overflow: hidden; }
-    .banner-slider img {
-      display: block;
-      width: 100%;
-      height: 100%;
-      max-width: 100%;
-      object-fit: cover;
-      object-position: center;
-      opacity: 0;
-      transition: opacity 0.4s ease-in-out;
-    }
-    .banner-slider img.loaded { opacity: 1; }
-
-    /* =================== PALETA VALAC · Ofertas =================== */
-    :root{
-      --lux-bg:#FAF8F4; --lux-surface:#FFFFFF; --lux-text:#1F2937; --lux-muted:#6B7280;
-      --lux-gold:#D5A300; --lux-gold-600:#B38F00;
-      --lux-oxblood:#7A0019; --lux-oxblood-600:#5E0013;
-      --lux-ivory:#FFFBF2;
-    }
-    #productos-destacados h2{ color:var(--lux-text); }
-    #product-grid h3{ color:var(--lux-text); }
-    #product-grid .text-gray-600{ color:var(--lux-muted) !important; }
-    #product-grid .line-through{ color:#8B9097 !important; }
-    #product-grid .text-amber-800{ color:var(--lux-gold-600) !important; }
-
-    .discount-badge{
-      position:absolute; top:0.5rem; right:0.5rem;
-      background:var(--lux-oxblood) !important; color:#fff !important;
-      border:1px solid var(--lux-oxblood-600) !important;
-      font-size:.75rem; font-weight:700; text-transform:uppercase;
-      padding:.25rem .75rem; border-radius:9999px; pointer-events:none; z-index:10;
-      box-shadow:0 2px 10px rgba(122,0,25,.18);
-    }
-    .offer-chip{
-      font-size:.70rem; padding:.125rem .5rem; border-radius:9999px; display:inline-block;
-      background:var(--lux-ivory); color:var(--lux-text); border:1px solid #E5D6A3;
-    }
-    .chip-emi{ font-weight:700; color:var(--lux-gold-600); border-color:var(--lux-gold); }
-    .chip-time{ font-weight:700; color:var(--lux-oxblood); border-color:var(--lux-oxblood); }
-    .ahorro-text{ color:var(--lux-gold-600); font-weight:600; }
-
-    .cta-offer{
-      background:linear-gradient(90deg, var(--lux-gold) 0%, #FACC15 100%) !important;
-      color:#111 !important; font-weight:800;
-      border:1px solid #E6B800 !important; border-radius:.5rem;
-      padding:.5rem 1rem; box-shadow:0 4px 12px rgba(213,163,0,.25);
-      transition:all .25s ease-in-out;
-    }
-    .cta-offer:hover, .cta-offer:focus{
-      background:#111 !important; color:var(--lux-gold) !important;
-      border-color:var(--lux-gold-600) !important;
-      box-shadow:0 6px 18px rgba(0,0,0,.30);
-    }
-    #product-grid a:not(.cta-offer).bg-gray-900{
-      background:#1F2937 !important; color:#FFFFFF !important;
-    }
-    #product-grid a:not(.cta-offer).bg-gray-900:hover{
-      background:#0B0B0B !important;
-    }
-    #product-grid .group:hover{ box-shadow:0 8px 24px rgba(31,41,55,0.08); }
-  </style>
-
-  <main class="pt-24 md:pt-28 lg:pt-32">
-
-    <!-- HERO / Banner -->
-    <section class="relative hero-wrap">
-      <div class="banner-slider hero-media rounded-none sm:rounded-lg">
-        {% for image in banner_images %}
-          <img
-            src="{{ SUPABASE_STORAGE_URL }}{{ image.filename }}"
-            alt="{{ image.alt }}"
-            loading="eager">
-        {% endfor %}
+  {# ---------- BLOQUE COMERCIAL: OFERTAS o NOVEDADES ---------- #}
+  <section id="productos-destacados" class="py-10 sm:py-12 bg-white">
+    <div class="container mx-auto px-4">
+      <h2 class="text-2xl sm:text-3xl font-semibold mb-6 sm:mb-8 text-center text-gray-800">Productos Destacados</h2>
+      <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8"></div>
+      <div class="mt-8 text-center">
+        <a href="/collection?sort=novedades" class="bg-yellow-500 text-white px-5 sm:px-6 py-3 rounded-lg text-lg sm:text-xl hover:bg-yellow-600 transition-colors inline-block">
+          Ver Colección Completa
+        </a>
       </div>
+    </div>
+  </section>
 
-      <!-- Texto sobre el banner -->
-      <div class="absolute inset-0 flex items-center justify-center px-4">
-        <div class="text-center text-white bg-black/45 px-6 py-5 sm:px-8 sm:py-6 rounded-lg max-w-[980px] w-full">
-          <h1 class="text-3xl sm:text-4xl md:text-5xl font-playfair">VALAC Joyas</h1>
-          <p class="mt-3 sm:mt-4 text-lg sm:text-xl md:text-2xl">Joyas que cuentan tu historia</p>
-          <p class="mt-2 text-base sm:text-lg md:text-xl">Oro auténtico en 10k y 14k para mujeres y hombres que marcan su propio camino.</p>
+  {# ---------- ACCESOS RÁPIDOS POR CATEGORÍA + TOGGLE GÉNERO ---------- #}
+  <section class="py-8 sm:py-10 bg-white">
+    <div class="container mx-auto px-4">
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-xl sm:text-2xl font-semibold">Explora por categoría</h3>
+        <div class="gender-toggle space-x-2">
+          <button type="button" data-gender="Mujer" class="active">Mujer</button>
+          <button type="button" data-gender="Hombre">Hombre</button>
         </div>
       </div>
-    </section>
 
-    <!-- Productos (Ofertas primero) -->
-    <section id="productos-destacados" class="py-10 sm:py-12 bg-white">
-      <div class="container mx-auto px-4">
-        <h2 class="text-2xl sm:text-3xl font-semibold mb-6 sm:mb-8 text-center text-gray-800" data-aos="fade-up" data-aos-duration="1000">
-          Productos Destacados
-        </h2>
-        <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8"></div>
-        <div class="mt-8 text-center">
-          <a href="/collection" class="bg-yellow-500 text-white px-5 sm:px-6 py-3 rounded-lg text-lg sm:text-xl hover:bg-yellow-600 transition-colors inline-block">
-            Ver Colección Completa
-          </a>
+      <div id="cats-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+        {# Tiles con href dinámico por JS #}
+        <a class="cat-tile flex-col" data-cat="aretes"   href="#"><span>Aretes</span></a>
+        <a class="cat-tile flex-col" data-cat="cadenas"  href="#"><span>Cadenas</span></a>
+        <a class="cat-tile flex-col" data-cat="anillos"  href="#"><span>Anillos</span></a>
+        <a class="cat-tile flex-col" data-cat="dijes"    href="#"><span>Dijes</span></a>
+        <a class="cat-tile flex-col" data-cat="pulsos"   href="#"><span>Pulsos</span></a>
+      </div>
+      <p class="text-sm text-gray-500 mt-2">* Unisex aparece en ambos.</p>
+    </div>
+  </section>
+
+  {# ---------- NUESTRA HISTORIA (ligero) ---------- #}
+  <section class="py-10 sm:py-12 bg-white text-gray-800">
+    <div class="container mx-auto px-4 flex flex-col md:flex-row items-center gap-6 md:gap-8">
+      <div class="md:w-1/2" data-aos="fade-right" data-aos-duration="1000">
+        <img src="{{ SUPABASE_STORAGE_URL }}our-story.jpg" alt="Nuestra Historia" class="rounded-lg shadow-lg w-full h-auto object-cover">
+      </div>
+      <div class="md:w-1/2 md:pl-2" data-aos="fade-left" data-aos-duration="1000">
+        <h2 class="text-2xl sm:text-3xl font-semibold mb-4 sm:mb-6">Nuestra Historia</h2>
+        <p class="text-base sm:text-lg leading-relaxed">
+          En VALAC Joyas, la tradición y la pasión por el oro se transmiten de generación en generación.
+          Cada pieza es el reflejo de compromiso, calidad y elegancia.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  {# ---------- RESEÑAS (estático, ligero) ---------- #}
+  <section class="bg-white pb-12">
+    <div class="container mx-auto px-4">
+      <h2 class="text-2xl sm:text-3xl font-semibold mb-6 sm:mb-8 text-gray-800 text-center">Reseñas de Clientes</h2>
+      <div class="grid sm:grid-cols-3 gap-4">
+        <div class="bg-white p-5 rounded-lg shadow text-center">
+          <p>"Estoy encantada con mi compra en VALAC Joyas. La calidad es insuperable y el servicio excepcional."</p>
+          <p class="mt-2 font-semibold">- Joss G.</p>
+        </div>
+        <div class="bg-white p-5 rounded-lg shadow text-center">
+          <p>"Piezas hermosas y entrega rápida. Definitivamente volveré a comprar."</p>
+          <p class="mt-2 font-semibold">- Daniel O.</p>
+        </div>
+        <div class="bg-white p-5 rounded-lg shadow text-center">
+          <p>"La elegancia y el detalle en cada pieza son impresionantes. ¡Lo recomiendo!"</p>
+          <p class="mt-2 font-semibold">- Marco M.</p>
         </div>
       </div>
-    </section>
-
-    <!-- Nuestra historia -->
-    <section class="py-10 sm:py-12 bg-white text-gray-800">
-      <div class="container mx-auto px-4 flex flex-col md:flex-row items-center gap-6 md:gap-8">
-        <div class="md:w-1/2" data-aos="fade-right" data-aos-duration="1000">
-          <img src="{{ SUPABASE_STORAGE_URL }}our-story.jpg" alt="Nuestra Historia" class="rounded-lg shadow-lg w-full h-auto object-cover">
-        </div>
-        <div class="md:w-1/2 md:pl-2" data-aos="fade-left" data-aos-duration="1000">
-          <h2 class="text-2xl sm:text-3xl font-semibold mb-4 sm:mb-6">Nuestra Historia</h2>
-          <p class="text-base sm:text-lg leading-relaxed">
-            En VALAC Joyas, la tradición y la pasión por el oro se transmiten de generación en generación.
-            Con una sólida herencia familiar, cada pieza es el reflejo de compromiso, calidad y elegancia.
-          </p>
-        </div>
-      </div>
-    </section>
-
-    <!-- Reseñas -->
-    <section class="bg-white py-10 sm:py-12">
-      <div class="container mx-auto px-4 text-center">
-        <h2 class="text-2xl sm:text-3xl font-semibold mb-6 sm:mb-8 text-gray-800" data-aos="fade-up" data-aos-duration="1000">
-          Reseñas de Clientes
-        </h2>
-        <div class="review-slider">
-          <div class="bg-white p-5 rounded-lg shadow-lg w-64 mx-4" data-aos="fade-up" data-aos-duration="1000">
-            <p>"Estoy encantada con mi compra en VALAC Joyas. La calidad es insuperable y el servicio excepcional."</p>
-            <p class="mt-2 font-semibold">- Joss G.</p>
-          </div>
-          <div class="bg-white p-5 rounded-lg shadow-lg w-64 mx-4" data-aos="fade-up" data-aos-duration="1200">
-            <p>"Piezas hermosas y entrega rápida. Definitivamente volveré a comprar."</p>
-            <p class="mt-2 font-semibold">- Daniel O.</p>
-          </div>
-          <div class="bg-white p-5 rounded-lg shadow-lg w-64 mx-4" data-aos="fade-up" data-aos-duration="1400">
-            <p>"La elegancia y el detalle en cada pieza son realmente impresionantes. ¡Lo recomiendo encarecidamente!"</p>
-            <p class="mt-2 font-semibold">- Marco M.</p>
-          </div>
-        </div>
-      </div>
-    </section>
-  </main>
+    </div>
+  </section>
+</main>
 {% endblock %}
 
 {% block scripts_extra %}
-  <script type="module">
-    const $ = window.jQuery;
-    document.addEventListener("DOMContentLoaded", async function(){
-      console.log("DEBUG: DOM fully loaded, starting initialization in home.html...");
+<script type="module">
+  // --------- Quick Categories: toggle género y construcción de links ---------
+  const setCategoryLinks = (genero) => {
+    document.querySelectorAll('#cats-grid a[data-cat]').forEach(a => {
+      const cat = a.getAttribute('data-cat');
+      a.href = `/collection?genero=${encodeURIComponent(genero)}&category=${encodeURIComponent(cat)}&mix_unisex=1&sort=novedades`;
+    });
+  };
+  // Estado inicial
+  let currentGender = 'Mujer';
+  setCategoryLinks(currentGender);
 
-      // Carga progresiva del banner (sin forzar alturas ni romper viewport)
-      const bannerImages = document.querySelectorAll('.banner-slider img');
-      bannerImages.forEach(img => {
-        const onLoad = () => img.classList.add('loaded');
-        if (img.complete) onLoad(); else img.addEventListener('load', onLoad);
+  document.querySelectorAll('.gender-toggle button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentGender = btn.dataset.gender;
+      document.querySelectorAll('.gender-toggle button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      setCategoryLinks(currentGender);
+    });
+  });
+
+  // --------- Carga dinámica de productos: Ofertas -> Novedades ----------
+  document.addEventListener("DOMContentLoaded", async function(){
+    try{
+      const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm");
+      const supabaseClient = createClient("{{ config['SUPABASE_URL'] }}", "{{ config['SUPABASE_KEY'] }}");
+
+      const { data: products, error } = await supabaseClient
+        .from('products')
+        .select(`
+          id, nombre, descripcion, precio, descuento_pct, precio_descuento,
+          tipo_producto, genero, tipo_oro, imagen, created_at, stock_total,
+          product_images ( imagen, orden )
+        `);
+
+      if (error) { console.error(error); return; }
+
+      const hasOffer = (p) => Number(p.descuento_pct) > 0 && Number(p.precio_descuento) > 0 && Number(p.precio_descuento) < Number(p.precio);
+      const effectivePrice = (p) => hasOffer(p) ? Number(p.precio_descuento) : Number(p.precio);
+      const mxn = (n) => Number(n).toLocaleString('es-MX',{style:'currency',currency:'MXN'});
+
+      const ofertas = products.filter(p => hasOffer(p) && Number(p.stock_total) > 0).sort((a,b)=> effectivePrice(a)-effectivePrice(b));
+      const novedades = products.filter(p => !hasOffer(p) && Number(p.stock_total) > 0).sort((a,b)=> new Date(b.created_at)-new Date(a.created_at));
+
+      const titulo = document.querySelector('#productos-destacados h2');
+      const lista = (ofertas.length ? (titulo.textContent='Ofertas', ofertas) : (titulo.textContent='Novedades', novedades)).slice(0,6);
+
+      const grid = document.getElementById('product-grid');
+      grid.innerHTML = '';
+      const placeholder = "{{ config['SUPABASE_STORAGE_URL'] }}placeholder.jpg";
+
+      lista.forEach((product, i) => {
+        let mainImage = placeholder, hoverImage = null;
+        if (product.product_images?.length){
+          const sorted = [...product.product_images].sort((a,b)=> a.orden-b.orden);
+          mainImage = sorted[0]?.imagen || placeholder;
+          hoverImage = sorted[1]?.imagen || null;
+        } else if (product.imagen && product.imagen!=='undefined'){ mainImage = product.imagen; }
+
+        const ahorroAbs = hasOffer(product) ? (Number(product.precio)-Number(product.precio_descuento)) : 0;
+        const lowStock  = Number(product.stock_total) <= 3 ? `<p class="mt-1 text-sm" style="color: var(--lux-oxblood); font-weight:600;">🔥 ¡Últimas ${product.stock_total} piezas!</p>` : ``;
+
+        grid.innerHTML += `
+          <div class="relative bg-white p-5 rounded-lg shadow-md overflow-hidden group" data-aos="fade-up" data-aos-delay="${i*50}">
+            ${hasOffer(product)?`<span class="discount-badge">OFERTA ${Number(product.descuento_pct)}%</span>`:''}
+            <div class="relative w-full h-64 overflow-hidden">
+              <img src="${mainImage}" alt="${product.nombre}" loading="lazy"
+                class="w-full h-full object-cover transition-opacity duration-300 ${hoverImage?'group-hover:opacity-0':''}">
+              ${hoverImage?`<img src="${hoverImage}" alt="${product.nombre} hover" loading="lazy"
+                class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-300 group-hover:opacity-100">`:''}
+            </div>
+            <h3 class="text-xl font-semibold mt-4">${product.nombre}</h3>
+            ${hasOffer(product)?`
+              <p class="text-gray-500 line-through mt-2">${mxn(product.precio)}</p>
+              <div class="flex items-baseline gap-2">
+                <p class="text-2xl font-semibold text-amber-800 mt-0.5">${mxn(product.precio_descuento)}</p>
+                <span class="offer-chip chip-emi">3 y 6 MSI</span>
+              </div>
+              <p class="text-sm ahorro-text mt-1">Ahorras ${mxn(ahorroAbs)} (${Number(product.descuento_pct)}%) • <span class="offer-chip chip-time">Oferta limitada</span></p>
+            `:`
+              <p class="text-2xl font-semibold text-gray-800 mt-2">${mxn(product.precio)}</p>
+            `}
+            ${lowStock}
+            <p class="text-gray-600 mt-1 text-sm">Oro: ${product.tipo_oro} | Género: ${product.genero}</p>
+            <a href="/producto/${product.id}" class="mt-4 inline-block px-4 py-2 rounded transition-colors ${hasOffer(product)?'cta-offer':'bg-gray-900 text-white hover:bg-black'}">
+              ${hasOffer(product)?'Comprar ahora • 3 y 6 MSI':'Ver detalles'}
+            </a>
+          </div>`;
       });
 
-      // Slick sliders
-      if (typeof $ !== "undefined" && $.fn.slick) {
-        $('.banner-slider').slick({
-          autoplay: true, autoplaySpeed: 3000, arrows: true, dots: true,
-          pauseOnHover: true, adaptiveHeight: true
-        });
-        $('.review-slider').slick({
-          autoplay: true, autoplaySpeed: 3000, arrows: true, dots: true,
-          slidesToShow: 3, responsive: [{ breakpoint: 1024, settings: { slidesToShow: 2 } }, { breakpoint: 640, settings: { slidesToShow: 1 } }]
-        });
-        console.log("DEBUG: Slick sliders inicializados.");
-      } else {
-        console.warn("DEBUG: Slick no encontrado; banner/reviews quedan estáticos.");
-      }
+      if (window.AOS) AOS.refresh();
+    }catch(err){ console.error(err); }
+  });
 
-      AOS.init();
-      console.log("DEBUG: AOS inicializado en home.html.");
+  // --------- Tracking básico de ruta ---------
+  const sessionId = localStorage.getItem("valac_session_id") || crypto.randomUUID();
+  localStorage.setItem("valac_session_id", sessionId);
+  fetch("/api/track-route",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({path:window.location.pathname,session_id:sessionId})});
+</script>
 
-      try {
-        const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm");
-        const SUPABASE_URL = "{{ config['SUPABASE_URL'] }}";
-        const SUPABASE_KEY = "{{ config['SUPABASE_KEY'] }}";
-        const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        const { data: products, error } = await supabaseClient
-          .from('products')
-          .select(`
-            id, nombre, descripcion, precio, descuento_pct, precio_descuento,
-            tipo_producto, genero, tipo_oro, imagen, created_at, stock_total,
-            product_images ( imagen, orden )
-          `);
-
-        if (error) {
-          console.error("DEBUG: Error loading products from Supabase:", error);
-          return;
-        }
-
-        // Helpers
-        const hasOffer = (p) =>
-          Number(p.descuento_pct) > 0 &&
-          Number(p.precio_descuento) > 0 &&
-          Number(p.precio_descuento) < Number(p.precio);
-        const effectivePrice = (p) => hasOffer(p) ? Number(p.precio_descuento) : Number(p.precio);
-        const mxn = (n) => Number(n).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
-
-        // Listas filtradas
-        const ofertasConStock = products
-          .filter(p => hasOffer(p) && Number(p.stock_total) > 0)
-          .sort((a,b) => effectivePrice(a) - effectivePrice(b));
-
-        const destacadosConStock = products
-          .filter(p => !hasOffer(p) && Number(p.stock_total) > 0)
-          .sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
-
-        // Qué mostramos primero
-        let lista = [];
-        let titulo = '';
-        if (ofertasConStock.length > 0) { titulo = 'Ofertas'; lista = ofertasConStock.slice(0,3); }
-        else { titulo = 'Productos Destacados'; lista = destacadosConStock.slice(0,3); }
-
-        // Render
-        const productGrid = document.getElementById('product-grid');
-        if (productGrid) {
-          document.querySelector('#productos-destacados h2').textContent = titulo;
-          productGrid.innerHTML = "";
-          lista.forEach((product, index) => {
-            const placeholder = "{{ config['SUPABASE_STORAGE_URL'] }}placeholder.jpg";
-
-            let mainImage = placeholder, hoverImage = null;
-            if (product.product_images?.length) {
-              const sorted = [...product.product_images].sort((a,b)=> a.orden - b.orden);
-              mainImage = sorted[0]?.imagen || placeholder;
-              hoverImage = sorted[1]?.imagen || null;
-            } else if (product.imagen && product.imagen !== 'undefined') {
-              mainImage = product.imagen;
-            }
-
-            const ahorroAbs = hasOffer(product)
-              ? (Number(product.precio) - Number(product.precio_descuento))
-              : 0;
-
-            const stockMsg = Number(product.stock_total) <= 3
-              ? `<p class="mt-1 text-sm" style="color: var(--lux-oxblood); font-weight:600;">
-                   🔥 ¡Últimas ${product.stock_total} piezas!
-                 </p>` : ``;
-
-            productGrid.innerHTML += `
-              <div class="relative bg-white p-5 rounded-lg shadow-md overflow-hidden group" data-aos="fade-up" data-aos-delay="${index*50}">
-                ${hasOffer(product) ? `
-                  <span class="discount-badge" aria-label="Producto en oferta">
-                    OFERTA ${Number(product.descuento_pct)}%
-                  </span>` : ``}
-
-                <div class="relative w-full h-64 overflow-hidden">
-                  <img src="${mainImage}" alt="${product.nombre}" loading="lazy"
-                       class="w-full h-full object-cover transition-opacity duration-300 ${hoverImage ? 'group-hover:opacity-0' : ''}">
-                  ${hoverImage ? `
-                    <img src="${hoverImage}" alt="${product.nombre} hover" loading="lazy"
-                         class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-300 group-hover:opacity-100">` : ``}
-                </div>
-
-                <h3 class="text-xl font-semibold text-[#424242] mt-4">${product.nombre}</h3>
-
-                ${hasOffer(product)
-                  ? `
-                    <p class="text-gray-500 line-through mt-2">${mxn(product.precio)}</p>
-                    <div class="flex items-baseline gap-2">
-                      <p class="text-2xl font-semibold text-amber-800 mt-0.5">${mxn(product.precio_descuento)}</p>
-                      <span class="offer-chip chip-emi" aria-label="Meses sin intereses">3 y 6 MSI</span>
-                    </div>
-                    <p class="text-sm ahorro-text mt-1">
-                      Ahorras ${mxn(ahorroAbs)} (${Number(product.descuento_pct)}%) •
-                      <span class="offer-chip chip-time">Oferta limitada</span>
-                    </p>
-                  `
-                  : `
-                    <p class="text-2xl font-semibold text-gray-800 mt-2">${mxn(product.precio)}</p>
-                  `
-                }
-
-                ${stockMsg}
-
-                <p class="text-gray-600 mt-1 text-sm">Oro: ${product.tipo_oro} | Género: ${product.genero}</p>
-
-                <a href="/producto/${product.id}" class="mt-4 inline-block px-4 py-2 rounded transition-colors
-                   ${hasOffer(product) ? 'cta-offer' : 'bg-gray-900 text-white hover:bg-black'}">
-                  ${hasOffer(product) ? 'Comprar ahora • 3 y 6 MSI' : 'Ver detalles'}
-                </a>
-              </div>
-            `;
-          });
-          console.log("DEBUG: Productos renderizados (Ofertas o Destacados) en home.html.");
-        }
-      } catch (err) {
-        console.error("DEBUG: Error initializing Supabase in home.html:", err);
-      }
-    });
-
-    // Mostrar promo modal (si existe)
-    setTimeout(() => {
-      const modal = document.getElementById("promo-modal");
-      if (modal) modal.classList.remove("hidden");
-    }, 1500);
-  </script>
-
-  <script>
-    const sessionId = localStorage.getItem("valac_session_id") || crypto.randomUUID();
-    localStorage.setItem("valac_session_id", sessionId);
-
-    // TRACK general de navegación
-    fetch("/api/track-route", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ path: window.location.pathname, session_id: sessionId })
-    });
-  </script>
-
-  {% include 'partials/tracking.html' %}
+{% include 'partials/tracking.html' %}
 {% endblock %}

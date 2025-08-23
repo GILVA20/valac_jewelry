@@ -11,7 +11,6 @@ def home():
     response = supabase.table("products").select("*").limit(3).execute()
     products = response.data if response.data else []
     return render_template('home.html', products=products)
-    return render_template('home.html')
 
 def collection_redirect():
     from flask import redirect, url_for

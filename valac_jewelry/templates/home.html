@@ -19,6 +19,27 @@
     .banner-slider img.loaded {
       opacity: 1;
     }
+    /* Badge Oferta (look lujo sobrio) */
+    .discount-badge {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.5rem;
+      background-color: #fef3c7;   /* amber-100 */
+      color: #92400e;              /* amber-800 */
+      border: 1px solid #fcd34d;   /* amber-300 */
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      pointer-events: none;
+      z-index: 10;
+    }
+    /* Chips de información */
+    .offer-chip { font-size: .70rem; padding: .125rem .5rem; border-radius: 9999px; display:inline-block; }
+    .chip-emi   { background:#eef2ff; color:#3730a3; border:1px solid #c7d2fe; }   /* MSI */
+    .chip-time  { background:#ecfccb; color:#365314; border:1px solid #d9f99d; }   /* Oferta limitada */
+    .cta-offer  { background:#d5a300; color:#fff; }
   </style>
 
   <!-- Sección: Banner y Slider de Banner -->
@@ -43,18 +64,8 @@
       </div>
     </div>
   </section>
-   <!-- 💬 Popup modal promocional Hot Sale 
-   <div id="promo-modal" class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 hidden">
-     <div class="bg-white max-w-md mx-auto rounded-lg p-6 relative shadow-xl text-center">
-       <button onclick="document.getElementById('promo-modal').classList.add('hidden')" class="absolute top-2 right-3 text-gray-600 text-xl">&times;</button>
-       <img src="{{ SUPABASE_STORAGE_URL }}JP11.png" alt="Hot Sale VALAC" class="rounded mb-4">
-       <h2 class="text-2xl font-semibold text-gray-800 mb-2">¡Día del Padre en VALAC!</h2>
-       <p class="text-gray-600 mb-3">Hasta 20% de descuento + 12 MSI en artículos seleccionados</p>
-       <a href="/collection" class="bg-[#d5a300] hover:bg-[#b38f00] text-white px-5 py-2 rounded inline-block">Ver promociones</a>
-     </div>
-   </div>
-   -->
-  <!-- Sección de Productos Destacados -->
+
+  <!-- Sección de Productos -->
   <section id="productos-destacados" class="py-12 bg-white">
     <div class="container mx-auto text-center">
       <h2 class="text-3xl font-semibold mb-8 text-gray-800" data-aos="fade-up" data-aos-duration="1000">
@@ -183,7 +194,8 @@
         const { data: products, error } = await supabaseClient
           .from('products')
           .select(`
-            id, nombre, descripcion, precio, descuento_pct, precio_descuento, tipo_producto, genero, tipo_oro, imagen, created_at,
+            id, nombre, descripcion, precio, descuento_pct, precio_descuento,
+            tipo_producto, genero, tipo_oro, imagen, created_at, stock_total,
             product_images ( imagen, orden )
           `);
         if (error) {
@@ -193,33 +205,62 @@
 
         console.log("DEBUG: Products loaded:", products);
 
-        products.sort((a, b) => b.precio - a.precio);
-        const top3 = products.slice(0, 3);
+        // Helpers UX y formato MXN
+        const hasOffer = (p) =>
+          Number(p.descuento_pct) > 0 &&
+          Number(p.precio_descuento) > 0 &&
+          Number(p.precio_descuento) < Number(p.precio);
+        const effectivePrice = (p) => hasOffer(p) ? Number(p.precio_descuento) : Number(p.precio);
+        const mxn = (n) => Number(n).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
+
+        // Listas filtradas
+        const ofertasConStock = products
+          .filter(p => hasOffer(p) && Number(p.stock_total) > 0)
+          .sort((a,b) => effectivePrice(a) - effectivePrice(b));
+
+        const destacadosConStock = products
+          .filter(p => !hasOffer(p) && Number(p.stock_total) > 0)
+          .sort((a,b) => new Date(b.created_at) - new Date(a.created_at));
+
+        // Decisión de bloque inicial
+        let lista = [];
+        let titulo = '';
+        if (ofertasConStock.length > 0) {
+          titulo = 'Ofertas';
+          lista = ofertasConStock.slice(0,3);
+        } else {
+          titulo = 'Productos Destacados';
+          lista = destacadosConStock.slice(0,3);
+        }
+
+        // Render tarjetas
         const productGrid = document.getElementById('product-grid');
         if (productGrid) {
+          document.querySelector('#productos-destacados h2').textContent = titulo;
           productGrid.innerHTML = "";
-          top3.forEach((product, index) => {
+          lista.forEach((product, index) => {
             const placeholder = "{{ config['SUPABASE_STORAGE_URL'] }}placeholder.jpg";
 
-            // ✅ Determinar imágenes
             let mainImage = placeholder;
             let hoverImage = null;
-
             if (product.product_images && product.product_images.length > 0) {
-              const sorted = [...product.product_images].sort((a, b) => a.orden - b.orden);
+              const sorted = [...product.product_images].sort((a,b)=> a.orden - b.orden);
               mainImage = sorted[0]?.imagen || placeholder;
               hoverImage = sorted.length > 1 ? sorted[1].imagen : null;
             } else if (product.imagen && product.imagen !== 'undefined') {
               mainImage = product.imagen;
             }
 
-            // ✅ HTML con efecto hover
+            const ahorroAbs = hasOffer(product)
+              ? (Number(product.precio) - Number(product.precio_descuento))
+              : 0;
+
             productGrid.innerHTML += `
-              <div class="relative bg-white p-5 rounded-lg shadow-md overflow-hidden group" data-aos="fade-up" data-aos-delay="${index * 50}">
-                ${product.descuento_pct > 0 ? `
-                  <div class="absolute top-4 left-4 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded">
-                    -${product.descuento_pct}%
-                  </div>
+              <div class="relative bg-white p-5 rounded-lg shadow-md overflow-hidden group" data-aos="fade-up" data-aos-delay="${index*50}">
+                ${hasOffer(product) ? `
+                  <span class="discount-badge" title="¡MIRA! Te estás llevando un ofertón" aria-label="Producto en oferta">
+                    OFERTA ${Number(product.descuento_pct)}%
+                  </span>
                 ` : ``}
 
                 <div class="relative w-full h-64 overflow-hidden">
@@ -233,24 +274,33 @@
 
                 <h3 class="text-xl font-semibold text-[#424242] mt-4">${product.nombre}</h3>
 
-                ${product.descuento_pct > 0 ? `
-                  <p class="text-gray-500 line-through mt-2">$${product.precio.toFixed(2)}</p>
-                  <p class="text-2xl font-bold text-red-600 mt-1">$${product.precio_descuento.toFixed(2)}</p>
-                ` : `
-                  <p class="text-2xl font-semibold text-gray-800 mt-2">$${product.precio.toFixed(2)}</p>
-                `}
+                ${hasOffer(product)
+                  ? `
+                    <p class="text-gray-500 line-through mt-2">${mxn(product.precio)}</p>
+                    <div class="flex items-baseline gap-2">
+                      <p class="text-2xl font-semibold text-amber-800 mt-0.5">${mxn(product.precio_descuento)}</p>
+                      <span class="offer-chip chip-emi" aria-label="Meses sin intereses">Hasta 6 MSI</span>
+                    </div>
+                    <p class="text-sm text-emerald-700 mt-1">
+                      Ahorras ${mxn(ahorroAbs)} (${Number(product.descuento_pct)}%) •
+                      <span class="offer-chip chip-time">Oferta limitada</span>
+                    </p>
+                  `
+                  : `
+                    <p class="text-2xl font-semibold text-gray-800 mt-2">${mxn(product.precio)}</p>
+                  `
+                }
 
                 <p class="text-gray-600 mt-1 text-sm">Oro: ${product.tipo_oro} | Género: ${product.genero}</p>
 
-                <a href="/producto/${product.id}" class="mt-4 inline-block bg-[#d5a300] text-white px-4 py-2 rounded hover:bg-[#b38f00] transition-colors">
-                  Ver detalles
+                <a href="/producto/${product.id}" class="mt-4 inline-block px-4 py-2 rounded transition-colors
+                   ${hasOffer(product) ? 'cta-offer hover:bg-[#b38f00]' : 'bg-gray-900 text-white hover:bg-black'}">
+                  ${hasOffer(product) ? 'Ver oferta' : 'Ver detalles'}
                 </a>
               </div>
             `;
           });
-          console.log("DEBUG: Top 3 products rendered in home.html.");
-        } else {
-          console.error("DEBUG: Product grid element not found in home.html.");
+          console.log("DEBUG: Productos renderizados (Ofertas o Destacados) en home.html.");
         }
       } catch (err) {
         console.error("DEBUG: Error initializing Supabase in home.html:", err);
@@ -262,6 +312,7 @@
     if (modal) modal.classList.remove("hidden");
   }, 1500);
   </script>
+
   <script>
   const sessionId = localStorage.getItem("valac_session_id") || crypto.randomUUID();
   localStorage.setItem("valac_session_id", sessionId);
@@ -272,7 +323,7 @@
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ path: window.location.pathname, session_id: sessionId })
   });
-</script>
+  </script>
 
   {% include 'partials/tracking.html' %}
 {% endblock %}

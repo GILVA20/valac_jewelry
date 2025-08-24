@@ -14,6 +14,7 @@ def _parse_date_range(args):
     """
     Devuelve (dt_from, dt_to) en UTC (datetime con tzinfo), o (None, None).
     Prioriza: ?from=YYYY-MM-DD&to=YYYY-MM-DD  luego ?days=N
+    Si viene 'to', se interpreta como fin del día (to + 1 día) para inclusividad.
     """
     now = datetime.now(timezone.utc)
     qs_from = args.get("from")
@@ -23,8 +24,10 @@ def _parse_date_range(args):
     if qs_from or qs_to:
         try:
             dt_from = datetime.strptime(qs_from, "%Y-%m-%d").replace(tzinfo=timezone.utc) if qs_from else None
-            # incluir fin del día si se da 'to'
-            dt_to = datetime.strptime(qs_to, "%Y-%m-%d").replace(tzinfo=timezone.utc) + timedelta(days=1) if qs_to else None
+            dt_to = (
+                datetime.strptime(qs_to, "%Y-%m-%d").replace(tzinfo=timezone.utc) + timedelta(days=1)
+                if qs_to else None
+            )
             return dt_from, dt_to
         except Exception:
             logger.warning("Rango de fecha inválido: from=%s to=%s", qs_from, qs_to)
@@ -40,6 +43,47 @@ def _parse_date_range(args):
 
     # Sin filtros -> None (server usa todo)
     return None, None
+
+
+# ---------- Helpers de ubicación ----------
+def _extract_city_region(loc):
+    """
+    Devuelve (city, region, country) desde el campo 'location' que puede ser:
+    - dict (nuevo formato JSON)
+    - string "Ciudad, Estado, País" (legado)
+    - None
+    """
+    if not loc:
+        return None, None, None
+
+    if isinstance(loc, dict):
+        return (
+            (loc.get("city") or None),
+            (loc.get("region") or None),
+            (loc.get("country") or loc.get("country_name") or None),
+        )
+
+    if isinstance(loc, str):
+        parts = [p.strip() for p in loc.split(",")]
+        city = parts[0] if len(parts) > 0 else None
+        region = parts[1] if len(parts) > 1 else None
+        country = parts[2] if len(parts) > 2 else None
+        return city, region, country
+
+    return None, None, None
+
+
+def _get_client_ip(req):
+    """
+    Obtén la IP del cliente respetando proxies/reverse-proxies.
+    """
+    xff = req.headers.get("X-Forwarded-For", "")
+    if xff:
+        # XFF puede traer "ip1, ip2, ip3", nos quedamos con la primera pública
+        first = xff.split(",")[0].strip()
+        if first:
+            return first
+    return req.remote_addr
 
 
 class AnalyticsAdmin(BaseView):
@@ -85,22 +129,27 @@ class AnalyticsAdmin(BaseView):
 
             # Top más vistos (10)
             product_views = sorted(
-                [{"product_id": pid,
-                  "nombre": product_names.get(pid, f"Producto ID {pid}"),
-                  "views": cnt}
-                 for pid, cnt in counts.items()],
+                [
+                    {
+                        "product_id": pid,
+                        "nombre": product_names.get(pid, f"Producto ID {pid}"),
+                        "views": cnt,
+                    }
+                    for pid, cnt in counts.items()
+                ],
                 key=lambda x: x["views"],
-                reverse=True
+                reverse=True,
             )[:10]
 
             # Lista completa (todos los productos, incl. 0 vistas)
-            all_product_views = []
-            for pid, nombre in all_products:
-                all_product_views.append({
+            all_product_views = [
+                {
                     "product_id": pid,
                     "nombre": nombre,
-                    "views": counts.get(pid, 0)
-                })
+                    "views": counts.get(pid, 0),
+                }
+                for pid, nombre in all_products
+            ]
             # Orden ascendente: menos vistos primero
             all_product_views.sort(key=lambda x: x["views"])
 
@@ -119,42 +168,59 @@ class AnalyticsAdmin(BaseView):
             navigation = sorted(
                 [{"path": p, "count": c} for p, c in path_counts.items()],
                 key=lambda x: x["count"],
-                reverse=True
+                reverse=True,
             )[:10]
 
             # ---------- FUNNEL (por paths) ----------
             funnel_stages = [
-                {'name': 'Home', 'path': '/'},
-                {'name': 'Colección', 'path': '/collection'},
-                {'name': 'Detalle de producto', 'path_prefix': '/producto/'},
-                {'name': 'Click en comprar', 'path_prefix': '/buy-click/'},
-                {'name': 'Checkout', 'path': '/checkout'},
-                {'name': 'Pago exitoso', 'path': '/success'},
+                {"name": "Home", "path": "/"},
+                {"name": "Colección", "path": "/collection"},
+                {"name": "Detalle de producto", "path_prefix": "/producto/"},
+                {"name": "Click en comprar", "path_prefix": "/buy-click/"},
+                {"name": "Checkout", "path": "/checkout"},
+                {"name": "Pago exitoso", "path": "/success"},
             ]
             funnel_data = []
             for stage in funnel_stages:
-                if 'path' in stage:
-                    count = path_counts.get(stage['path'], 0)
+                if "path" in stage:
+                    count = path_counts.get(stage["path"], 0)
                 else:
-                    count = sum(1 for p in paths if p.startswith(stage['path_prefix']))
-                funnel_data.append({'name': stage['name'], 'count': count})
+                    pref = stage["path_prefix"]
+                    count = sum(1 for p in paths if p and p.startswith(pref))
+                funnel_data.append({"name": stage["name"], "count": count})
 
             # ---------- KPIs ----------
             total_views = len(pv_rows)
-            total_buy_clicks = sum(1 for p in paths if p.startswith("/buy-click/"))
+            total_buy_clicks = sum(1 for p in paths if p and p.startswith("/buy-click/"))
 
-            # Ubicaciones únicas (limpiando vacíos/None)
-            locations = [row.get("location") for row in pv_rows]
-            location_set = set([str(loc).strip() for loc in locations if loc and str(loc).strip().lower() != "null"])
+            # ---------- Ubicaciones (Top regiones/ciudades) ----------
+            cities_counter = Counter()
+            regions_counter = Counter()
+            location_set = set()
+
+            for row in pv_rows:
+                city, region, country = _extract_city_region(row.get("location"))
+                if city:
+                    cities_counter[city] += 1
+                if region:
+                    regions_counter[region] += 1
+                key = (city or "", region or "", country or "")
+                if any(key):
+                    location_set.add(key)
+
+            top_cities = [{"city": c, "count": n} for c, n in cities_counter.most_common(10)]
+            top_regions = [{"region": r, "count": n} for r, n in regions_counter.most_common(10)]
 
         except Exception as e:
             logger.error("[AnalyticsAdmin] Error al consultar Supabase: %s", e)
             flash("Error al cargar analíticas. Revisa los logs.", "error")
             product_views, navigation, all_product_views = [], [], []
-            total_views, total_buy_clicks, location_set = 0, 0, set()
+            total_views, total_buy_clicks = 0, 0
             funnel_data = []
+            top_cities, top_regions = [], []
+            location_set = set()
 
-        # Render con mismos nombres que tu template espera
+        # Render con los nombres que el template espera + nuevas tablas de ubicación
         return self.render(
             "admin/analytics.html",
             product_views=product_views,
@@ -163,7 +229,9 @@ class AnalyticsAdmin(BaseView):
             total_views=total_views,
             total_buy_clicks=total_buy_clicks,
             total_locations=len(location_set),
-            funnel_data=funnel_data
+            funnel_data=funnel_data,
+            top_cities=top_cities,
+            top_regions=top_regions,
         )
 
     # -------------------- Endpoints de tracking --------------------
@@ -174,13 +242,14 @@ class AnalyticsAdmin(BaseView):
             payload = request.get_json(silent=True) or {}
             session_id = payload.get("session_id") or str(uuid.uuid4())
             referrer = request.headers.get("Referer")
-            location = self.get_location_from_ip(request.remote_addr)
+            ip = _get_client_ip(request)
+            location = self.get_location_from_ip(ip)
 
             current_app.supabase.table("product_views").insert({
                 "product_id": product_id,
                 "session_id": session_id,
                 "referrer": referrer,
-                "location": location
+                "location": location,   # <-- JSON estructurado
             }).execute()
             return "", 204
         except Exception as e:
@@ -193,12 +262,13 @@ class AnalyticsAdmin(BaseView):
             payload = request.get_json(silent=True) or {}
             session_id = payload.get("session_id") or str(uuid.uuid4())
             path = payload.get("path") or ""
-            location = self.get_location_from_ip(request.remote_addr)
+            ip = _get_client_ip(request)
+            location = self.get_location_from_ip(ip)
 
             current_app.supabase.table("user_navigation").insert({
                 "path": path,
                 "session_id": session_id,
-                "location": location
+                "location": location,   # <-- JSON estructurado
             }).execute()
             return "", 204
         except Exception as e:
@@ -210,12 +280,13 @@ class AnalyticsAdmin(BaseView):
         try:
             payload = request.get_json(silent=True) or {}
             session_id = payload.get("session_id") or str(uuid.uuid4())
-            location = self.get_location_from_ip(request.remote_addr)
+            ip = _get_client_ip(request)
+            location = self.get_location_from_ip(ip)
 
             current_app.supabase.table("user_navigation").insert({
                 "session_id": session_id,
                 "path": f"/buy-click/{product_id}",
-                "location": location
+                "location": location,   # <-- JSON estructurado
             }).execute()
             return "", 204
         except Exception as e:
@@ -225,18 +296,36 @@ class AnalyticsAdmin(BaseView):
     # -------------------- Utilidades --------------------
 
     def get_location_from_ip(self, ip_address):
+        """
+        Devuelve un dict JSON listo para guardar en jsonb:
+        {
+          ip, city, region, region_code, country, country_code, postal,
+          latitude, longitude, timezone
+        }
+        Backwards-safe: si falla, devuelve city/region/country = None.
+        """
         try:
             # Evita resolver localhost/privadas
-            if not ip_address or ip_address.startswith(("127.", "10.", "192.168.", "172.16.", "172.17.", "172.18.", "172.19.")):
-                return "Ubicación desconocida"
-            response = requests.get(f'https://ipapi.co/{ip_address}/json/', timeout=2.5)
-            if response.status_code == 200:
-                data = response.json()
-                city = data.get('city') or ''
-                region = data.get('region') or ''
-                country = data.get('country_name') or ''
-                pretty = ", ".join([v for v in [city, region, country] if v])
-                return pretty or "Ubicación desconocida"
+            private_prefixes = ("127.", "10.", "192.168.", "172.16.", "172.17.", "172.18.", "172.19.")
+            if not ip_address or ip_address.startswith(private_prefixes):
+                return {"ip": ip_address, "city": None, "region": None, "country": None}
+
+            resp = requests.get(f"https://ipapi.co/{ip_address}/json/", timeout=2.5)
+            if resp.status_code == 200:
+                d = resp.json() or {}
+                return {
+                    "ip": ip_address,
+                    "city": d.get("city"),
+                    "region": d.get("region"),
+                    "region_code": d.get("region_code"),
+                    "country": d.get("country_name"),
+                    "country_code": d.get("country"),
+                    "postal": d.get("postal"),
+                    "latitude": d.get("latitude"),
+                    "longitude": d.get("longitude"),
+                    "timezone": d.get("timezone"),
+                }
         except Exception:
             pass
-        return "Ubicación desconocida"
+
+        return {"ip": ip_address, "city": None, "region": None, "country": None}

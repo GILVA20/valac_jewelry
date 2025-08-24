@@ -1,5 +1,66 @@
-<header class="fixed top-[32px] left-0 right-0 z-40 bg-white/95 backdrop-blur shadow-md">
+<!-- Banner superior tipo marquee (izq -> der) -->
+<div id="top-promo" class="fixed top-0 left-0 right-0 z-50 bg-black text-amber-300 shadow-[0_1px_0_rgba(255,255,255,0.08)]">
+  <div class="container mx-auto px-3 md:px-4 py-1.5 flex items-center gap-3">
+    <div class="marquee flex-1" role="region" aria-label="Promociones">
+      {% set msgs = promo_msgs or [
+        'Hasta 6 MSI con Mercado Pago',
+        '🔥 Oro 10k y 14k',
+        '🚚 Envíos a todo México'
+      ] %}
+      {% set joined = msgs|join('  •  ') %}
+      <div class="marquee-track ltr">
+        <span class="marquee-item">{{ joined }}</span>
+        <span class="marquee-item" aria-hidden="true">{{ joined }}</span>
+      </div>
+    </div>
+    <button id="promo-close"
+            class="shrink-0 text-white/70 hover:text-white text-xs px-2 py-1 rounded"
+            aria-label="Cerrar anuncio">✕</button>
+  </div>
+</div>
+
+<header id="site-header"
+         class="fixed left-0 right-0 z-40 bg-white/95 backdrop-blur shadow-md"
+         style="top: var(--promo-offset, 0px)">
   <style>
+    :root{
+      --promo-offset: 0px;     /* altura del banner */
+      --header-total: 72px;    /* banner + header (JS lo recalcula) */
+    }
+
+    /* deja espacio global para header fijo + banner */
+    body.has-fixed-header{ padding-top: var(--header-total); }
+    /* evita doble espacio si el primer bloque ya trae pt-/mt- */
+    body.has-fixed-header > main:first-of-type,
+    body.has-fixed-header > section:first-of-type,
+    body.has-fixed-header > .container:first-of-type,
+    body.has-fixed-header > #app:first-of-type{
+      padding-top:0 !important;
+      margin-top:0 !important;
+    }
+    /* anclas internas que respeten el header */
+    html{ scroll-padding-top: var(--header-total); }
+
+    /* --- Marquee --- */
+    .marquee{ position:relative; overflow:hidden; }
+    .marquee-track{
+      display:flex; gap:4rem;
+      white-space:nowrap; will-change:transform;
+      animation: marquee 24s linear infinite;
+    }
+    /* izquierda -> derecha */
+    .marquee-track.ltr{ animation-direction: reverse; }
+    .marquee-item{ flex:0 0 auto; padding-inline:1rem; }
+    .marquee:hover .marquee-track{ animation-play-state: paused; }
+    @keyframes marquee{
+      from{ transform: translateX(0); }
+      to  { transform: translateX(-50%); } /* 2 copias => loop perfecto */
+    }
+    @media (max-width:640px){ .marquee-track{ animation-duration:18s; } }
+    @media (prefers-reduced-motion:reduce){
+      .marquee-track{ animation:none; transform:translateX(0); }
+    }
+
     /* micro detalles visuales */
     .nav-link{position:relative}
     .nav-link:after{content:"";position:absolute;left:0;bottom:-6px;height:2px;width:0;background:#D4AF37;transition:width .2s ease}
@@ -162,7 +223,52 @@
   </div>
 
   <script>
-    // --- Mobile toggle
+    // Debounce helper
+    const debounce = (fn,ms=120)=>{ let id; return (...a)=>{ clearTimeout(id); id=setTimeout(()=>fn(...a),ms); }; };
+
+    // Offsets dinámicos (banner + header fijo)
+    (function(){
+      const promo  = document.getElementById('top-promo');
+      const header = document.getElementById('site-header');
+      const body   = document.body;
+
+      function updateOffsets(){
+        const promoH  = (promo && !promo.classList.contains('hidden'))
+                        ? Math.ceil(promo.getBoundingClientRect().height) : 0;
+        const headH   = header ? Math.ceil(header.getBoundingClientRect().height) : 0;
+        document.documentElement.style.setProperty('--promo-offset', promoH + 'px');
+        document.documentElement.style.setProperty('--header-total', (promoH + headH) + 'px');
+        body.classList.add('has-fixed-header');
+      }
+
+      // Eventos base
+      document.addEventListener('DOMContentLoaded', updateOffsets);
+      window.addEventListener('load', updateOffsets);
+      window.addEventListener('resize', debounce(updateOffsets, 100));
+      setTimeout(updateOffsets, 0);
+
+      // Recalcular cuando cambie la altura (fuentes, wrap de texto, etc.)
+      if (window.ResizeObserver) {
+        const ro = new ResizeObserver(debounce(updateOffsets, 50));
+        promo && ro.observe(promo);
+        header && ro.observe(header);
+      }
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(updateOffsets).catch(()=>{});
+      }
+
+      // Cerrar banner (persistencia por campaña)
+      const closeBtn = document.getElementById('promo-close');
+      const KEY = '{{ promo_key|default("promo-2025-08-27") }}';
+      if (localStorage.getItem(KEY)==='1'){ promo?.classList.add('hidden'); updateOffsets(); }
+      closeBtn?.addEventListener('click', ()=>{
+        promo?.classList.add('hidden');
+        localStorage.setItem(KEY,'1');
+        updateOffsets();
+      });
+    })();
+
+    // Mobile toggle
     const menuToggle = document.getElementById('menu-toggle');
     const mobileMenu = document.getElementById('mobile-menu');
     menuToggle?.addEventListener('click', () => {
@@ -171,24 +277,21 @@
       menuToggle.setAttribute('aria-expanded', String(!isOpen));
     });
 
-    // --- Mega menu accesible (teclado / click fuera / Escape)
+    // Mega menú accesible
     const trigger = document.getElementById('mega-trigger');
     const panel   = document.getElementById('mega-menu');
-
-    function openMega(){ panel.classList.remove('invisible','opacity-0','translate-y-2'); trigger.setAttribute('aria-expanded','true'); }
-    function closeMega(){ panel.classList.add('invisible','opacity-0','translate-y-2');  trigger.setAttribute('aria-expanded','false'); }
-
+    function openMega(){ panel?.classList.remove('invisible','opacity-0','translate-y-2'); trigger?.setAttribute('aria-expanded','true'); }
+    function closeMega(){ panel?.classList.add('invisible','opacity-0','translate-y-2');  trigger?.setAttribute('aria-expanded','false'); }
     trigger?.addEventListener('keydown', (e)=>{
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openMega(); panel.querySelector('a')?.focus(); }
-      if (e.key === 'Escape') { closeMega(); trigger.focus(); }
+      if (e.key==='Enter' || e.key===' ') { e.preventDefault(); openMega(); panel?.querySelector('a')?.focus(); }
+      if (e.key==='Escape') { closeMega(); trigger?.focus(); }
     });
     document.addEventListener('keydown', (e)=>{ if(e.key==='Escape') closeMega(); });
     document.addEventListener('click', (e)=>{
-      if (!panel.contains(e.target) && !trigger.contains(e.target)) closeMega();
+      if (panel && !panel.contains(e.target) && !trigger.contains(e.target)) closeMega();
     });
-    // Abre al pasar el mouse, cierra al salir (fallback a CSS hover)
     trigger?.addEventListener('mouseenter', openMega);
-    trigger?.addEventListener('mouseleave', ()=> setTimeout(()=>{ if(!panel.matches(':hover')) closeMega(); }, 120));
+    trigger?.addEventListener('mouseleave', ()=> setTimeout(()=>{ if(!panel?.matches(':hover')) closeMega(); }, 120));
     panel?.addEventListener('mouseleave', closeMega);
   </script>
 </header>

@@ -295,10 +295,28 @@
               Pagar Ahora
               <span id="spinner" class="hidden inline-block ml-2 w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
             </button>
-            <p class="text-xs text-center text-gray-500">Transacción 100% segura</p>
-            <img src="{{ url_for('static', filename='images/sello_seguridad.png') }}" alt="Sello SSL"
-                 class="mx-auto w-16 mt-2" aria-hidden="true">
-            <p class="text-sm italic text-gray-600 text-center">“+10,000 compras seguras”</p>
+            <div class="mt-3 text-center space-y-2">
+              <p class="text-xs text-gray-500">Transacción 100% segura (SSL)</p>
+              <div
+                class="flex flex-wrap items-center justify-center gap-x-4 gap-y-2
+                       grayscale opacity-80 hover:opacity-100 transition"
+                aria-label="Métodos de pago disponibles"
+              >
+                <img src="https://cdn.simpleicons.org/visa"            alt="Visa"             title="Visa"            class="h-5 md:h-6 w-auto align-middle" loading="lazy" />
+                <img src="https://cdn.simpleicons.org/mastercard"      alt="Mastercard"       title="Mastercard"      class="h-5 md:h-6 w-auto align-middle" loading="lazy" />
+                <img src="https://cdn.simpleicons.org/americanexpress" alt="American Express" title="American Express" class="h-5 md:h-6 w-auto align-middle" loading="lazy" />
+                <span class="hidden md:inline-block w-px h-6 bg-gray-300"></span>
+                <img src="https://cdn.simpleicons.org/mercadopago"     alt="Mercado Pago"     title="Mercado Pago"    class="h-5 md:h-6 w-auto align-middle" loading="lazy" />
+                <img src="https://cdn.simpleicons.org/oxxo"            alt="OXXO Pay"         title="OXXO Pay"        class="h-5 md:h-6 w-auto align-middle" loading="lazy" />
+                <img src="https://cdn.simpleicons.org/spei"            alt="SPEI"             title="Transferencia SPEI" class="h-5 md:h-6 w-auto align-middle" loading="lazy" />
+              </div>
+              <p class="text-[11px] text-gray-500">
+                Aceptamos tarjetas • OXXO • SPEI — *Hasta 6 MSI con Mercado Pago
+              </p>
+              <p class="text-sm italic text-gray-600">
+                “+10,000 compras seguras”
+              </p>
+            </div>
           </div>
         </aside>
   </form>

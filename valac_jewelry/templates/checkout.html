@@ -5,7 +5,7 @@
 {% endblock %}
 
 {% block content %}
-<main class="pt-24 container mx-auto px-4 pb-40 md:pb-0">
+<main class="container mx-auto px-4 pb-40 md:pb-0 page-checkout">
 
     <!-- Progress Bar: Carrito → Datos → Pago → Confirmación -->
     <div class="mb-8">
@@ -102,6 +102,37 @@
         margin-top: 0.25rem;
         display: none;
       }
+      
+      /* ===== Layout fixes: evitar overlap con header fijo + banner ===== */
+      /* El header/base define --header-total vía JS con la altura real (banner + header). */
+      .page-checkout{
+        /* si por alguna razón aún no está definida, cae a 88px */
+        padding-top: var(--header-total, 88px);
+      }
+
+      /* Resumen sticky solo en desktop y respetando el header/banner */
+      @media (min-width:1024px){
+        .sticky-summary{
+          position: sticky;
+          top: calc(var(--header-total, 88px) + 1rem);
+        }
+      }
+      @media (max-width:1023px){
+        .sticky-summary{ position: static; top: auto; }
+      }
+
+      /* Contenedor para el botón de MercadoPago: respeta header/banner */
+      #mp-button-container {
+        margin-top: calc(var(--header-total, 88px) + 20vh);
+        display: flex;
+        justify-content: center;
+      }
+      @media (max-width: 768px) {
+        #mp-button-container {
+          margin-top: calc(var(--header-total, 88px) + 15vh);
+        }
+      }
+
       .validation-message.valid { color: #38c172; display: block; }
       .validation-message.error { display: block; }
       .form-section {
@@ -152,23 +183,17 @@
         font-size: 1rem;
         display: none;
       }
-      /* Contenedor para el botón de MercadoPago */
-      #mp-button-container {
-        margin-top: 20vh;  /* Ubica el botón a 20% de la altura del viewport */
-        display: flex;
-        justify-content: center;
-      }
-      @media (max-width: 768px) {
-        #mp-button-container {
-          margin-top: 15vh; /* Ajuste para móviles */
-        }
-      }
       /* Mensaje para Aplazo no disponible */
       #aplazo-message {
         color: #e3342f;
         font-size: 1rem;
         margin-top: 1rem;
         display: none;
+      }
+
+      /* Ajuste temporal: Forzar un valor mínimo para evitar superposición */
+      .page-checkout {
+        padding-top: calc(var(--header-total, 120px)); /* Incremento del valor mínimo */
       }
     </style>
 
@@ -265,7 +290,8 @@
 
         <!-- Sticky Sidebar / Footer -->
         <aside class="lg:col-span-1">
-          <div class="sticky top-24 bg-white p-6 rounded-lg shadow space-y-6">
+          <!-- CAMBIO AQUÍ: usar sticky-summary para que respete --header-total -->
+          <div class="sticky-summary bg-white p-6 rounded-lg shadow space-y-6">
             <h3 class="text-xl font-semibold">Resumen de tu Compra</h3>
                          <div class="space-y-2 text-gray-700">
                             <div class="flex justify-between">
@@ -326,6 +352,66 @@
 {% endblock %}
 
 {% block scripts_extra %}
+<script>
+  /**
+   * HEADER/BANNER OFFSET HELPER
+   * Calcula y actualiza --header-total (banner + header) para evitar overlap.
+   * Busca elementos comunes o con data-attributes:
+   *   - Header: [data-site-header], header.site-header, #site-header, header
+   *   - Banner: [data-top-banner], #top-banner, #promo-bar, .promo-bar
+   */
+  (function setupHeaderOffset(){
+    const root   = document.documentElement;
+    const header = document.querySelector('[data-site-header], header.site-header, #site-header, header');
+    const banner = document.querySelector('[data-top-banner], #top-banner, #promo-bar, .promo-bar');
+
+    function computeAndSet() {
+      const headerH = header ? header.offsetHeight : 0;
+      const bannerH = banner ? banner.offsetHeight : 0;
+      const total   = headerH + bannerH;
+      root.style.setProperty('--header-total', total + 'px');
+    }
+
+    // Recalcular en eventos de ventana
+    ['load','resize','orientationchange'].forEach(ev => {
+      window.addEventListener(ev, computeAndSet, { passive: true });
+    });
+
+    // Observar cambios del DOM en header/banner (por ejemplo, si se abre/cierra un banner)
+    [header, banner].filter(Boolean).forEach(el => {
+      const mo = new MutationObserver(computeAndSet);
+      mo.observe(el, { attributes: true, childList: true, subtree: true });
+    });
+
+    // Primer cálculo
+    computeAndSet();
+  })();
+</script>
+
+<script>
+  (function debugHeaderOffset() {
+    const header = document.querySelector('[data-site-header], header.site-header, #site-header, header');
+    const banner = document.querySelector('[data-top-banner], #top-banner, #promo-bar, .promo-bar');
+
+    if (!header) {
+      console.warn("Header element not found. Ensure the header has the correct selector.");
+    }
+    if (!banner) {
+      console.warn("Banner element not found. Ensure the banner has the correct selector.");
+    }
+
+    const headerHeight = header ? header.offsetHeight : 0;
+    const bannerHeight = banner ? banner.offsetHeight : 0;
+    const totalHeight = headerHeight + bannerHeight;
+
+    console.log("Header height:", headerHeight);
+    console.log("Banner height:", bannerHeight);
+    console.log("Total height (header + banner):", totalHeight);
+
+    document.documentElement.style.setProperty('--header-total', `${totalHeight}px`);
+  })();
+</script>
+
 <script>
   // Función para cargar el SDK de MercadoPago asíncronamente
   function loadMercadoPagoSDK() {
@@ -559,11 +645,12 @@
       msg.style.display = 'block';
     });
 
-    // Animación de carga al enviar el formulario
-    document.getElementById('checkout-form').addEventListener('submit', (e) => {
-      const finalizeBtn = document.getElementById('finalize-btn');
-      finalizeBtn.classList.add('loading');
-      document.getElementById('spinner').classList.remove('hidden');
+    // Animación de carga al enviar el formulario (FIX: usar checkout-btn existente)
+    document.getElementById('checkout-form').addEventListener('submit', () => {
+      const checkoutBtn = document.getElementById('checkout-btn');
+      if (checkoutBtn) { checkoutBtn.classList.add('loading'); }
+      const sp = document.getElementById('spinner');
+      if (sp) { sp.classList.remove('hidden'); }
     });
 
     // ✨ ADDITIONS ✨: Debug: Environment mode and MP public key (test/prod)
@@ -595,5 +682,93 @@
     }
   };
 </script>
+<script>
+  (function robustHeaderOffset() {
+    const root = document.documentElement;
+    const header = document.querySelector('[data-site-header], header.site-header, #site-header, header');
+    const banner = document.querySelector('[data-top-banner], #top-banner, #promo-bar, .promo-bar');
+
+    function computeAndSetOffset() {
+      const headerHeight = header ? header.offsetHeight : 0;
+      const bannerHeight = banner ? banner.offsetHeight : 0;
+      const totalHeight = headerHeight + bannerHeight;
+
+      if (totalHeight > 0) {
+        root.style.setProperty('--header-total', `${totalHeight}px`);
+      } else {
+        console.warn("Header or banner height is zero. Check element visibility or selectors.");
+      }
+
+      console.log("Computed header total height:", totalHeight);
+    }
+
+    // Recalculate on window events
+    ['load', 'resize', 'orientationchange'].forEach(event => {
+      window.addEventListener(event, computeAndSetOffset, { passive: true });
+    });
+
+    // Observe DOM changes in header/banner
+    [header, banner].filter(Boolean).forEach(element => {
+      const observer = new MutationObserver(computeAndSetOffset);
+      observer.observe(element, { attributes: true, childList: true, subtree: true });
+    });
+
+    // Initial calculation
+    computeAndSetOffset();
+  })();
+</script>
+
+<script>
+  (function debugHeaderAndBannerPresence() {
+    const header = document.querySelector('[data-site-header], header.site-header, #site-header, header');
+    const banner = document.querySelector('[data-top-banner], #top-banner, #promo-bar, .promo-bar');
+
+    if (!header) {
+      console.error("Header element not found. Ensure the header has the correct selector.");
+    } else {
+      console.log("Header detected with height:", header.offsetHeight);
+    }
+
+    if (!banner) {
+      console.error("Banner element not found. Ensure the banner has the correct selector.");
+    } else {
+      console.log("Banner detected with height:", banner.offsetHeight);
+    }
+  })();
+</script>
+
+<script>
+  (function adjustHeaderAndPromoOffsets() {
+    const promo = document.getElementById('top-promo');
+    const header = document.getElementById('site-header');
+    const root = document.documentElement;
+
+    function updateOffsets() {
+      const promoHeight = promo && !promo.classList.contains('hidden')
+        ? Math.ceil(promo.getBoundingClientRect().height)
+        : 0;
+      const headerHeight = header ? Math.ceil(header.getBoundingClientRect().height) : 0;
+      const totalHeight = promoHeight + headerHeight;
+
+      root.style.setProperty('--header-total', `${totalHeight}px`);
+
+      console.log("Promo height:", promoHeight);
+      console.log("Header height:", headerHeight);
+      console.log("Total header + promo height:", totalHeight);
+    }
+
+    // Recalculate offsets on load, resize, and DOM changes
+    document.addEventListener('DOMContentLoaded', updateOffsets);
+    window.addEventListener('load', updateOffsets);
+    window.addEventListener('resize', updateOffsets);
+
+    if (window.ResizeObserver) {
+      const observer = new ResizeObserver(updateOffsets);
+      promo && observer.observe(promo);
+      header && observer.observe(header);
+    }
+  })();
+</script>
+
 {% include 'partials/tracking.html' %}
 {% endblock %}

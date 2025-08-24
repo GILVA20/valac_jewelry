@@ -78,6 +78,10 @@
   #cat-bg{ position:absolute; inset:0; background-size:cover; background-position:center; transition:opacity .35s ease; }
   .opacity-0{ opacity:0 !important; }
 </style>
+
+{# Preload de fondos para evitar flicker #}
+<link rel="preload" as="image" href="{{ SUPABASE_STORAGE_URL }}gold-earring.jpg">
+<link rel="preload" as="image" href="{{ SUPABASE_STORAGE_URL }}cadenasjorge.jpg">
 {% endblock %}
 
 {% block content %}
@@ -123,11 +127,11 @@
   <section
     id="cat-section"
     class="relative my-12 rounded-2xl overflow-hidden ring-1 ring-black/5 shadow-lg"
-    data-bg-mujer="{{ SUPABASE_STORAGE_URL }}bg-categorias-mujer.jpg"
-    data-bg-hombre="{{ SUPABASE_STORAGE_URL }}bg-categorias-hombre.jpg"
+    data-bg-mujer="{{ SUPABASE_STORAGE_URL }}gold-earring.jpg"
+    data-bg-hombre="{{ SUPABASE_STORAGE_URL }}cadenasjorge.jpg"
   >
     <!-- Fondo intercambiable + velo -->
-    <div id="cat-bg"></div>
+    <div id="cat-bg" style="background-image:url('{{ SUPABASE_STORAGE_URL }}gold-earring.jpg')"></div>
     <div class="absolute inset-0 bg-white/78 md:bg-white/70"></div>
 
     <div class="relative z-10 container mx-auto px-4 py-6 md:py-8">

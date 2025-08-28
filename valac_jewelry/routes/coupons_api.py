@@ -1,117 +1,116 @@
-
+# valac_jewelry/routes/coupons_api.py
 from __future__ import annotations
-from decimal import Decimal
-from flask import Blueprint, current_app, request, jsonify
-from flask_login import current_user
-from datetime import datetime
-import pytz
+from flask import Blueprint, request, jsonify, current_app, session
+from datetime import datetime, timezone
+from decimal import Decimal, ROUND_HALF_UP
 
-from ..services.discounts_service import apply_coupon, is_coupon_active, _round2
 from ..services.limits_service import can_use_coupon
 
-coupons_api = Blueprint("coupons_api", __name__)
+coupons_api = Blueprint("coupons_api", __name__, url_prefix="/api/coupons")
 
-def _sb():
-    return current_app.supabase
+def _round2(x) -> float:
+    return float(Decimal(str(x)).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
 
-@coupons_api.post("/api/coupons/validate")
-def validate_coupon():
+def _parse_utc(ts: str) -> datetime:
+    # Maneja '2025-08-01T00:00:00Z' y variantes
+    return datetime.fromisoformat(ts.replace("Z", "+00:00")).astimezone(timezone.utc)
+
+def _compute_discount(coupon: dict, subtotal: float, msi_selected: bool) -> float:
     """
-    Body JSON:
-      { code, subtotal, msi_selected, email? }
-    Respuesta:
-      { ok, code, discount_amount, reason?, starts_at_local?, ends_at_local?, cap_mode?, cap_amount?, cap_percent? }
+    Calcula el descuento y aplica cap según modo y si es MSI.
+    Campos esperados en coupon:
+      - type: 'percent' | 'fixed'
+      - value
+      - cap_mode: 'amount' | 'percent' | 'both' | None
+      - cap_amount, cap_percent
+      - cap_amount_msi, cap_percent_msi
     """
-    data = request.get_json(force=True, silent=True) or {}
-    code = (data.get("code") or "").strip().upper()
-    subtotal = Decimal(str(data.get("subtotal") or "0"))
-    msi = bool(data.get("msi_selected"))
-    email = (data.get("email") or "").strip() or (getattr(current_user, "email", None) or None)
-    user_id = getattr(current_user, "id", None)
-
-    if not code:
-        return jsonify(ok=False, reason="missing_code"), 400
     if subtotal <= 0:
-        return jsonify(ok=False, reason="subtotal_required"), 400
+        return 0.0
 
-    sb = _sb()
-    row = sb.table("coupons").select("*").eq("code", code).single().execute()
-    coupon = row.data
-    if not coupon:
-        # intento case-insensitive usando índice upper(code)
-        row = sb.table("coupons").select("*").eq("upper(code)", code).single().execute()
-        coupon = row.data
-    if not coupon:
-        return jsonify(ok=False, reason="invalid"), 404
+    ctype = (coupon.get("type") or "").lower()
+    value = float(coupon.get("value") or 0)
 
-    # Vigencia
-    if not is_coupon_active(coupon):
-        # Fechas bonitas en zona local guardada
-        tz = pytz.timezone(coupon.get("timezone") or "America/Monterrey")
-        s_local = coupon["starts_at"]; e_local = coupon["ends_at"]
+    if ctype == "percent":
+        raw = subtotal * (value / 100.0)
+    else:  # fixed
+        raw = value
+
+    # Caps
+    cmode = (coupon.get("cap_mode") or "").lower() or "both"
+    cap_amt = float(coupon.get("cap_amount") or 0)
+    cap_pct = float(coupon.get("cap_percent") or 0)
+
+    # Caps MSI
+    if msi_selected:
+        cap_amt = float(coupon.get("cap_amount_msi") or cap_amt)
+        cap_pct = float(coupon.get("cap_percent_msi") or cap_pct)
+
+    # Aplica caps
+    capped = raw
+    if cmode in ("amount", "both") and cap_amt > 0:
+        capped = min(capped, cap_amt)
+    if cmode in ("percent", "both") and cap_pct > 0:
+        capped = min(capped, subtotal * (cap_pct / 100.0))
+
+    return _round2(max(0.0, min(capped, subtotal)))
+
+@coupons_api.route("/validate", methods=["POST"])
+def validate_coupon():
+    try:
+        data = request.get_json(silent=True) or {}
+        code = (data.get("code") or "").strip().upper()
+        subtotal = float(data.get("subtotal") or 0)
+        msi_selected = bool(data.get("msi_selected", False))
+
+        if not code or subtotal <= 0:
+            return jsonify({"ok": False, "reason": "invalid"}), 400
+
+        sb = current_app.supabase
+
+        # Busca cupón por código
+        r = sb.table("coupons").select("*").eq("code", code).single().execute()
+        coupon = r.data or None
+        if not coupon:
+            return jsonify({"ok": False, "reason": "invalid"}), 200
+
+        # Activo + vigencia
+        if not bool(coupon.get("active", True)):
+            return jsonify({"ok": False, "reason": "inactive"}), 200
+
+        now = datetime.now(timezone.utc)
         try:
-            s_local = s_local if isinstance(s_local, str) else s_local.isoformat()
-            e_local = e_local if isinstance(e_local, str) else e_local.isoformat()
+            starts = _parse_utc(coupon["starts_at"])
+            ends = _parse_utc(coupon["ends_at"])
         except Exception:
-            pass
-        return jsonify(ok=False, reason="inactive",
-                       starts_at_local=s_local, ends_at_local=e_local,
-                       timezone=coupon.get("timezone")), 400
+            return jsonify({"ok": False, "reason": "inactive"}), 200
 
-    # Límites
-    ok, why = can_use_coupon(sb, coupon, user_id, email)
-    if not ok:
-        return jsonify(ok=False, reason=why), 400
+        if not (starts <= now <= ends):
+            return jsonify({"ok": False, "reason": "inactive"}), 200
 
-    # Mínimo de compra
-    min_order = coupon.get("min_order_amount")
-    if min_order is not None and Decimal(str(min_order)) > subtotal:
-        return jsonify(ok=False, reason="min_order_not_met", min_order_amount=str(min_order)), 400
+        # Mínimo de compra
+        min_order = float(coupon.get("min_order_amount") or 0)
+        if subtotal < min_order:
+            return jsonify({"ok": False, "reason": "min_order_not_met"}), 200
 
-    # Cálculo
-    discount_amount = apply_coupon(subtotal, coupon, msi_selected=msi)
-    return jsonify(
-        ok=True,
-        code=code,
-        discount_amount=str(discount_amount),
-        cap_mode=coupon.get("cap_mode"),
-        cap_amount=str(coupon.get("cap_amount") or "") or None,
-        cap_percent=str(coupon.get("cap_percent") or "") or None
-    ), 200
+        # Límites global/usuario
+        # Obtén user_id/email de tu sesión (ajusta a tu app)
+        user_id = session.get("user_id")
+        email = (session.get("user_email") or session.get("checkout_email") or "").strip().lower()
 
-@coupons_api.post("/api/coupons/commit")
-def commit_coupon():
-    """
-    Registra el uso de un cupón UNA VEZ que el pedido esté confirmado/pagado.
-    Body JSON: { code, order_id, amount, email? }
-    """
-    data = request.get_json(force=True, silent=True) or {}
-    code   = (data.get("code") or "").strip().upper()
-    order_id = data.get("order_id")
-    amount = Decimal(str(data.get("amount") or "0"))
-    email  = (data.get("email") or "").strip() or (getattr(current_user, "email", None) or None)
-    user_id = getattr(current_user, "id", None)
+        ok, why = can_use_coupon(sb, coupon, user_id, email)
+        if not ok:
+            return jsonify({"ok": False, "reason": why}), 200
 
-    if not code or not order_id or amount <= 0:
-        return jsonify(ok=False, reason="missing_fields"), 400
+        # Cálculo de descuento con caps
+        discount = _compute_discount(coupon, subtotal, msi_selected)
+        return jsonify({
+            "ok": True,
+            "discount_amount": discount,
+            "coupon_id": coupon["id"],
+            "code": coupon["code"]
+        }), 200
 
-    sb = _sb()
-    row = sb.table("coupons").select("id").eq("code", code).single().execute()
-    coupon = row.data
-    if not coupon:
-        return jsonify(ok=False, reason="invalid"), 404
-
-    payload = {
-        "coupon_id": coupon["id"],
-        "order_id": int(order_id),
-        "amount": float(amount),
-    }
-    if user_id is not None:
-        payload["user_id"] = int(user_id)
-    if email:
-        payload["email"] = email
-
-    ins = sb.table("coupon_redemptions").insert(payload).execute()
-    if getattr(ins, "error", None):
-        return jsonify(ok=False, reason="insert_failed", detail=str(ins.error)), 400
-    return jsonify(ok=True), 200
+    except Exception as e:
+        current_app.logger.exception("[/api/coupons/validate] error: %s", e)
+        return jsonify({"ok": False, "reason": "server_error"}), 500

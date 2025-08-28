@@ -1,31 +1,17 @@
 {% extends "base.html" %}
 
-{% block title %}
-  Carrito - VALAC Joyas
-{% endblock %}
+{% block title %}Carrito - VALAC Joyas{% endblock %}
 
 {% block content %}
 <style>
-  /* Badge “En oferta” estilo pill */
-  .discount-badge {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-    background-color: #000;
-    color: #fff;
-    font-size: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    padding: 0.25rem 0.75rem;
-    border-radius: 9999px;
-    z-index: 10;
+  .discount-badge{
+    position:absolute;top:1rem;right:1rem;background:#000;color:#fff;font-size:.75rem;
+    font-weight:600;text-transform:uppercase;padding:.25rem .75rem;border-radius:9999px;z-index:10
   }
-  .product-detail-container {
-    position: relative;
-  }
-</style> 
+  .product-detail-container{position:relative}
+</style>
+
 <main class="pt-32 md:pt-36 container mx-auto px-4 md:px-6 pb-16">
-  <!-- Si el servidor indica que no hay productos, se limpia localStorage -->
   {% if not products %}
     <script>
       console.log("DEBUG: No hay productos en el carrito. Limpiando localStorage.");
@@ -34,32 +20,38 @@
   {% endif %}
 
   <div class="flex flex-col md:flex-row gap-8">
-    <!-- Lista de Productos del Carrito -->
+    <!-- Lista de productos -->
     <section class="w-full md:w-2/3">
       <h1 class="text-3xl md:text-4xl font-bold text-[#333333] mb-8 font-playfair">Tus Artículos</h1>
+
       {% if products %}
         <div class="space-y-6" id="cart-items">
           {% for p in products %}
           <div class="bg-white p-5 rounded-lg shadow-md flex flex-col product-card" data-product-id="{{ p.id }}">
             <img src="{{ p.imagen or url_for('static', filename='images/placeholder.jpg') }}" alt="{{ p.nombre }}" class="w-full h-64 object-cover mb-4 rounded">
             <h3 class="text-xl md:text-2xl font-semibold text-[#333333] font-playfair">{{ p.nombre }}</h3>
+
             {% if p.descuento_pct and p.descuento_pct > 0 %}
-              <p class="text-gray-500 line-through mt-2">
-                ${{ "%.2f"|format(p.precio) }}
-              </p>
-              <p class="text-lg font-bold text-red-600 mt-1">
-                ${{ "%.2f"|format(p.unit_price) }}
-              </p>
+              <p class="text-gray-500 line-through mt-2">${{ "%.2f"|format(p.precio) }}</p>
+              <p class="text-lg font-bold text-red-600 mt-1">${{ "%.2f"|format(p.unit_price) }}</p>
             {% else %}
-              <p class="text-gray-800 mt-2 font-bold">
-                ${{ "%.2f"|format(p.unit_price) }}
-              </p>
+              <p class="text-gray-800 mt-2 font-bold">${{ "%.2f"|format(p.unit_price) }}</p>
             {% endif %}
-            <!-- Mostrar y permitir actualizar la cantidad -->
-            <p class="text-gray-700 mt-4 font-medium">Cantidad: 1</p>
-            <!-- Botón para eliminar el producto (envía POST a /remove) -->
-            <form method="POST" action="{{ url_for('cart.remove_from_cart', product_id=p.id) }}" class="mt-4">
-              <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded-full hover:bg-red-700 transition-colors" aria-label="Eliminar producto {{ p.nombre }}">
+
+            <!-- Cantidad (form para actualizar) -->
+            <form method="POST" action="{{ url_for('cart.update_quantity', product_id=p.id) }}" class="mt-4 flex items-center gap-3">
+              <label for="qty-{{ p.id }}" class="text-gray-700 font-medium">Cantidad:</label>
+              <input id="qty-{{ p.id }}" name="quantity" type="number" min="0" value="{{ p.cantidad or 1 }}"
+                     class="w-24 border border-gray-300 p-2 rounded">
+              <button type="submit" class="bg-gray-800 text-white px-3 py-2 rounded hover:bg-black transition-colors">
+                Actualizar
+              </button>
+            </form>
+
+            <!-- Eliminar -->
+            <form method="POST" action="{{ url_for('cart.remove_from_cart', product_id=p.id) }}" class="mt-3">
+              <button type="submit" class="bg-red-600 text-white px-4 py-2 rounded-full hover:bg-red-700 transition-colors"
+                      aria-label="Eliminar producto {{ p.nombre }}">
                 <i class="fas fa-trash"></i> Eliminar
               </button>
             </form>
@@ -71,33 +63,61 @@
       {% endif %}
     </section>
 
-    <!-- Resumen de Compra y Aplicación de Cupón -->
+    <!-- Resumen / Cupón -->
     <aside class="w-full md:w-1/3 bg-white p-6 rounded-lg shadow-md">
       <h2 class="text-2xl md:text-3xl font-bold font-playfair mb-4">Resumen de Compra</h2>
+
+      <!-- 1) Productos -->
       <div class="flex justify-between mb-2">
-        <span class="text-gray-700">Subtotal:</span>
+        <span class="text-gray-700">Productos:</span>
         <span id="subtotal" class="font-bold text-gray-900">$0.00</span>
       </div>
+
+      <!-- 2) Envío (no se descuenta) -->
       <div class="flex justify-between mb-2">
         <span class="text-gray-700">Envío:</span>
-        <span id="shipping" class="font-bold text-gray-900">$260.00</span>
+        <span id="shipping" class="font-bold text-gray-900">${{ '%.2f'|format(shipping_base|default(260)) }}</span>
       </div>
+
+      <!-- 3) Subtotal (productos + envío) -->
+      <div class="flex justify-between mb-2 border-t pt-2">
+        <span class="text-gray-700">Subtotal (productos + envío):</span>
+        <span id="preCoupon" class="font-bold text-gray-900">$0.00</span>
+      </div>
+
+      <!-- 4) Descuento cupón (sólo sobre productos) -->
+      <div class="flex justify-between mb-2 hidden" id="discountRow">
+        <span class="text-gray-700">Descuento cupón:</span>
+        <span id="discountAmount" class="font-bold text-gray-900">-$0.00</span>
+      </div>
+
+      <!-- 5) Total -->
       <div class="flex justify-between mb-4 border-t pt-2">
         <span class="text-gray-700">Total:</span>
         <span id="total" class="font-bold text-gray-900">$0.00</span>
       </div>
-      <!-- Sección de Cupón -->
+
+      <!-- Cupón -->
       <div class="coupon-section" data-aos="fade-up" data-aos-duration="1000">
         <label for="coupon" class="block text-gray-700 mb-2 text-lg">Código de Cupón</label>
-        <input type="text" id="coupon" class="coupon-input border border-gray-300 p-2 rounded w-full" placeholder="Ingresa tu cupón" aria-label="Código de Cupón">
-        <button id="apply-coupon-btn" class="apply-coupon-btn mt-2 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors" aria-label="Aplicar Cupón">Aplicar Cupón</button>
-        <!-- Mensaje animado para cupón -->
-        <div id="coupon-message" class="hidden text-green-600 font-semibold mt-2" data-aos="fade-in" data-aos-duration="500" role="status" aria-live="polite">
+        <input type="text" id="coupon" class="coupon-input border border-gray-300 p-2 rounded w-full"
+               placeholder="Ingresa tu cupón" aria-label="Código de Cupón">
+        <button id="apply-coupon-btn"
+                class="apply-coupon-btn mt-2 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 transition-colors"
+                aria-label="Aplicar Cupón">
+          Aplicar Cupón
+        </button>
+        <div id="coupon-message"
+             class="hidden text-green-600 font-semibold mt-2"
+             data-aos="fade-in" data-aos-duration="500" role="status" aria-live="polite">
           ¡Cupón aplicado con éxito!
         </div>
       </div>
-      <!-- Botón para proceder al pago -->
-      <button id="checkout-btn" class="mt-6 w-full bg-gradient-to-r from-[#D4AF37] to-[#C09330] hover:from-[#B38F00] hover:to-[#967700] text-white px-6 py-3 rounded-full font-semibold transition-colors shadow-md" aria-label="Proceder al Pago">
+
+      <button id="checkout-btn"
+              class="mt-6 w-full bg-gradient-to-r from-[#D4AF37] to-[#C09330] hover:from-[#B38F00] hover:to-[#967700]
+                     text-white px-6 py-3 rounded-full font-semibold transition-colors shadow-md"
+              aria-label="Proceder al Pago">
         Proceder al Pago
       </button>
     </aside>
@@ -107,97 +127,145 @@
 
 {% block scripts_extra %}
 <script>
-  // Inicializar cartItems desde los datos del servidor (no desde localStorage)
+  // --------------------------
+  // Datos iniciales desde servidor
+  // --------------------------
   let cartItems = [
     {% for p in products %}
     {
       id: {{ p.id }},
       nombre: "{{ p.nombre }}",
+      /* precio final por unidad mostrado/cobrado en carrito (unit_price) */
       precio: {{ '%.2f'|format(p.unit_price) }},
       cantidad: {{ p.cantidad or 1 }}
     }{% if not loop.last %},{% endif %}
     {% endfor %}
   ];
-  console.log("DEBUG: Cart items inicializados:", cartItems);
+  const SHIPPING_BASE = {{ shipping_base|default(260) }};
+  const FREE_SHIPPING_THRESHOLD = {{ free_shipping_threshold|default(8500) }};
+  let appliedCoupon = null; // { code, discount_amount }
 
-  // Función para calcular el subtotal
-  const calculateSubtotal = () => {
-    return cartItems.reduce((sum, item) => sum + item.precio * item.cantidad, 0);
-  };
+  const $subtotalEl = document.getElementById('subtotal');     // Productos
+  const $shippingEl = document.getElementById('shipping');     // Envío
+  const $preCouponEl = document.getElementById('preCoupon');   // Productos + Envío
+  const $totalEl    = document.getElementById('total');        // Total
+  const $discRow    = document.getElementById('discountRow');  // Fila descuento
+  const $discAmt    = document.getElementById('discountAmount');
 
-  // Actualiza el resumen de la compra y sincroniza con localStorage
-  const updateSummary = () => {
-    const subtotal = calculateSubtotal();
-    // 🔄 REEMPLAZA el cálculo de shipping dentro de updateOrderSummary()
-    const shipping = subtotal >= 8500 ? 0 : (subtotal > 0 ? 260 : 0);
-    const total = subtotal + shipping;
-    document.getElementById('subtotal').textContent = `$${subtotal.toFixed(2)}`;
-    document.getElementById('shipping').textContent = `$${shipping.toFixed(2)}`;
-    document.getElementById('total').textContent = `$${total.toFixed(2)}`;
-    if (cartItems.length === 0) {
-      console.log("DEBUG: El carrito está vacío. Eliminando cartItems de localStorage.");
-      localStorage.removeItem('cartItems');
-    } else {
-      console.log("DEBUG: Actualizando localStorage con cartItems:", cartItems);
-      localStorage.setItem('cartItems', JSON.stringify(cartItems));
+  const money = v => `$${Number(v).toFixed(2)}`;
+
+  // Subtotal de productos (sobre el que SÍ aplica el cupón)
+  const calcSubtotalProducts = () =>
+    cartItems.reduce((s, it) => s + (Number(it.precio) * Number(it.cantidad)), 0);
+
+  async function updateSummary({revalidate=false} = {}) {
+    const subtotalProducts = calcSubtotalProducts();
+    const shipping = subtotalProducts >= FREE_SHIPPING_THRESHOLD ? 0 : (subtotalProducts > 0 ? SHIPPING_BASE : 0);
+    const preCoupon = subtotalProducts + shipping;
+
+    // Revalidar cupón si cambia el importe base
+    if (revalidate && appliedCoupon && appliedCoupon.code) {
+      try {
+        const r = await fetch('/api/coupons/validate', {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({
+            code: appliedCoupon.code,
+            // ⬇️ El cupón se calcula SOLO sobre productos, no incluye envío
+            subtotal: String(subtotalProducts),
+            msi_selected: false
+          })
+        });
+        const j = await r.json();
+        if (r.ok && j.ok) {
+          appliedCoupon.discount_amount = parseFloat(j.discount_amount || '0');
+        } else {
+          appliedCoupon = null;
+        }
+      } catch(e) { /* no bloquear UI */ }
     }
-  };
 
-  // Confirmación para eliminar producto (para carrito)
-  document.querySelectorAll('.remove-item').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      if (confirm("¿Estás seguro que deseas eliminar este producto?")) {
-        const id = parseInt(btn.getAttribute('data-product-id'));
-        console.log("DEBUG: Eliminando producto con ID:", id);
-        cartItems = cartItems.filter(item => item.id !== id);
-        // Remover el producto del DOM
-        btn.closest('.product-card').remove();
-        updateSummary();
-      } else {
-        console.log("DEBUG: Eliminación cancelada para producto con ID:", btn.getAttribute('data-product-id'));
-      }
-    });
-  });
+    const discount = appliedCoupon ? Number(appliedCoupon.discount_amount || 0) : 0;
+    const total = Math.max(0, preCoupon - discount); // (productos + envío) - cupón
 
-  // Actualizar resumen al cargar la página
+    // Pintar
+    $subtotalEl.textContent = money(subtotalProducts);
+    $shippingEl.textContent = money(shipping);
+    $preCouponEl.textContent = money(preCoupon);
+    $totalEl.textContent    = money(total);
+
+    if (discount > 0) {
+      $discRow.classList.remove('hidden');
+      $discAmt.textContent = `-${money(discount).replace('$','')}`;
+    } else {
+      $discRow.classList.add('hidden');
+      $discAmt.textContent = '-$0.00';
+    }
+
+    // Persistencia ligera en el front
+    cartItems.length ? localStorage.setItem('cartItems', JSON.stringify(cartItems))
+                     : localStorage.removeItem('cartItems');
+  }
+
+  // Inicial
   updateSummary();
 
-  // Evento para aplicar cupón: "DESCUENTO10" otorga 10% de descuento
-  document.getElementById('apply-coupon-btn').addEventListener('click', () => {
-    const couponCode = document.getElementById('coupon').value.trim();
-    const couponMsg = document.getElementById('coupon-message');
-    console.log("DEBUG: Aplicando cupón, código ingresado:", couponCode);
-    if (couponCode === "DESCUENTO10") {
-      const subtotal = calculateSubtotal();
-      const discount = subtotal * 0.10;
-      const shipping = subtotal > 0 ? 50 : 0;
-      const total = subtotal + shipping - discount;
-      document.getElementById('subtotal').textContent = `$${(subtotal - discount).toFixed(2)}`;
-      document.getElementById('total').textContent = `$${total.toFixed(2)}`;
-      document.getElementById('apply-coupon-btn').classList.add('animate-bounce');
-      couponMsg.textContent = "¡Cupón aplicado con éxito!";
-      couponMsg.classList.remove('hidden');
-      console.log("DEBUG: Cupón aplicado. Nuevo subtotal:", subtotal - discount, "Nuevo total:", total);
-      setTimeout(() => {
-        couponMsg.classList.add('hidden');
-        document.getElementById('apply-coupon-btn').classList.remove('animate-bounce');
-      }, 3000);
-    } else {
-      console.log("DEBUG: Código de cupón inválido:", couponCode);
-      alert("Código de cupón inválido");
+  // Aplicar cupón
+  document.getElementById('apply-coupon-btn').addEventListener('click', async () => {
+    const codeInput = document.getElementById('coupon');
+    const code = (codeInput.value || '').trim().toUpperCase();
+    const msg = document.getElementById('coupon-message');
+
+    msg.classList.add('hidden'); msg.style.color = '#16a34a';
+    if (!code) { alert('Ingresa un código.'); return; }
+
+    const baseForCoupon = calcSubtotalProducts(); // ⬅️ base = productos
+    if (baseForCoupon <= 0) { alert('Tu carrito está vacío.'); return; }
+
+    try {
+      const r = await fetch('/api/coupons/validate', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({ code, subtotal: String(baseForCoupon), msi_selected: false })
+      });
+      const j = await r.json();
+
+      if (!r.ok || !j.ok) {
+        const map = {
+          invalid: 'Cupón inválido.',
+          inactive: 'Fuera de vigencia.',
+          min_order_not_met: 'No alcanzas el mínimo de compra.',
+          limit_reached_global: 'Se alcanzó el límite de usos.',
+          limit_reached_user: 'Ya usaste este cupón.'
+        };
+        alert(map[j.reason] || 'No se pudo aplicar el cupón.');
+        appliedCoupon = null;
+        await updateSummary();
+        return;
+      }
+
+      appliedCoupon = { code, discount_amount: parseFloat(j.discount_amount || '0') };
+      localStorage.setItem('applied_coupon_code', code);
+      localStorage.setItem('applied_coupon_amount', String(appliedCoupon.discount_amount));
+
+      msg.textContent = `¡Cupón aplicado: -$${appliedCoupon.discount_amount.toFixed(2)}!`;
+      msg.classList.remove('hidden');
+
+      await updateSummary();
+    } catch (e) {
+      console.error(e);
+      alert('Error de red al validar el cupón.');
     }
   });
 
-  // Evento para proceder al pago (simulado)
+  // Botón pagar (tu flujo)
   document.getElementById('checkout-btn').addEventListener('click', () => {
+    // En el checkout del servidor recalcula y manda el total correcto
     window.location.href = '/checkout';
   });
 
-  // Inicialización de AOS para animaciones y log de inicio
   document.addEventListener("DOMContentLoaded", () => {
-    AOS.init();
-    console.log("DEBUG: AOS inicializado.");
+    if (window.AOS) AOS.init();
   });
 </script>
 {% include 'partials/tracking.html' %}

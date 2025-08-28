@@ -1,0 +1,205 @@
+{% extends 'admin/master.html' %}
+{% block body %}
+<div class="container" style="padding:16px">
+  <div class="row">
+    <div class="col-sm-12">
+      <div class="clearfix" style="margin-bottom:12px">
+        <h3 class="pull-left" style="margin-top:0">Cupones</h3>
+        <a class="btn btn-primary pull-right" href="{{ url_for('admin_coupons.new') }}">
+          <span class="glyphicon glyphicon-plus"></span> Nuevo cupón
+        </a>
+      </div>
+
+      <!-- Toolbar de búsqueda y filtros (client-side) -->
+      <div class="panel panel-default">
+        <div class="panel-body">
+          <div class="row">
+            <div class="col-sm-6">
+              <label for="searchInput" class="sr-only">Buscar</label>
+              <div class="input-group">
+                <span class="input-group-addon"><span class="glyphicon glyphicon-search"></span></span>
+                <input id="searchInput" type="text" class="form-control" placeholder="Buscar por código… (p. ej. VALAC, AFF-, SEP25)">
+              </div>
+              <p class="help-block" style="margin:6px 0 0">Búsqueda parcial, sin distinguir mayúsculas.</p>
+            </div>
+            <div class="col-sm-2">
+              <label for="filterActive">Estado</label>
+              <select id="filterActive" class="form-control">
+                <option value="all">Todos</option>
+                <option value="active">Activos</option>
+                <option value="inactive">Inactivos</option>
+              </select>
+            </div>
+            <div class="col-sm-2">
+              <label for="filterType">Tipo</label>
+              <select id="filterType" class="form-control">
+                <option value="all">Todos</option>
+                <option value="percent">%</option>
+                <option value="fixed">$</option>
+              </select>
+            </div>
+            <div class="col-sm-2">
+              <label for="filterCap">Tope</label>
+              <select id="filterCap" class="form-control">
+                <option value="all">Todos</option>
+                <option value="amount">Tope $</option>
+                <option value="percent">Tope %</option>
+                <option value="both">Ambos</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-responsive">
+        <table id="couponsTable" class="table table-striped table-hover">
+          <thead style="position: sticky; top: 0; background: #fff; z-index: 1">
+            <tr>
+              <th style="min-width:60px">ID</th>
+              <th style="min-width:190px">Código</th>
+              <th>Tipo</th>
+              <th>Valor</th>
+              <th style="min-width:180px">Tope</th>
+              <th style="min-width:230px">Vigencia</th>
+              <th>Estado</th>
+              <th style="min-width:190px">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+          {% for c in coupons %}
+            <tr
+              data-active="{{ 'active' if c.active else 'inactive' }}"
+              data-type="{{ c.type }}"
+              data-cap="{{ c.cap_mode }}"
+              data-code="{{ (c.code or '')|lower }}"
+            >
+              <td class="text-muted">#{{ c.id }}</td>
+              <td>
+                <code style="font-size:13px; letter-spacing:.5px">{{ c.code }}</code>
+                <button type="button" class="btn btn-xs btn-default js-copy" title="Copiar código" aria-label="Copiar código" data-code="{{ c.code }}">
+                  <span class="glyphicon glyphicon-copy"></span>
+                </button>
+                {% if c.notes %}
+                  <span class="label label-info" title="{{ c.notes }}">Notas</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if c.type == 'percent' %}
+                  <span class="label label-primary">%</span>
+                {% else %}
+                  <span class="label label-success">$</span>
+                {% endif %}
+              </td>
+              <td>
+                {% if c.type == 'percent' %}
+                  {{ '%.2f'|format(c.value) }}%
+                {% else %}
+                  ${{ '%.2f'|format(c.value) }}
+                {% endif %}
+              </td>
+              <td>
+                {% if c.cap_mode in ['amount','both'] and c.cap_amount %}
+                  <span class="label label-success" title="Tope en dinero">$ {{ '%.2f'|format(c.cap_amount) }}</span>
+                {% endif %}
+                {% if c.cap_mode in ['percent','both'] and c.cap_percent %}
+                  <span class="label label-primary" title="Tope en porcentaje">{{ '%.2f'|format(c.cap_percent) }}%</span>
+                {% endif %}
+                {% if c.cap_amount_msi or c.cap_percent_msi %}
+                  <div><small class="text-muted">
+                    MSI:
+                    {% if c.cap_amount_msi %}$ {{ '%.2f'|format(c.cap_amount_msi) }}{% endif %}
+                    {% if c.cap_percent_msi %} {{ '%.2f'|format(c.cap_percent_msi) }}%{% endif %}
+                  </small></div>
+                {% endif %}
+              </td>
+              <td>
+                <div>
+                  <span class="glyphicon glyphicon-time" aria-hidden="true"></span>
+                  {{ c.starts_at }} → {{ c.ends_at }}
+                </div>
+                <small class="text-muted">TZ: {{ tz_labels.get(c.timezone, c.timezone) }}</small>
+              </td>
+              <td>
+                {% if c.active %}
+                  <span class="label label-success">Activo</span>
+                {% else %}
+                  <span class="label label-default">Inactivo</span>
+                {% endif %}
+              </td>
+              <td>
+                <div class="btn-group" role="group" aria-label="Acciones">
+                  <a class="btn btn-xs btn-info" href="{{ url_for('admin_coupons.edit', coupon_id=c.id) }}">
+                    <span class="glyphicon glyphicon-pencil"></span> Editar
+                  </a>
+                  <form class="js-toggle-form" action="{{ url_for('admin_coupons.toggle', coupon_id=c.id) }}" method="post" style="display:inline">
+                    <button class="btn btn-xs btn-warning" type="submit" data-current="{{ 'on' if c.active else 'off' }}">
+                      <span class="glyphicon glyphicon-off"></span> {{ 'Desactivar' if c.active else 'Activar' }}
+                    </button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <p class="text-muted"><small>Tip: Los timestamps se guardan en UTC; “TZ” indica la zona con la que se capturó en la UI.</small></p>
+      <p><a href="{{ url_for('admin.index') }}">&larr; Volver al panel</a></p>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  // Copiar código
+  document.querySelectorAll('.js-copy').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var code = btn.getAttribute('data-code') || '';
+      navigator.clipboard.writeText(code).then(function(){
+        btn.classList.add('btn-success');
+        btn.innerHTML = '<span class="glyphicon glyphicon-ok"></span>';
+        setTimeout(function(){
+          btn.classList.remove('btn-success');
+          btn.innerHTML = '<span class="glyphicon glyphicon-copy"></span>';
+        }, 1200);
+      });
+    });
+  });
+
+  // Confirmación al activar/desactivar
+  document.querySelectorAll('.js-toggle-form').forEach(function(form){
+    form.addEventListener('submit', function(e){
+      var btn = form.querySelector('button[type="submit"]');
+      var current = btn.getAttribute('data-current') === 'on';
+      var msg = current ? '¿Seguro que deseas desactivar este cupón?' : '¿Activar este cupón?';
+      if(!confirm(msg)){ e.preventDefault(); }
+    });
+  });
+
+  // Filtros y búsqueda (client-side)
+  var q = document.getElementById('searchInput');
+  var fActive = document.getElementById('filterActive');
+  var fType = document.getElementById('filterType');
+  var fCap = document.getElementById('filterCap');
+  var rows = Array.prototype.slice.call(document.querySelectorAll('#couponsTable tbody tr'));
+
+  function applyFilters(){
+    var term = (q.value || '').toLowerCase().trim();
+    var a = fActive.value, t = fType.value, c = fCap.value;
+    rows.forEach(function(tr){
+      var ok = true;
+      if (term) ok = ok && (tr.dataset.code.indexOf(term) !== -1);
+      if (a !== 'all') ok = ok && (tr.dataset.active === a);
+      if (t !== 'all') ok = ok && (tr.dataset.type === t);
+      if (c !== 'all') ok = ok && (tr.dataset.cap === c);
+      tr.style.display = ok ? '' : 'none';
+    });
+  }
+  [q, fActive, fType, fCap].forEach(function(el){
+    el.addEventListener('input', applyFilters);
+    el.addEventListener('change', applyFilters);
+  });
+})();
+</script>
+{% endblock %}

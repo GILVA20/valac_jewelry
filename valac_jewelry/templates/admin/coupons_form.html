@@ -1,0 +1,275 @@
+{% extends 'admin/master.html' %}
+{% block body %}
+<div class="container" style="padding:16px; max-width:980px">
+  <h3 style="margin-top:0">{{ 'Editar cupón' if coupon else 'Nuevo cupón' }}</h3>
+  <form method="post" id="couponForm" novalidate>
+    <!-- Identidad del cupón -->
+    <div class="panel panel-default">
+      <div class="panel-heading"><strong>Identidad</strong></div>
+      <div class="panel-body">
+        <div class="row">
+          <div class="col-sm-6">
+            <label for="code">Código</label>
+            <div class="input-group">
+              <span class="input-group-addon"><span class="glyphicon glyphicon-barcode"></span></span>
+              <input id="code" name="code" class="form-control text-uppercase"
+                     required maxlength="40"
+                     pattern="[A-Z2-9\-]{4,40}"
+                     title="Usa A–Z, 2–9 y guiones. Evita 0,O,1,I."
+                     value="{{ coupon.code if coupon else '' }}"
+                     placeholder="VALAC-SEP25-8F7K" autocomplete="off">
+            </div>
+            <p class="help-block">Ignora mayúsculas/minúsculas. Caracteres válidos: A–Z, 2–9 y “-”.</p>
+          </div>
+          <div class="col-sm-3">
+            <label for="type">Tipo</label>
+            <select id="type" name="type" class="form-control">
+              <option value="percent" {{ 'selected' if coupon and coupon.type=='percent' else '' }}>% (porcentaje)</option>
+              <option value="fixed"   {{ 'selected' if coupon and coupon.type=='fixed' else '' }}>$ (monto fijo)</option>
+            </select>
+          </div>
+          <div class="col-sm-3">
+            <label for="value">Valor</label>
+            <div class="input-group">
+              <input id="value" name="value" type="number" step="0.01" min="0" class="form-control"
+                     required value="{{ coupon.value if coupon else '' }}"
+                     aria-describedby="valueHelp">
+              <span class="input-group-addon" id="valueUnit">%</span>
+            </div>
+            <p id="valueHelp" class="help-block">Si es “%”, usa 5–15 recomendado. Si es “$”, usa 100–500.</p>
+          </div>
+        </div>
+        <div class="checkbox" style="margin-top:10px">
+          <label>
+            <input name="active" type="checkbox" {{ 'checked' if (coupon and coupon.active) or (not coupon) else '' }}>
+            Activar cupón al guardar
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vigencia -->
+    <div class="panel panel-default">
+      <div class="panel-heading"><strong>Vigencia</strong></div>
+      <div class="panel-body">
+        <div class="row">
+          <div class="col-sm-4">
+            <label for="starts_at">Inicio (local)</label>
+            <input id="starts_at" name="starts_at" type="datetime-local" class="form-control"
+                   required value="{{ coupon.starts_at|replace('Z','') if coupon else '' }}">
+          </div>
+          <div class="col-sm-4">
+            <label for="ends_at">Fin (local)</label>
+            <input id="ends_at" name="ends_at" type="datetime-local" class="form-control"
+                   required value="{{ coupon.ends_at|replace('Z','') if coupon else '' }}">
+            <p class="help-block">Debe ser posterior al inicio. Corte sugerido: 23:59 (zona local).</p>
+          </div>
+          <div class="col-sm-4">
+            <label for="timezone">Zona horaria</label>
+            <select id="timezone" name="timezone" class="form-control">
+              {% for tz, label in tz_labels.items() %}
+                <option value="{{ tz }}" {{ 'selected' if coupon and coupon.timezone==tz else '' }}>{{ label }}</option>
+              {% endfor %}
+            </select>
+            <p class="help-block">Se guarda en UTC; esta zona se usa solo para captura/mostrar.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Límites y mínimos -->
+    <div class="panel panel-default">
+      <div class="panel-heading"><strong>Elegibilidad y límites</strong></div>
+      <div class="panel-body">
+        <div class="row">
+          <div class="col-sm-4">
+            <label for="min_order_amount">Mínimo de compra ($)</label>
+            <input id="min_order_amount" name="min_order_amount" type="number" step="0.01" min="0" class="form-control"
+                   value="{{ coupon.min_order_amount if coupon and coupon.min_order_amount is not none else '' }}">
+            <p class="help-block">Ej. $2,000 para evitar canjes de ticket bajo.</p>
+          </div>
+          <div class="col-sm-4">
+            <label for="max_uses">Usos globales</label>
+            <input id="max_uses" name="max_uses" type="number" min="0" class="form-control"
+                   value="{{ coupon.max_uses if coupon and coupon.max_uses is not none else '' }}">
+          </div>
+          <div class="col-sm-4">
+            <label for="max_uses_per_user">Usos por usuario</label>
+            <input id="max_uses_per_user" name="max_uses_per_user" type="number" min="0" class="form-control"
+                   value="{{ coupon.max_uses_per_user if coupon and coupon.max_uses_per_user is not none else '' }}">
+            <p class="help-block">Recomendado: 1</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Topes -->
+    <div class="panel panel-default">
+      <div class="panel-heading"><strong>Topes de descuento (Cap)</strong></div>
+      <div class="panel-body">
+        <div class="row">
+          <div class="col-sm-3">
+            <label for="cap_mode">Modo de tope</label>
+            <select id="cap_mode" name="cap_mode" class="form-control">
+              <option value="amount"  {{ 'selected' if coupon and coupon.cap_mode=='amount' else '' }}>Tope $</option>
+              <option value="percent" {{ 'selected' if coupon and coupon.cap_mode=='percent' else '' }}>Tope %</option>
+              <option value="both"    {{ 'selected' if (not coupon) or (coupon and coupon.cap_mode=='both') else '' }}>Ambos</option>
+            </select>
+            <p class="help-block">Protege margen: usa “Ambos” para limitar por $ y por %.</p>
+          </div>
+          <div class="col-sm-3">
+            <label for="cap_amount">Cap $</label>
+            <div class="input-group">
+              <span class="input-group-addon">$</span>
+              <input id="cap_amount" name="cap_amount" type="number" step="0.01" min="0" class="form-control"
+                     value="{{ coupon.cap_amount if coupon and coupon.cap_amount is not none else '' }}">
+            </div>
+          </div>
+          <div class="col-sm-3">
+            <label for="cap_percent">Cap %</label>
+            <div class="input-group">
+              <input id="cap_percent" name="cap_percent" type="number" step="0.01" min="0" class="form-control"
+                     value="{{ coupon.cap_percent if coupon and coupon.cap_percent is not none else '' }}">
+              <span class="input-group-addon">%</span>
+            </div>
+          </div>
+          <div class="col-sm-3">
+            <label class="text-muted">Sugerencias</label>
+            <div class="well well-sm" style="margin:0">
+              <small>
+                % recomendado: 10–15<br>
+                Cap $ típico: $600–$800<br>
+                MSI: reduce el cap
+              </small>
+            </div>
+          </div>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <div class="col-sm-3">
+            <label for="cap_amount_msi">Cap $ (MSI)</label>
+            <div class="input-group">
+              <span class="input-group-addon">$</span>
+              <input id="cap_amount_msi" name="cap_amount_msi" type="number" step="0.01" min="0" class="form-control"
+                     value="{{ coupon.cap_amount_msi if coupon and coupon.cap_amount_msi is not none else '' }}">
+            </div>
+          </div>
+          <div class="col-sm-3">
+            <label for="cap_percent_msi">Cap % (MSI)</label>
+            <div class="input-group">
+              <input id="cap_percent_msi" name="cap_percent_msi" type="number" step="0.01" min="0" class="form-control"
+                     value="{{ coupon.cap_percent_msi if coupon and coupon.cap_percent_msi is not none else '' }}">
+              <span class="input-group-addon">%</span>
+            </div>
+          </div>
+          <div class="col-sm-6">
+            <label for="notes">Notas internas</label>
+            <textarea id="notes" name="notes" class="form-control" rows="3" placeholder="Contexto de campaña, exclusiones, influencer, etc.">{{ coupon.notes if coupon else '' }}</textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Acciones -->
+    <div class="clearfix" style="position:sticky;bottom:0;background:#fff;padding:8px 0;border-top:1px solid #eee">
+      <button id="saveBtn" class="btn btn-success" type="submit">
+        <span class="glyphicon glyphicon-floppy-disk"></span> Guardar
+      </button>
+      <a class="btn btn-default" href="{{ url_for('admin_coupons.index') }}">Cancelar</a>
+      <span id="formAlert" class="text-danger" style="margin-left:12px; display:none"></span>
+    </div>
+  </form>
+</div>
+
+<style>
+  .text-uppercase { text-transform: uppercase; }
+  .has-error input, .has-error select, .has-error textarea { border-color: #a94442; }
+</style>
+
+<script>
+(function(){
+  var $form = document.getElementById('couponForm');
+  var $code = document.getElementById('code');
+  var $type = document.getElementById('type');
+  var $value = document.getElementById('value');
+  var $valueUnit = document.getElementById('valueUnit');
+  var $starts = document.getElementById('starts_at');
+  var $ends = document.getElementById('ends_at');
+  var $capMode = document.getElementById('cap_mode');
+  var $capAmt = document.getElementById('cap_amount');
+  var $capPct = document.getElementById('cap_percent');
+  var $alert = document.getElementById('formAlert');
+  var requiredClass = 'has-error';
+
+  function setUnit(){
+    $valueUnit.textContent = ($type.value === 'percent') ? '%' : '$';
+  }
+  function toggleCapFields(){
+    var mode = $capMode.value;
+    var disableAmt = (mode === 'percent');
+    var disablePct = (mode === 'amount');
+    $capAmt.disabled = disableAmt;
+    $capPct.disabled = disablePct;
+  }
+  function validateTimes(){
+    if($starts.value && $ends.value && ($ends.value <= $starts.value)){
+      $ends.parentElement.classList.add(requiredClass);
+      showError('La fecha de fin debe ser posterior al inicio.');
+      return false;
+    } else {
+      $ends.parentElement.classList.remove(requiredClass);
+      hideError();
+      return true;
+    }
+  }
+  function showError(msg){
+    $alert.textContent = msg || 'Revisa los campos marcados.';
+    $alert.style.display = 'inline';
+  }
+  function hideError(){
+    $alert.textContent = '';
+    $alert.style.display = 'none';
+  }
+  function upcaseClean(e){
+    var v = (e.target.value || '').toUpperCase().replace(/\s+/g,'');
+    e.target.value = v;
+  }
+  // Eventos
+  $type.addEventListener('change', setUnit);
+  $capMode.addEventListener('change', toggleCapFields);
+  $starts.addEventListener('change', validateTimes);
+  $ends.addEventListener('change', validateTimes);
+  $code.addEventListener('input', upcaseClean);
+  setUnit(); toggleCapFields();
+
+  // Validación HTML5 + reforzada
+  $form.addEventListener('submit', function(e){
+    hideError();
+    // Chequeo nativo
+    if(!$form.checkValidity()){
+      e.preventDefault();
+      showError('Completa los campos requeridos y corrige los errores.');
+      // Resaltar campos inválidos
+      Array.prototype.slice.call($form.querySelectorAll(':invalid')).forEach(function(el){
+        var grp = el.closest('.form-group') || el.parentElement;
+        if(grp) grp.classList.add(requiredClass);
+      });
+      return;
+    }
+    // Validación adicional de fechas
+    if(!validateTimes()){
+      e.preventDefault();
+      return;
+    }
+  });
+
+  // Quitar marca de error al editar
+  $form.querySelectorAll('input,select,textarea').forEach(function(el){
+    el.addEventListener('input', function(){
+      var grp = el.closest('.form-group') || el.parentElement;
+      if(grp) grp.classList.remove(requiredClass);
+      hideError();
+    });
+  });
+})();
+</script>
+{% endblock %}

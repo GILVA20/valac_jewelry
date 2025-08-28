@@ -104,6 +104,7 @@ def create_app():
     
     admin = Admin(app, name='VALAC Joyas Admin', template_mode='bootstrap3', url='/admin', endpoint='admin')
     from .routes.admin import SupabaseProductAdmin, BulkUploadAdminView, SalesAdmin, PaymentsAdmin, ReportsAdmin
+    from .routes.admin_coupons import CouponsAdminView
     from .routes.admin_orders import OrderAdminView
     from .routes.analytics import AnalyticsAdmin
     admin.add_view(SupabaseProductAdmin(name='Productos Supabase', endpoint='supabase_products'))
@@ -114,6 +115,7 @@ def create_app():
     admin.add_view(PaymentsAdmin(name='Pagos / Cobranza', endpoint='payments'))
     admin.add_view(ReportsAdmin(name='Reportes', endpoint='reports'))
     admin.add_view(AnalyticsAdmin(name='Analytics', endpoint='analytics'))
+    admin.add_view(CouponsAdminView(name='Cupones', endpoint='admin_coupons'))
     return app
 
 if __name__ == '__main__':

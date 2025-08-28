@@ -99,7 +99,10 @@ def create_app():
     from .routes.mercadopago_checkout import mp_checkout_bp
     app.register_blueprint(mp_checkout_bp)
 
-    from .routes.mock_checkout import mock_ch
+
+    # Mock checkout (SIEMPRE registrado, como pediste)
+    from .routes.mock_checkout import mock_checkout_bp
+    app.register_blueprint(mock_checkout_bp)
     from .routes.coupons_api import coupons_api
     app.register_blueprint(coupons_api)
     

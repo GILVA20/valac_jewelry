@@ -1,35 +1,29 @@
 {% extends "base.html" %}
-{% block title %}
-  Pago Exitoso - VALAC Joyas
-{% endblock %}
+{% block title %}Pago Exitoso - VALAC Joyas{% endblock %}
 
 {% block content %}
 <main class="container mx-auto p-6 pt-24">
   <div class="bg-white shadow-md rounded p-6">
     <h1 class="text-3xl font-bold mb-4 text-center">¡Pago Exitoso!</h1>
     <p class="text-center mb-6">Gracias por tu compra. A continuación, se muestra el resumen de tu orden:</p>
-    
-    <!-- Resumen de la Orden -->
+
+    <!-- Resumen de la Orden (totales 100% desde cart_snapshot inyectados en order) -->
     <div class="border p-4 rounded mb-6">
       <h2 class="text-2xl font-semibold mb-2">Resumen de la Orden</h2>
       <ul class="list-disc pl-6">
         <li><strong>ID de Orden:</strong> {{ order.id }}</li>
-        <li><strong>Nombre:</strong> {{ order.nombre }}</li>
-        <li><strong>Dirección de Envío:</strong> {{ order.dirección_envío }}</li>
-        <li><strong>Estado:</strong> {{ order.estado_geografico }}</li>
-        <li><strong>Colonia:</strong> {{ order.colonia }}</li>
-        <li><strong>Ciudad:</strong> {{ order.ciudad }}</li>
-        <li><strong>Código Postal:</strong> {{ order.codigo_postal }}</li>
-        <li><strong>Teléfono:</strong> {{ order.telefono }}</li>
-        <li><strong>Correo:</strong> {{ order.email }}</li>
-        <li><strong>Total:</strong> ${{ order.total }}</li>
-        <li><strong>Estado de Pago:</strong> Completado</li>
+        <li><strong>Subtotal:</strong> ${{ '%.2f' % (order.subtotal or 0.0) }}</li>
+        <li><strong>Envío:</strong> ${{ '%.2f' % (order.shipping or 0.0) }}</li>
+        <li><strong>Descuento:</strong> ${{ '%.2f' % (order.discount or 0.0) }}</li>
+        <li><strong>Total:</strong> ${{ '%.2f' % (order.total or 0.0) }}</li>
+        <li><strong>Estado de pago:</strong> {{ order.estado_pago }}</li>
       </ul>
     </div>
-    
-    <!-- Artículos Comprados -->
+
+    <!-- Artículos Comprados (items normalizados) -->
     <div>
       <h2 class="text-2xl font-semibold mb-4">Artículos Comprados</h2>
+
       {% if order_items and order_items|length > 0 %}
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         {% for item in order_items %}
@@ -42,26 +36,37 @@
             {% endif %}
           </div>
           <div class="w-2/3 pl-4">
-            <p><strong>ID de Producto:</strong> {{ item.id }}</p>
             <p><strong>Artículo:</strong> {{ item.nombre }}</p>
-            {% if item.descripcion %}
-              <p><strong>Descripción:</strong> {{ item.descripcion }}</p>
-            {% endif %}
-            {% if item.precio %}
-              <p><strong>Precio:</strong> ${{ item.precio }}</p>
-            {% endif %}
-            {% if item.cantidad %}
-              <p><strong>Cantidad:</strong> {{ item.cantidad }}</p>
-            {% endif %}
+            {% if item.descripcion %}<p>{{ item.descripcion }}</p>{% endif %}
+            <p><strong>Precio unitario:</strong> ${{ '%.2f' % item.unit_price }}</p>
+            <p><strong>Descuento unitario:</strong> ${{ '%.2f' % item.descuento }}</p>
+            <p><strong>Precio final unitario producto:</strong> ${{ '%.2f' % item.final_price }}</p>
+            <p><strong>Cantidad:</strong> {{ item.cantidad }}</p>
           </div>
         </div>
         {% endfor %}
       </div>
+
+      <!-- Resumen dentro de la misma sección (debajo del listado) -->
+      <div class="border rounded p-4 mt-4">
+        <div class="flex justify-between">
+          <span class="font-medium">Subtotal artículos</span>
+          <span>${{ '%.2f' % (items_sum or 0) }}</span>
+        </div>
+        <div class="flex justify-between mt-1">
+          <span class="font-medium">Envío</span>
+          <span>${{ '%.2f' % (order.shipping or 0) }}</span>
+        </div>
+        <div class="flex justify-between mt-2 text-base">
+          <span class="font-semibold">Total (artículos + envío)</span>
+          <span class="font-semibold">${{ '%.2f' % (grand_sum or 0) }}</span>
+        </div>
+      </div>
       {% else %}
-      <p>No se encontraron artículos en tu orden.</p>
+        <p>No se encontraron artículos en tu orden.</p>
       {% endif %}
     </div>
-    
+
     <!-- Botón Volver al Inicio -->
     <div class="text-center mt-8">
       <a href="{{ url_for('main.home') }}" class="inline-block bg-green-600 text-white px-6 py-3 rounded hover:bg-green-700 transition">
@@ -70,5 +75,6 @@
     </div>
   </div>
 </main>
+
 {% include 'partials/tracking.html' %}
 {% endblock %}

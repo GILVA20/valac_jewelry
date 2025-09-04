@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirmación de Pedido - VALAC Joyas</title>
+</head>
+<body style="font-family: Arial, sans-serif; line-height: 1.6;">
+    <div style="max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px;">
+        <h1 style="text-align: center; color: #333;">¡Gracias por tu compra!</h1>
+        <p>Hola {{ order.nombre }},</p>
+        <p>Tu pedido ha sido confirmado exitosamente. Aquí tienes los detalles:</p>
+
+        <h2>Resumen de la Orden</h2>
+        <ul>
+            <li><strong>ID de Orden:</strong> {{ order.id }}</li>
+            <li><strong>Subtotal:</strong> ${{ cart_snapshot.subtotalProducts }}</li>
+            <li><strong>Envío:</strong> ${{ cart_snapshot.shipping }}</li>
+            <li><strong>Descuento:</strong> ${{ cart_snapshot.discount_total }}</li>
+            <li><strong>Total:</strong> ${{ cart_snapshot.total }}</li>
+        </ul>
+
+        <h2>Artículos Comprados</h2>
+        <ul>
+            {% for item in order_items %}
+            <li>
+                <strong>{{ item.nombre }}</strong> - ${{ item.unit_price }} x {{ item.cantidad }}
+            </li>
+            {% endfor %}
+        </ul>
+
+        <p>Si tienes alguna pregunta, no dudes en contactarnos.</p>
+        <p>Gracias por elegir VALAC Joyas.</p>
+
+        <footer style="text-align: center; margin-top: 20px;">
+            <p style="font-size: 0.9em; color: #666;">VALAC Joyas - Todos los derechos reservados</p>
+        </footer>
+    </div>
+</body>
+</html>

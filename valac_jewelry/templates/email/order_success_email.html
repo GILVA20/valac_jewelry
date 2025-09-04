@@ -15,20 +15,42 @@
       <li><strong>Dirección:</strong> {{ order["dirección_envío"] }}, {{ order.colonia }}, {{ order.ciudad }} {{ order.codigo_postal }}</li>
       <li><strong>Teléfono:</strong> {{ order.telefono }}</li>
       <li><strong>Email:</strong> {{ order.email }}</li>
-      <li><strong>Total:</strong> ${{ order.total }}</li>
+      <li><strong>Subtotal:</strong> ${{ "%.2f"|format(order.subtotal or 0.0) }}</li>
+      <li><strong>Envío:</strong> ${{ "%.2f"|format(order.shipping or 0.0) }}</li>
+      <li><strong>Descuento:</strong> ${{ "%.2f"|format(order.discount or 0.0) }}</li>
+      <li><strong>Total:</strong> ${{ "%.2f"|format(order.total or 0.0) }}</li>
       <li><strong>Estado de pago:</strong> {{ order.estado_pago }}</li>
     </ul>
 
-    <h3 style="margin-top: 30px;">Artículos:</h3>
-    {% for item in order_items %}
-    <div style="margin-bottom: 20px; border-bottom: 1px solid #ddd; padding-bottom: 12px;">
-      <p><strong>{{ item.nombre }}</strong></p>
-      {% if item.descripcion %}
-        <p>{{ item.descripcion }}</p>
-      {% endif %}
-      <p>Precio: ${{ item.precio }} | Cantidad: {{ item.cantidad }}</p>
-    </div>
-    {% endfor %}
+    <h3 style="margin-top: 30px;">Artículos Comprados:</h3>
+    {% if order_items and order_items|length > 0 %}
+    <table style="width: 100%; border-collapse: collapse;">
+      <thead>
+        <tr>
+          <th style="border: 1px solid #ddd; padding: 8px;">Artículo</th>
+          <th style="border: 1px solid #ddd; padding: 8px;">Precio Unitario</th>
+          <th style="border: 1px solid #ddd; padding: 8px;">Descuento</th>
+          <th style="border: 1px solid #ddd; padding: 8px;">Precio Final</th>
+          <th style="border: 1px solid #ddd; padding: 8px;">Cantidad</th>
+          <th style="border: 1px solid #ddd; padding: 8px;">Total Línea</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in order_items %}
+        <tr>
+          <td style="border: 1px solid #ddd; padding: 8px;">{{ item.nombre }}</td>
+          <td style="border: 1px solid #ddd; padding: 8px;">${{ '%.2f' % (item.unit_price or item.precio) }}</td>
+          <td style="border: 1px solid #ddd; padding: 8px;">${{ '%.2f' % (item.descuento or 0) }}</td>
+          <td style="border: 1px solid #ddd; padding: 8px;">${{ '%.2f' % (item.final_price or ((item.unit_price or item.precio) - (item.descuento or 0))) }}</td>
+          <td style="border: 1px solid #ddd; padding: 8px;">{{ item.cantidad }}</td>
+          <td style="border: 1px solid #ddd; padding: 8px;">${{ '%.2f' % ((item.final_price or (item.unit_price - (item.descuento or 0))) * item.cantidad) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <p>No se encontraron artículos en tu orden.</p>
+    {% endif %}
 
     <p style="text-align: center; margin-top: 40px;">
       <a href="https://valacjoyas.com" style="padding: 12px 20px; background-color: #d5a300; color: white; text-decoration: none; border-radius: 4px;">

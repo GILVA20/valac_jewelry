@@ -11,13 +11,15 @@ def _dec(x) -> Decimal:
 def sanitize_input(input_str):
     return str(input_str).strip().replace("<", "&lt;").replace(">", "&gt;")
 
-# Configuración Supabase
+# ---------------- Supabase ----------------
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 checkout_bp = Blueprint('checkout', __name__)
+log = logging.getLogger("valac_jewelry")
 
+# ---------------- Helpers ----------------
 def build_order_items_and_subtotal():
     """
     Construye items a partir del carrito en sesión y calcula subtotal
@@ -41,9 +43,7 @@ def build_order_items_and_subtotal():
             product.setdefault("descripcion", "Sin descripción")
 
             # unit_price: usa precio_descuento si viene, si no precio
-            unit_price = float(
-                product.get("precio_descuento", product.get("precio", 0))
-            )
+            unit_price = float(product.get("precio_descuento", product.get("precio", 0)))
             product['unit_price'] = unit_price
 
             subtotal += unit_price * qty
@@ -52,6 +52,7 @@ def build_order_items_and_subtotal():
             current_app.logger.error("Error obteniendo producto %s: %s", product_id_str, e)
 
     return order_items, subtotal
+
 
 def snapshot_totals_fallback(subtotal_calc: float) -> dict:
     """
@@ -63,7 +64,7 @@ def snapshot_totals_fallback(subtotal_calc: float) -> dict:
         return {
             "subtotal": float(snap.get("subtotalProducts", 0.0)),
             "shipping": float(snap.get("shipping", 0.0)),
-            "discount": float(snap.get("discount_total", 0.0)),
+            "discount": float(snap.get("discount_total", 0.0)),  # solo para UI; NO existe en DB
             "total": float(snap.get("total", 0.0)),
             "coupon_code": snap.get("coupon_code"),
             "coupon_percent_base": snap.get("coupon_percent_base", "products"),
@@ -79,17 +80,39 @@ def snapshot_totals_fallback(subtotal_calc: float) -> dict:
         "coupon_percent_base": "products",
     }
 
-def create_order_in_db(order_data, order_items):
-    response = supabase.table("orders").insert(order_data).execute()
-    if not response.data:
-        current_app.logger.error("Error insertando la orden: %s", response)
-        return None
-    order_id = response.data[0]["id"]
-    order_data["id"] = order_id
-    session["order_data"] = order_data
-    session["order_items"] = order_items
-    return order_id
 
+def create_order_in_db(order_data, order_items):
+    """
+    Inserta en 'orders' usando EXACTAMENTE los nombres de columna del esquema:
+
+      - dirección_envío (text, NOT NULL)
+      - costo_envío     (numeric, NOT NULL)
+      - método_pago     (text,    NULLABLE)
+      - demás campos: ver tabla 'orders'
+
+    También descarta claves que no existen en la tabla (coupon_*, discount_total).
+    """
+    # Claves que NO existen en orders (según tu esquema)
+    DROP_KEYS = {"coupon_code", "coupon_percent_base", "discount_total"}
+
+    payload = {k: v for k, v in order_data.items() if k not in DROP_KEYS}
+
+    try:
+        response = supabase.table("orders").insert(payload).execute()
+        if not response.data:
+            log.error("Error insertando la orden: %s", response)
+            return None
+        order_id = response.data[0]["id"]
+        order_data["id"] = order_id
+        session["order_data"] = order_data
+        session["order_items"] = order_items
+        return order_id
+    except Exception as e:
+        log.exception("Excepción insertando orden en Supabase: %s", e)
+        return None
+
+
+# ---------------- Route ----------------
 @checkout_bp.route('/checkout', methods=['GET', 'POST'])
 def checkout():
     # ---------- GET: mostrar resumen ----------
@@ -97,8 +120,7 @@ def checkout():
         order_items, subtotal_calc = build_order_items_and_subtotal()
         totals = snapshot_totals_fallback(subtotal_calc)
 
-        # Guardamos el discount en sesión (para quien lo espere) pero
-        # los montos finales SIEMPRE vienen del snapshot.
+        # para compatibilidad con plantillas antiguas
         session['discount_amount'] = totals["discount"]
 
         return render_template(
@@ -116,7 +138,7 @@ def checkout():
     # ---------- POST: procesar pago ----------
     # Extraer y sanitizar datos del formulario
     nombre = sanitize_input(request.form.get('nombre'))
-    direccion_envio = sanitize_input(request.form.get('direccion'))
+    direccion_envio_in = sanitize_input(request.form.get('direccion'))
     estado_envio = sanitize_input(request.form.get('estado'))
     colonia = sanitize_input(request.form.get('colonia'))
     ciudad = sanitize_input(request.form.get('ciudad'))
@@ -124,19 +146,20 @@ def checkout():
     telefono = sanitize_input(request.form.get('telefono'))
     email = sanitize_input(request.form.get('email'))
 
-    metodo_pago = (request.form.get('metodo_pago', '').strip().lower())
-    if metodo_pago == "mercadopago":
-        metodo_pago = "MercadoPago"
-    elif metodo_pago == "aplazo":
-        metodo_pago = "aplazo"
-    elif metodo_pago == "mock_gateway":
-        metodo_pago = "mock_gateway"
-    metodo_pago = sanitize_input(metodo_pago)
+    metodo_pago_in = (request.form.get('metodo_pago', '').strip().lower())
+    if metodo_pago_in == "mercadopago":
+        metodo_pago_in = "MercadoPago"
+    elif metodo_pago_in == "aplazo":
+        metodo_pago_in = "aplazo"
+    elif metodo_pago_in == "mock_gateway":
+        metodo_pago_in = "mock_gateway"
+    metodo_pago_in = sanitize_input(metodo_pago_in)
 
+    # Normaliza estado
     estado_mapping = {"hi": "Hidalgo", "hidalgo": "Hidalgo"}
     estado_geografico = estado_mapping.get(estado_envio.lower(), estado_envio)
 
-    if not all([nombre, direccion_envio, estado_geografico, colonia, ciudad, codigo_postal, telefono, email, metodo_pago]):
+    if not all([nombre, direccion_envio_in, estado_geografico, colonia, ciudad, codigo_postal, telefono, email, metodo_pago_in]):
         flash("Por favor, completa todos los campos obligatorios.", "error")
         return redirect(url_for('checkout.checkout'))
 
@@ -149,41 +172,43 @@ def checkout():
     totals = snapshot_totals_fallback(subtotal_calc)
     subtotal = totals["subtotal"]
     shipping_cost = totals["shipping"]
-    discount = totals["discount"]
+    discount = totals["discount"]  # solo UI
     total = totals["total"]
 
-    # Datos de la orden
+    # ---------- Datos de la orden (nombres EXACTOS según tu tabla) ----------
+    # Nota: tu esquema usa acentos:
+    #   dirección_envío (NOT NULL)
+    #   costo_envío     (NOT NULL)
+    #   método_pago     (NULLABLE – pero enviamos valor)
     order_data = {
         "nombre": nombre,
-        "dirección_envío": direccion_envio,
-        "estado_geografico": estado_geografico,
-        "colonia": colonia,
+        "dirección_envío": direccion_envio_in,
+        "estado_geografico": estado_geografico or None,  # nullable en DB
+        "colonia": colonia,  # nullable en DB, pero enviamos lo que viene
         "ciudad": ciudad,
         "codigo_postal": codigo_postal,
         "telefono": telefono,
         "email": email,
-        "método_pago": metodo_pago,
+        "método_pago": metodo_pago_in,    # con acento, como en la tabla
         "subtotal": subtotal,
-        "costo_envío": shipping_cost,
+        "costo_envío": shipping_cost,     # con acento, como en la tabla
         "total": total,
-        "estado_pago": "Pendiente",
-        # opcional: guarda info de cupón/base para conciliación
-        "coupon_code": totals.get("coupon_code"),
-        "coupon_percent_base": totals.get("coupon_percent_base"),
-        "discount_total": discount,
+        "estado_pago": "Pendiente",       # existe y por defecto es 'Pendiente'
+        # Campos que NO existen en DB no se incluyen (coupon_*, discount_total)
     }
 
     order_id = create_order_in_db(order_data, order_items)
     if not order_id:
-        flash("Error registrando la orden.", "error")
+        flash("Error registrando la orden (verifica columnas acentuadas y tipos).", "error")
         return redirect(url_for('checkout.checkout'))
 
-    if metodo_pago not in ["MercadoPago", "aplazo", "mock_gateway"]:
+    # Validar método de pago
+    if metodo_pago_in not in ["MercadoPago", "aplazo", "mock_gateway"]:
         flash("Método de pago no válido. Selecciona MercadoPago, Aplazo o Pago Simulado.", "error")
         return redirect(url_for('checkout.checkout'))
 
     # ------- MercadoPago -------
-    if metodo_pago == "MercadoPago":
+    if metodo_pago_in == "MercadoPago":
         simular_pago = os.getenv("SIMULAR_PAGO", "False").lower() == "true"
         if simular_pago:
             simulated_status = {"estado_pago": "Completado", "transaction_id": "SIMULADO", "fecha_actualizacion": "now()"}
@@ -205,7 +230,7 @@ def checkout():
         }
         notification_url = "https://valacjoyas.com/webhook"
 
-        # MUY IMPORTANTE: usar el total del snapshot (ya con descuento)
+        # MUY IMPORTANTE: usar el total del snapshot (ya con descuento aplicado)
         preference_data = {
             "items": [{
                 "title": "Orden de Compra VALAC Joyas",
@@ -251,12 +276,12 @@ def checkout():
         )
 
     # ------- Aplazo -------
-    if metodo_pago == "aplazo":
+    if metodo_pago_in == "aplazo":
         flash("Pago procesado con éxito. ¡Gracias por tu compra!", "success")
         return redirect(url_for('success.success'))
 
     # ------- Mock / Simulado -------
-    if metodo_pago == "mock_gateway":
+    if metodo_pago_in == "mock_gateway":
         return redirect(url_for('mock_checkout.index', order_id=order_id))
 
     # Fallback

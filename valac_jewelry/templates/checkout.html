@@ -34,6 +34,10 @@
     </ol>
   </nav>
 
+  {# === NUEVO: variables de base/cupón para usar en ambos resúmenes === #}
+  {% set _base = coupon_percent_base if coupon_percent_base is defined else 'products' %}
+  {% set _coupon = coupon_code if coupon_code is defined else None %}
+
   <!-- Resumen del Pedido y mensaje para revisar antes de pagar -->
   <section class="mb-8 p-4 bg-gray-100 rounded-md">
     <h2 class="text-lg font-bold mb-2">Revise su pedido antes de pagar</h2>
@@ -48,7 +52,14 @@
             </div>
             {% if discount and discount > 0 %}
             <div class="flex justify-between mb-1 text-red-600">
-              <span>Descuento:</span>
+              <span>
+                Descuento{% if _coupon %} ({{ _coupon }}){% endif %}
+                {% if _base == 'products_plus_shipping' %}
+                  <small class="text-gray-600">(aplicado sobre productos + envío)</small>
+                {% else %}
+                  <small class="text-gray-600">(aplicado sólo sobre productos)</small>
+                {% endif %}
+              </span>
               <span>-${{ '%.2f'|format(discount) }}</span>
             </div>
             {% endif %}
@@ -300,7 +311,14 @@
                             </div>
                             {% if discount > 0 %}
                             <div class="flex justify-between text-red-600">
-                              <span>Descuento</span>
+                              <span>
+                                Descuento{% if _coupon %} ({{ _coupon }}){% endif %}
+                                {% if _base == 'products_plus_shipping' %}
+                                  <small class="text-gray-600">(aplicado sobre productos + envío)</small>
+                                {% else %}
+                                  <small class="text-gray-600">(aplicado sólo sobre productos)</small>
+                                {% endif %}
+                              </span>
                               <span>–${{ '%.2f'|format(discount) }}</span>
                             </div>
                             {% endif %}
@@ -686,7 +704,7 @@
   (function robustHeaderOffset() {
     const root = document.documentElement;
     const header = document.querySelector('[data-site-header], header.site-header, #site-header, header');
-    const banner = document.querySelector('[data-top-banner], #top-banner, #promo-bar, .promo-bar');
+    const banner = document.querySelector('[data-top-banner], #top-banner, #promo-bar, .promo-bar']);
 
     function computeAndSetOffset() {
       const headerHeight = header ? header.offsetHeight : 0;

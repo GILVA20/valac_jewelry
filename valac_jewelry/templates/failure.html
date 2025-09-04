@@ -1,46 +1,31 @@
 {% extends "base.html" %}
-{% block title %}
-  Pago Fallido - VALAC Joyas
-{% endblock %}
+{% block title %}Pago Fallido - VALAC Joyas{% endblock %}
 
 {% block content %}
 <main class="container mx-auto p-6 pt-24">
-  <div class="bg-white shadow-md rounded p-6 text-center">
-    <!-- Icono de error (Font Awesome) -->
-    <div class="text-red-500 mb-4">
-      <i class="fas fa-times-circle fa-4x"></i>
-    </div>
-    
-    <h1 class="text-3xl font-bold mb-4">Pago No Procesado</h1>
-    <p class="mb-6">Hubo un problema al procesar tu pago. Por favor, intenta nuevamente.</p>
-    
-    <!-- Resumen Básico -->
-    <div class="border-t pt-4 mb-6 text-left">
-      <h2 class="text-xl font-semibold mb-2">Detalles del Error</h2>
-      <p><strong>ID de Orden:</strong> {{ order.id }}</p>
-      <p><strong>Motivo:</strong> Pago rechazado por el procesador</p>
-      <p><strong>Método de Pago:</strong> {{ order.método_pago }}</p>
-      <p><strong>Total:</strong> ${{ order.total }}</p>
-    </div>
+  <div class="bg-white shadow-md rounded p-6">
+    <h1 class="text-3xl font-bold mb-4 text-center text-red-700">Pago Fallido</h1>
+    <p class="text-center mb-6">Tu pago no pudo completarse. A continuación verás el resumen de la orden para que puedas reintentarlo.</p>
 
-    <!-- Soluciones -->
-    <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-6 text-left">
-      <p class="font-semibold">¿Cómo resolverlo?</p>
-      <ul class="list-disc pl-5 mt-2">
-        <li>Verifica los datos de tu método de pago.</li>
-        <li>Intenta con otra tarjeta o método de pago.</li>
-        <li>Contactanos al +527718574647</li>
-        <li>Contacta a tu banco si el problema persiste.</li>
+    <div class="border p-4 rounded mb-6">
+      <h2 class="text-2xl font-semibold mb-2">Resumen de la Orden</h2>
+      <ul class="list-disc pl-6">
+        <li><strong>ID de Orden:</strong> {{ order.id }}</li>
+        <li><strong>Estado de pago:</strong> {{ order.estado_pago }}</li>
+        <li><strong>Subtotal:</strong> ${{ '%.2f' % (order.subtotal or 0.0) }}</li>
+        <li><strong>Envío:</strong> ${{ '%.2f' % (order.shipping or 0.0) }}</li>
+        <li><strong>Descuento:</strong> ${{ '%.2f' % (order.discount or 0.0) }}</li>
+        <li><strong>Total:</strong> ${{ '%.2f' % (order.total or 0.0) }}</li>
       </ul>
     </div>
 
-    <!-- Botones -->
-    <div class="flex flex-col sm:flex-row justify-center gap-4 mt-8">
-      <a href="{{ url_for('main.home') }}" class="bg-gray-600 text-white px-6 py-3 rounded hover:bg-gray-700 transition">
+    <div class="text-center mt-8 space-x-3">
+      <a href="{{ url_for('main.home') }}" class="inline-block bg-gray-700 text-white px-6 py-3 rounded hover:bg-gray-800 transition">
         Volver al Inicio
       </a>
-      <a href="{{ url_for('checkout.checkout') }}" class="bg-yellow-600 text-white px-6 py-3 rounded hover:bg-yellow-700 transition">
-        Reintentar Pago
+      <!-- Si tienes una ruta de reintento/checkout, cámbiala aquí -->
+      <a href="{{ url_for('main.home') }}" class="inline-block bg-red-600 text-white px-6 py-3 rounded hover:bg-red-700 transition">
+        Reintentar Compra
       </a>
     </div>
   </div>

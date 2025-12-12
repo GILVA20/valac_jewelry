@@ -197,6 +197,7 @@
 
 {% block scripts_extra %}
 <script type="module">
+  import { supabase as supabaseClient } from "/static/js/supabase-client.mjs";
   // --------- Helpers: construir links de categoría ---------
   const setCategoryLinks = (genero) => {
     document.querySelectorAll('#cats-grid a[data-cat]').forEach(a => {
@@ -239,10 +240,8 @@
   // --------- Carga dinámica de productos: Ofertas -> Novedades ----------
   document.addEventListener("DOMContentLoaded", async function(){
     try{
-      const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm");
-      const supabaseClient = createClient("{{ config['SUPABASE_URL'] }}", "{{ config['SUPABASE_KEY'] }}");
 
-      const { data: products, error } = await supabaseClient
+  const { data: products, error } = await supabaseClient
         .from('products')
         .select(`
           id, nombre, descripcion, precio, descuento_pct, precio_descuento,

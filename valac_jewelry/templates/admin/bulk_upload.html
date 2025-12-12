@@ -63,10 +63,7 @@
 
   <!-- Bloque de JavaScript: Flujo unificado para la carga masiva -->
   <script type="module">
-    import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
-    const SUPABASE_URL = "{{ config['SUPABASE_URL'] }}";
-    const SUPABASE_KEY = "{{ config['SUPABASE_KEY'] }}";
-    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+    import { supabase } from "/static/js/supabase-client.mjs";
 
     const dropZone = document.getElementById('drop-zone');
     const csvInput = document.getElementById('csv-input');

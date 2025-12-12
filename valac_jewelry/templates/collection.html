@@ -285,6 +285,7 @@
 
 {% block scripts_extra %}
 <script type="module">
+  import { supabase as supabaseClient } from "/static/js/supabase-client.mjs";
   const $ = window.jQuery;
   let loadProducts;
   let currentPage = {{ page|default(1) }};
@@ -304,11 +305,6 @@
     }
 
     try {
-      const { createClient } = await import("https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm");
-      const SUPABASE_URL = "{{ config['SUPABASE_URL'] }}";
-      const SUPABASE_KEY = "{{ config['SUPABASE_KEY'] }}";
-      const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
-
       const urlParams = new URLSearchParams(window.location.search);
       const category  = urlParams.get('category')   || '';
       const type_oro  = urlParams.get('type_oro')   || '';

@@ -285,7 +285,7 @@
 
 {% block scripts_extra %}
 <script type="module">
-  import { supabase as supabaseClient } from "/static/js/supabase-client.mjs";
+  import { supabase as supabaseClient } from "/static/js/supabase-client.js";
   const $ = window.jQuery;
   let loadProducts;
   let currentPage = {{ page|default(1) }};

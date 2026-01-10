@@ -197,7 +197,7 @@
 
 {% block scripts_extra %}
 <script type="module">
-  import { supabase as supabaseClient } from "/static/js/supabase-client.mjs";
+  import { supabase as supabaseClient } from "/static/js/supabase-client.js";
   // --------- Helpers: construir links de categoría ---------
   const setCategoryLinks = (genero) => {
     document.querySelectorAll('#cats-grid a[data-cat]').forEach(a => {

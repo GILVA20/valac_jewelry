@@ -1,5 +1,6 @@
 import os
 import logging
+import mimetypes
 from flask import Flask, request, redirect
 from flask_admin import Admin
 from supabase import create_client
@@ -12,6 +13,10 @@ print(f"                DEBUG:valac_jewelry:FLASK_ENV: {os.getenv('FLASK_ENV')} 
 logging.basicConfig(level=logging.DEBUG)
 
 def create_app():
+    # Ensure .mjs files are served with the correct MIME type.
+    # Registering here guarantees it runs before Flask serves static files.
+    mimetypes.add_type("application/javascript", ".mjs")
+
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     static_folder = os.path.join(base_dir, 'static')
     app = Flask(__name__, static_folder=static_folder, instance_relative_config=True)

@@ -290,6 +290,18 @@ class SupabaseProductAdmin(BaseView):
                 for prod in products:
                     prod["gallery"] = []
 
+            # Convertir created_at de string a datetime para formateo en template
+            from datetime import datetime as dt
+            for prod in products:
+                if prod.get("created_at"):
+                    try:
+                        # created_at viene como ISO string: "2025-01-21T22:48:33.123456Z"
+                        prod["created_at"] = dt.fromisoformat(
+                            prod["created_at"].replace("Z", "+00:00")
+                        )
+                    except (ValueError, AttributeError):
+                        prod["created_at"] = None
+
             logging.info("[index] Productos enriquecidos con galería: %d", len(products))
 
         return self.render("admin/supabase_products.html", products=products)
@@ -564,11 +576,15 @@ class SupabaseProductAdmin(BaseView):
 
             precio_descuento = round(precio * (1 - descuento_pct / 100.0), 2)
 
+            # Stock por defecto: 1 si no se proporciona
+            stock_total = _coerce_int(request.form.get("stock_total")) or 1
+
             sb = self.app_sb
             data = {
                 "nombre": nombre,
                 "descripcion": descripcion,
                 "precio": precio,
+                "stock_total": stock_total,
                 "descuento_pct": descuento_pct,
                 "precio_descuento": precio_descuento,
                 "tipo_producto": tipo_producto,

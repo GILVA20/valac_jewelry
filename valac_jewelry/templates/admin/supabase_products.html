@@ -26,6 +26,11 @@
       max-width: 90%;
       max-height: 90%;
     }
+    /* Botones filtro activo */
+    button.active {
+      box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.5);
+      font-weight: bold;
+    }
   </style>
 </head>
 <body class="bg-gray-100 p-6">
@@ -44,6 +49,19 @@
     <!-- Campo de búsqueda -->
     <div class="mb-6">
       <input type="text" id="search" placeholder="Buscar producto..." class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+    </div>
+
+    <!-- Filtros Rápidos de Fechas -->
+    <div class="mb-6 flex gap-2">
+      <button id="filter-todos" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 active">
+        Todos
+      </button>
+      <button id="filter-nuevos" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
+        Nuevos (7 días)
+      </button>
+      <button id="filter-antiguos" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
+        Stock Antiguo (+30 días)
+      </button>
     </div>
 
     <!-- Formulario de descuento en lote -->
@@ -78,7 +96,9 @@
           <thead class="bg-gray-100">
             <tr>
               <th class="border p-3"><input type="checkbox" id="select_all" /></th>
+              <th class="border p-3 text-left text-gray-700">Acciones</th>
               <th class="border p-3 text-left text-gray-700 cursor-pointer" data-sort="id">ID</th>
+              <th class="border p-3 text-left text-gray-700 cursor-pointer" data-sort="created_at">Fecha Alta</th>
               <th class="border p-3 text-left text-gray-700 cursor-pointer" data-sort="nombre">Nombre</th>
               <th class="border p-3 text-left text-gray-700 cursor-pointer" data-sort="stock_total">Stock</th>
               <th class="border p-3 text-left text-gray-700 cursor-pointer" data-sort="precio">Precio</th>
@@ -88,16 +108,34 @@
               <th class="border p-3 text-left text-gray-700 cursor-pointer" data-sort="genero">Género</th>
               <th class="border p-3 text-left text-gray-700 cursor-pointer" data-sort="tipo_oro">Tipo de Oro</th>
               <th class="border p-3 text-left text-gray-700">Imagen</th>
-              <th class="border p-3 text-left text-gray-700">Acciones</th>
             </tr>
           </thead>
           <tbody>
             {% for prod in products %}
-            <tr class="hover:bg-gray-50 transition duration-200">
+            <tr class="hover:bg-gray-50 transition duration-200" data-created-at="{{ prod.created_at }}">
               <td class="border p-3 text-center">
                 <input type="checkbox" name="product_ids" value="{{ prod.id }}" class="select_row" />
               </td>
+              <td class="border p-3">
+                <a href="{{ url_for('.edit_product', id=prod.id) }}" class="text-blue-500 hover:text-blue-600 mr-2" title="Editar">
+                  <i class="fas fa-edit"></i>
+                </a>
+                <form method="POST" action="{{ url_for('supabase_products.delete_product', product_id=prod.id) }}" style="display:inline;" onsubmit="return confirm('¿Estás seguro de eliminar este producto?');">
+                  <button type="submit" class="text-red-500 hover:text-red-600" title="Eliminar">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </form>
+              </td>
               <td class="border p-3 text-gray-700">{{ prod.id }}</td>
+              <td class="border p-3 text-gray-700">
+                <span class="fecha-alta">
+                  {% if prod.created_at %}
+                    {{ prod.created_at.strftime('%d/%m/%Y') if prod.created_at else '-' }}
+                  {% else %}
+                    -
+                  {% endif %}
+                </span>
+              </td>
               <td class="border p-3 text-gray-700" data-editable="true" data-field="nombre" data-id="{{ prod.id }}">
                 <span class="current-value">{{ prod.nombre }}</span>
               </td>
@@ -143,16 +181,6 @@
                   <img src="{{ prod.imagen }}" alt="Imagen única" class="h-16 w-16 object-cover rounded">
                 {% endif %}
               </td>
-              <td class="border p-3">
-                <a href="{{ url_for('.edit_product', id=prod.id) }}" class="text-blue-500 hover:text-blue-600 mr-2">
-                  <i class="fas fa-edit"></i>
-                </a>
-                <form method="POST" action="{{ url_for('supabase_products.delete_product', product_id=prod.id) }}" style="display:inline;" onsubmit="return confirm('¿Estás seguro de eliminar este producto?');">
-                  <button type="submit" class="text-red-500 hover:text-red-600">
-                    <i class="fas fa-trash"></i>
-                  </button>
-                </form>
-              </td>
             </tr>
             {% endfor %}
           </tbody>
@@ -178,15 +206,83 @@
     </div>
   </div>
 
-  <!-- Script para búsqueda, selección, modal y ordenamiento -->
+  <!-- Script para búsqueda, selección, modal, ordenamiento y filtrado -->
   <script>
+    // Utility para formatear fechas
+    function parseDate(dateStr) {
+      const d = new Date(dateStr);
+      return isNaN(d.getTime()) ? null : d;
+    }
+
+    function getDaysDifference(date) {
+      if (!date) return Infinity;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      date.setHours(0, 0, 0, 0);
+      const diff = Math.floor((today - date) / (1000 * 60 * 60 * 24));
+      return diff;
+    }
+
     // Búsqueda interactiva
     document.getElementById('search').addEventListener('input', function () {
       const term = this.value.toLowerCase();
       document.querySelectorAll('tbody tr').forEach(row => {
-        const name = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
-        row.style.display = name.includes(term) ? '' : 'none';
+        const name = row.querySelector('td:nth-child(5)')?.textContent.toLowerCase() || '';
+        const matchesSearch = name.includes(term);
+        const isHidden = row.classList.contains('hidden');
+        row.style.display = (matchesSearch && !isHidden) ? '' : 'none';
       });
+    });
+
+    // Filtrado por fecha
+    const filterBtns = {
+      todos: document.getElementById('filter-todos'),
+      nuevos: document.getElementById('filter-nuevos'),
+      antiguos: document.getElementById('filter-antiguos')
+    };
+
+    function applyDateFilter(filterType) {
+      document.querySelectorAll('tbody tr').forEach(row => {
+        const createdAtStr = row.getAttribute('data-created-at');
+        const createdAt = parseDate(createdAtStr);
+        const daysDiff = getDaysDifference(createdAt);
+        
+        let shouldShow = false;
+        
+        if (filterType === 'todos') {
+          shouldShow = true;
+        } else if (filterType === 'nuevos') {
+          shouldShow = daysDiff >= 0 && daysDiff <= 7;
+        } else if (filterType === 'antiguos') {
+          shouldShow = daysDiff > 30;
+        }
+
+        row.classList.toggle('hidden', !shouldShow);
+        if (!shouldShow) {
+          row.style.display = 'none';
+        } else {
+          row.style.display = '';
+        }
+      });
+    }
+
+    // Event listeners para filtros
+    filterBtns.todos.addEventListener('click', () => {
+      Object.values(filterBtns).forEach(btn => btn.classList.remove('active'));
+      filterBtns.todos.classList.add('active');
+      applyDateFilter('todos');
+    });
+
+    filterBtns.nuevos.addEventListener('click', () => {
+      Object.values(filterBtns).forEach(btn => btn.classList.remove('active'));
+      filterBtns.nuevos.classList.add('active');
+      applyDateFilter('nuevos');
+    });
+
+    filterBtns.antiguos.addEventListener('click', () => {
+      Object.values(filterBtns).forEach(btn => btn.classList.remove('active'));
+      filterBtns.antiguos.classList.add('active');
+      applyDateFilter('antiguos');
     });
 
     // Select all
@@ -222,6 +318,17 @@
         const getValue = (row) => {
           const cell = row.children[colIndex];
           const raw = cell.textContent.trim();
+          
+          // Parsing especial para fechas en formato DD/MM/YYYY
+          if (key === 'created_at') {
+            const parts = raw.split('/');
+            if (parts.length === 3) {
+              // Convertir DD/MM/YYYY a YYYYMMDD para ordenamiento
+              return parts[2] + parts[1] + parts[0];
+            }
+            return raw;
+          }
+          
           const number = parseFloat(raw.replace(/[^0-9.\-]+/g, ''));
           return isNaN(number) ? raw.toLowerCase() : number;
         };

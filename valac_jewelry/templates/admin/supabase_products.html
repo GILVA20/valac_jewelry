@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- Generated: 2025-01-21T23:59:59Z -->
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -97,9 +98,12 @@
                 <input type="checkbox" name="product_ids" value="{{ prod.id }}" class="select_row" />
               </td>
               <td class="border p-3 text-gray-700">{{ prod.id }}</td>
-              <td class="border p-3 text-gray-700">{{ prod.nombre }}</td>
-              <td class="border p-3 text-gray-700">
-                <form method="POST" action="{{ url_for('supabase_products.update_stock', product_id=prod.id) }}">
+              <td class="border p-3 text-gray-700" data-editable="true" data-field="nombre" data-id="{{ prod.id }}">
+                <span class="current-value">{{ prod.nombre }}</span>
+              </td>
+              <td class="border p-3 text-gray-700" data-editable="true" data-field="stock_total" data-id="{{ prod.id }}">
+                <span class="current-value">{{ prod.stock_total or 0 }}</span>
+                <form method="POST" action="{{ url_for('supabase_products.update_stock', product_id=prod.id) }}" style="display:none;">
                   <input type="number" name="stock_total" value="{{ prod.stock_total or 0 }}" min="0"
                         class="w-20 border border-gray-300 rounded px-2 py-1 text-center">
                   <button type="submit" class="text-blue-600 hover:text-blue-800 ml-2">
@@ -107,7 +111,9 @@
                   </button>
                 </form>
               </td>
-              <td class="border p-3 text-gray-700">${{ prod.precio }}</td>
+              <td class="border p-3 text-gray-700" data-editable="true" data-field="precio" data-id="{{ prod.id }}">
+                <span class="current-value">${{ prod.precio }}</span>
+              </td>
               <td class="border p-3 text-gray-700">{{ prod.descuento_pct or 0 }}%</td>
               <td class="border p-3 text-gray-700">${{ prod.precio_descuento or 0 }}</td>
               <td class="border p-3 text-gray-700">{{ prod.tipo_producto }}</td>
@@ -172,70 +178,72 @@
     </div>
   </div>
 
-  <!-- Script para búsqueda, selección y modal -->
-<!-- Script para búsqueda, selección, modal y ordenamiento -->
-<script>
-  // Búsqueda interactiva
-  document.getElementById('search').addEventListener('input', function () {
-    const term = this.value.toLowerCase();
-    document.querySelectorAll('tbody tr').forEach(row => {
-      const name = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
-      row.style.display = name.includes(term) ? '' : 'none';
-    });
-  });
-
-  // Select all
-  document.getElementById('select_all').addEventListener('change', function () {
-    document.querySelectorAll('.select_row').forEach(cb => cb.checked = this.checked);
-  });
-
-  // Modal de imagen
-  function openModal(url) {
-    const modal = document.getElementById('image-modal');
-    document.getElementById('modal-image').src = url + "?t=" + Date.now();
-    modal.style.display = 'flex';
-  }
-  document.getElementById('close-modal').onclick = () => {
-    document.getElementById('image-modal').style.display = 'none';
-  };
-  window.onclick = e => {
-    if (e.target.id === 'image-modal') {
-      e.target.style.display = 'none';
-    }
-  };
-
-  // Ordenamiento por columnas
-  const headers = document.querySelectorAll('th[data-sort]');
-  let currentSort = { column: null, asc: true };
-
-  headers.forEach(header => {
-    header.addEventListener('click', () => {
-      const key = header.getAttribute('data-sort');
-      const rows = Array.from(document.querySelectorAll('tbody tr')).filter(row => row.style.display !== 'none');
-      const colIndex = Array.from(header.parentElement.children).indexOf(header);
-
-      const getValue = (row) => {
-        const cell = row.children[colIndex];
-        const raw = cell.textContent.trim();
-        const number = parseFloat(raw.replace(/[^0-9.\-]+/g, ''));
-        return isNaN(number) ? raw.toLowerCase() : number;
-      };
-
-      const asc = currentSort.column === key ? !currentSort.asc : true;
-      currentSort = { column: key, asc };
-
-      rows.sort((a, b) => {
-        const valA = getValue(a);
-        const valB = getValue(b);
-        if (valA < valB) return asc ? -1 : 1;
-        if (valA > valB) return asc ? 1 : -1;
-        return 0;
+  <!-- Script para búsqueda, selección, modal y ordenamiento -->
+  <script>
+    // Búsqueda interactiva
+    document.getElementById('search').addEventListener('input', function () {
+      const term = this.value.toLowerCase();
+      document.querySelectorAll('tbody tr').forEach(row => {
+        const name = row.querySelector('td:nth-child(3)').textContent.toLowerCase();
+        row.style.display = name.includes(term) ? '' : 'none';
       });
-
-      const tbody = document.querySelector('tbody');
-      rows.forEach(row => tbody.appendChild(row)); // reordenar
     });
-  });
-</script>
+
+    // Select all
+    document.getElementById('select_all').addEventListener('change', function () {
+      document.querySelectorAll('.select_row').forEach(cb => cb.checked = this.checked);
+    });
+
+    // Modal de imagen
+    function openModal(url) {
+      const modal = document.getElementById('image-modal');
+      document.getElementById('modal-image').src = url + "?t=" + Date.now();
+      modal.style.display = 'flex';
+    }
+    document.getElementById('close-modal').onclick = () => {
+      document.getElementById('image-modal').style.display = 'none';
+    };
+    window.onclick = e => {
+      if (e.target.id === 'image-modal') {
+        e.target.style.display = 'none';
+      }
+    };
+
+    // Ordenamiento por columnas
+    const headers = document.querySelectorAll('th[data-sort]');
+    let currentSort = { column: null, asc: true };
+
+    headers.forEach(header => {
+      header.addEventListener('click', () => {
+        const key = header.getAttribute('data-sort');
+        const rows = Array.from(document.querySelectorAll('tbody tr')).filter(row => row.style.display !== 'none');
+        const colIndex = Array.from(header.parentElement.children).indexOf(header);
+
+        const getValue = (row) => {
+          const cell = row.children[colIndex];
+          const raw = cell.textContent.trim();
+          const number = parseFloat(raw.replace(/[^0-9.\-]+/g, ''));
+          return isNaN(number) ? raw.toLowerCase() : number;
+        };
+
+        const asc = currentSort.column === key ? !currentSort.asc : true;
+        currentSort = { column: key, asc };
+
+        rows.sort((a, b) => {
+          const valA = getValue(a);
+          const valB = getValue(b);
+          if (valA < valB) return asc ? -1 : 1;
+          if (valA > valB) return asc ? 1 : -1;
+          return 0;
+        });
+
+        const tbody = document.querySelector('tbody');
+        rows.forEach(row => tbody.appendChild(row)); // reordenar
+      });
+    });
+  </script>
+
+<!-- Script para Edición Inline -->
+<script src="{{ url_for('static', filename='js/inline-edit.js') }}?v={{ range(0, 100000) | random }}"></script>
 </body>
 </html>

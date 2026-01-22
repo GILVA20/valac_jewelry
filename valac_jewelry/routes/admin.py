@@ -332,6 +332,172 @@ class SupabaseProductAdmin(BaseView):
         return redirect(url_for("supabase_products.index"))
 
     # ---------------------------
+    # API: Edición rápida (AJAX/Inline)
+    # ---------------------------
+    @expose("/api/quick-update/<product_id>", methods=["PATCH"])
+    def quick_update(self, product_id: str):
+        """
+        Endpoint para actualizaciones rápidas parciales vía AJAX.
+        Valida campo, tipo y valor antes de actualizar en Supabase.
+
+        Request:
+            {
+                "field": "precio|stock_total|descuento_pct",
+                "value": <new_value>
+            }
+
+        Response (200 OK):
+            {
+                "status": "success",
+                "updated_field": "precio",
+                "new_value": 125.50,
+                "precio_descuento": 112.50,
+                "updated_at": "2025-01-21T14:30:00Z"
+            }
+
+        Response (400/422/500):
+            {
+                "status": "error",
+                "message": "Descripción del error"
+            }
+        """
+        sb = self.app_sb
+        ALLOWED_FIELDS = {"precio", "stock_total", "descuento_pct", "nombre"}
+
+        try:
+            payload = request.get_json(force=True) if request.is_json else {}
+            field = payload.get("field", "").strip()
+            raw_value = payload.get("value")
+
+            # ========== VALIDACIONES ==========
+            # DEBUG: Log exact state
+            current_app.logger.info(f"[DEBUG] ALLOWED_FIELDS = {ALLOWED_FIELDS}")
+            current_app.logger.info(f"[DEBUG] field = '{field}' (type: {type(field).__name__})")
+            current_app.logger.info(f"[DEBUG] field in ALLOWED_FIELDS = {field in ALLOWED_FIELDS}")
+
+            # 1. Campo permitido
+            if field not in ALLOWED_FIELDS:
+                current_app.logger.warning(
+                    "[quick_update] Campo no permitido: %s. Permitidos: %s", field, ALLOWED_FIELDS
+                )
+                return jsonify({
+                    "status": "error",
+                    "message": f"Campo '{field}' no permitido"
+                }), 422
+
+            # 2. Producto existe
+            resp_check = sb.table("products").select("id, precio, stock_total").eq("id", product_id).execute()
+            if not resp_check.data:
+                current_app.logger.warning("[quick_update] Producto no encontrado: %s", product_id)
+                return jsonify({
+                    "status": "error",
+                    "message": "Producto no encontrado"
+                }), 404
+
+            current_product = resp_check.data[0]
+            current_price = float(current_product.get("precio") or 0)
+
+            # ========== COERCIÓN Y VALIDACIÓN DE TIPOS ==========
+
+            update_payload: Dict[str, Any] = {}
+            new_value: Any = None
+
+            if field == "precio":
+                new_value = _coerce_float(raw_value)
+                if new_value is None or new_value < 0:
+                    return jsonify({
+                        "status": "error",
+                        "message": "Precio inválido: debe ser un número ≥ 0"
+                    }), 400
+                update_payload["precio"] = new_value
+                # Recalcular precio_descuento si existe descuento
+                resp_discount = sb.table("products").select("descuento_pct").eq("id", product_id).execute()
+                discount_pct = 0
+                if resp_discount.data:
+                    discount_pct = int(resp_discount.data[0].get("descuento_pct") or 0)
+                precio_descuento = round(new_value * (1 - discount_pct / 100.0), 2)
+                update_payload["precio_descuento"] = precio_descuento
+
+            elif field == "stock_total":
+                new_value = _coerce_int(raw_value)
+                if new_value is None or new_value < 0:
+                    return jsonify({
+                        "status": "error",
+                        "message": "Stock inválido: debe ser un número entero ≥ 0"
+                    }), 400
+                update_payload["stock_total"] = new_value
+
+            elif field == "descuento_pct":
+                new_value = _coerce_int(raw_value)
+                if new_value is None or not (0 <= new_value <= 100):
+                    return jsonify({
+                        "status": "error",
+                        "message": "Descuento inválido: debe estar entre 0 y 100%"
+                    }), 400
+                update_payload["descuento_pct"] = new_value
+                # Recalcular precio_descuento basado en precio actual
+                precio_descuento = round(current_price * (1 - new_value / 100.0), 2)
+                update_payload["precio_descuento"] = precio_descuento
+
+            elif field == "nombre":
+                new_value = str(raw_value).strip() if raw_value else None
+                if not new_value or len(new_value) == 0:
+                    return jsonify({
+                        "status": "error",
+                        "message": "Nombre inválido: no puede estar vacío"
+                    }), 400
+                if len(new_value) > 200:
+                    return jsonify({
+                        "status": "error",
+                        "message": "Nombre inválido: máximo 200 caracteres"
+                    }), 400
+                update_payload["nombre"] = new_value
+
+            # ========== ACTUALIZAR EN SUPABASE ==========
+
+            upd_response = (
+                sb.table("products")
+                .update(update_payload, returning="representation")
+                .eq("id", product_id)
+                .execute()
+            )
+
+            if not upd_response.data:
+                current_app.logger.error(
+                    "[quick_update] Error Supabase UPDATE producto %s field %s: %s",
+                    product_id, field, upd_response
+                )
+                return jsonify({
+                    "status": "error",
+                    "message": "Error al actualizar en la base de datos"
+                }), 500
+
+            updated_product = upd_response.data[0]
+            response_field = field
+
+            # Preparar respuesta con el precio_descuento actualizado
+            response_data = {
+                "status": "success",
+                "updated_field": response_field,
+                "new_value": new_value,
+                "precio_descuento": float(updated_product.get("precio_descuento") or 0),
+                "updated_at": updated_product.get("updated_at", ""),
+            }
+
+            current_app.logger.info(
+                "[quick_update] Actualización exitosa: producto=%s field=%s new_value=%s",
+                product_id, field, new_value
+            )
+            return jsonify(response_data), 200
+
+        except Exception as e:  # pragma: no cover
+            current_app.logger.exception("[quick_update] Excepción inesperada")
+            return jsonify({
+                "status": "error",
+                "message": str(e)
+            }), 500
+
+    # ---------------------------
     # Descuentos (bulk)
     # ---------------------------
     @expose("/apply_discount", methods=["POST"])

@@ -18,6 +18,29 @@ class Config:
     MAIL_USE_TLS = os.getenv('MAIL_USE_TLS', 'True') == 'True'
     MAIL_SENDER = os.getenv('MAIL_SENDER')
     MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
+    
+    # ========================================================================
+    # SALES ASSISTANT CONFIGURATION (Sprint 1 - Infraestructura)
+    # ========================================================================
+    SALES_ASSISTANT = {
+        'whatsapp_number': '+521 771 857 4647',
+        'whatsapp_number_clean': '521771857464647',  # Sin espacios ni símbolos
+        'default_message': 'Hola VALAC, tengo una pregunta',
+        'locale': 'es-MX',  # Español de México
+        'routes': {
+            '/': {
+                'title': 'Asesoría VALAC 💎',
+                'emoji': '👋',
+                'message': 'Hola, estoy visitando su tienda y me gustaría recibir asesoría personalizada.'
+            },
+            '/collection': {
+                'title': 'Asesoría en Colecciones ✨',
+                'emoji': '💍',
+                'message': 'Hola, estoy viendo sus colecciones de joyería y tengo una duda.'
+            }
+        }
+    }
+
 
 class DevelopmentConfig(Config):
     DEBUG = True

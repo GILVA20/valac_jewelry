@@ -54,6 +54,51 @@ def create_app():
     def inject_supabase_storage_url():
         return dict(SUPABASE_STORAGE_URL=app.config.get("SUPABASE_STORAGE_URL"))
     
+    # ========================================================================
+    # Context Processor para Sales Assistant (Sprint 1 - Infraestructura)
+    # Inyecta current_path a todos los templates automáticamente
+    # ========================================================================
+    @app.context_processor
+    def inject_sales_assistant_context():
+        """
+        Inyecta la ruta actual a todos los templates sin modificar las rutas.
+        Escalable: agregar nuevas rutas solo requiere editar config.py
+        """
+        try:
+            current_path = request.path
+            sales_assistant_config = app.config.get('SALES_ASSISTANT', {})
+            
+            # Obtener configuración de la ruta actual
+            route_config = sales_assistant_config.get('routes', {}).get(current_path, {})
+            
+            if route_config:
+                return {
+                    'current_path': current_path,
+                    'sales_assistant': {
+                        'title': route_config.get('title', 'VALAC Joyas'),
+                        'emoji': route_config.get('emoji', '💎'),
+                        'message': route_config.get('message', sales_assistant_config.get('default_message')),
+                        'whatsapp': sales_assistant_config.get('whatsapp_number'),
+                        'whatsapp_clean': sales_assistant_config.get('whatsapp_number_clean')
+                    }
+                }
+            else:
+                # Fallback para rutas no configuradas
+                return {
+                    'current_path': current_path,
+                    'sales_assistant': {
+                        'title': 'VALAC Joyas',
+                        'emoji': '💎',
+                        'message': sales_assistant_config.get('default_message', 'Hola VALAC'),
+                        'whatsapp': sales_assistant_config.get('whatsapp_number'),
+                        'whatsapp_clean': sales_assistant_config.get('whatsapp_number_clean')
+                    }
+                }
+        except Exception as e:
+            app.logger.error(f"Error en context processor: {e}")
+            return {'current_path': request.path, 'sales_assistant': {}}
+
+    
     login_manager = LoginManager()
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'

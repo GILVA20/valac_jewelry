@@ -1,0 +1,148 @@
+{
+  "whatsapp": {
+    "numero_default": "+521 771 857 4647"
+  },
+  
+  "rutas": {
+    "/": {
+      "context_key": "home",
+      "titulo": "Asesoría VALAC 💎",
+      "emoji": "👋",
+      "mensaje_template": "Hola, estoy visitando su tienda y me gustaría recibir asesoría personalizada.",
+      "descripcion_breve": "Página Principal",
+      "prioridad": 1
+    },
+    
+    "/about": {
+      "context_key": "about",
+      "titulo": "Conoce Nuestra Historia 📖",
+      "emoji": "💎",
+      "mensaje_template": "Hola, quiero conocer más sobre la historia y valores de VALAC Joyas.",
+      "descripcion_breve": "Acerca de Nosotros",
+      "prioridad": 2
+    },
+    
+    "/contact": {
+      "context_key": "contact",
+      "titulo": "¡Comunícate Directamente! 💬",
+      "emoji": "📞",
+      "mensaje_template": "Hola VALAC, quisiera hablar sobre nuestros servicios y colecciones.",
+      "descripcion_breve": "Contacto",
+      "prioridad": 3
+    },
+    
+    "/collection": {
+      "context_key": "collection_base",
+      "titulo": "Asesoría en Colecciones ✨",
+      "emoji": "💍",
+      "mensaje_template": "Hola, estoy viendo sus colecciones de joyería y tengo una duda.",
+      "descripcion_breve": "Colecciones",
+      "prioridad": 10,
+      "subcontextos": {
+        "genero": {
+          "Mujer": {
+            "context_key": "collection_mujer",
+            "titulo": "Asesora en Colección Mujer ✨",
+            "emoji": "👑",
+            "mensaje_template": "Hola, estoy viendo la colección de MUJER y me gustaría que me ayudes a elegir la pieza perfecta.",
+            "descripcion_breve": "Colección Mujer"
+          },
+          "Hombre": {
+            "context_key": "collection_hombre",
+            "titulo": "Asesor en Colección Hombre 👔",
+            "emoji": "🔗",
+            "mensaje_template": "Hola, estoy viendo la colección de HOMBRE y quiero recomendaciones.",
+            "descripcion_breve": "Colección Hombre"
+          },
+          "Unisex": {
+            "context_key": "collection_unisex",
+            "titulo": "Piezas para Todos 🌟",
+            "emoji": "💫",
+            "mensaje_template": "Hola, me interesa la colección UNISEX de VALAC. ¿Qué me recomiendas?",
+            "descripcion_breve": "Colección Unisex"
+          }
+        },
+        "category": {
+          "Anillos": {
+            "context_key": "collection_anillos",
+            "titulo": "Encuentra tu Anillo Perfecto 💍",
+            "emoji": "✨",
+            "mensaje_template": "Hola, estoy buscando anillos y quiero asesoría sobre opciones.",
+            "descripcion_breve": "Anillos"
+          },
+          "Cadenas": {
+            "context_key": "collection_cadenas",
+            "titulo": "Cadenas Exclusivas 🔗",
+            "emoji": "✨",
+            "mensaje_template": "Hola, me interesa tu catálogo de cadenas en oro.",
+            "descripcion_breve": "Cadenas"
+          },
+          "Aretes": {
+            "context_key": "collection_aretes",
+            "titulo": "Aretes Elegantes 💎",
+            "emoji": "✨",
+            "mensaje_template": "Hola, estoy viendo tus aretes, ¿cuál me recomiendas?",
+            "descripcion_breve": "Aretes"
+          }
+        }
+      }
+    },
+    
+    "/producto": {
+      "context_key": "product",
+      "titulo": "Consulta sobre Producto 💍",
+      "emoji": "🔍",
+      "mensaje_template": "Hola, tengo una pregunta sobre este producto específico de VALAC.",
+      "descripcion_breve": "Producto",
+      "prioridad": 20
+    },
+    
+    "/cart": {
+      "context_key": "cart",
+      "titulo": "Ayuda con tu Carrito 🛒",
+      "emoji": "🎁",
+      "mensaje_template": "Hola, tengo dudas sobre mi pedido. ¿Puedo personalizar mi compra?",
+      "descripcion_breve": "Carrito",
+      "prioridad": 50
+    },
+    
+    "/checkout": {
+      "context_key": "checkout",
+      "titulo": "Ayuda en Compra 💳",
+      "emoji": "✔️",
+      "mensaje_template": "Hola, estoy en el proceso de compra y tengo una pregunta urgente.",
+      "descripcion_breve": "Checkout",
+      "prioridad": 60
+    },
+    
+    "/orders": {
+      "context_key": "orders",
+      "titulo": "Seguimiento de Orden 📦",
+      "emoji": "📍",
+      "mensaje_template": "Hola, quiero información sobre mi orden de VALAC Joyas.",
+      "descripcion_breve": "Mis Órdenes",
+      "prioridad": 40
+    },
+    
+    "/admin": {
+      "context_key": "admin",
+      "titulo": "Soporte Administrativo 🔧",
+      "emoji": "⚙️",
+      "mensaje_template": "Hola equipo VALAC, tengo una consulta administrativa.",
+      "descripcion_breve": "Admin",
+      "prioridad": 100
+    }
+  },
+
+  "metadata": {
+    "version": "1.0",
+    "fecha_creacion": "2025-02-01",
+    "descripcion": "Configuración centralizada de rutas y mensajes para el Sales Assistant",
+    "notas": [
+      "Cada ruta tiene un context_key único para identificar en analytics",
+      "prioridad: número usado para ordenar en casos de múltiples coincidencias",
+      "subcontextos: permite detectar parámetros GET (genero, category, etc)",
+      "emoji: se usa en tooltip y en el botón para diferencias visuales"
+    ]
+  }
+}

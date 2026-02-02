@@ -1,0 +1,18 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Variables personalizadas */
+:root {
+  --color-gold: #D4AF37;
+  --color-gold-light: #FACC15;
+  --color-black: #000000;
+  --color-white: #FFFFFF;
+}
+
+/* Estilos personalizados adicionales */
+@layer components {
+  .btn-premium {
+    @apply rounded-full bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 shadow-lg hover:shadow-2xl transition-all duration-300;
+  }
+}

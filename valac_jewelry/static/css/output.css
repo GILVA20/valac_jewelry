@@ -1,0 +1,14 @@
+/* Placeholder - Este archivo será generado por Tailwind */
+/* Para generar: npx tailwindcss -i ./static/css/styles.css -o ./static/css/output.css --minify */
+
+/* Estilos de base */
+body {
+  font-family: 'Playfair Display', serif;
+  color: #424242;
+  background-color: #f7f7f7;
+}
+
+h1, h2, h3 {
+  font-family: 'Playfair Display', serif;
+  font-weight: 600;
+}

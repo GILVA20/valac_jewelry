@@ -23,8 +23,8 @@ class Config:
     # SALES ASSISTANT CONFIGURATION (Sprint 1 - Infraestructura)
     # ========================================================================
     SALES_ASSISTANT = {
-        'whatsapp_number': '+521 771 857 4647',
-        'whatsapp_number_clean': '521771857464647',  # Sin espacios ni símbolos
+        'whatsapp_number': '+52 771 857 4647',
+        'whatsapp_number_clean': '527718574647',  # Sin espacios ni símbolos
         'default_message': 'Hola VALAC, tengo una pregunta',
         'locale': 'es-MX',  # Español de México
         'routes': {

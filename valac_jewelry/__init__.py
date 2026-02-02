@@ -126,6 +126,10 @@ def create_app():
     from .routes.contact import contact_bp
     app.register_blueprint(contact_bp)
 
+    # Registrar rutas de testing
+    from .routes.test import test_bp
+    app.register_blueprint(test_bp)
+
         # Registrar blueprint de órdenes para seguimiento
     from .routes.orders import orders_bp
     app.register_blueprint(orders_bp)

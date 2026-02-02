@@ -37,8 +37,7 @@
 #    app.run(debug=True)
 #
 # valac_jewelry/app.py
-# valac_jewelry/app.py
-from . import create_app
+from valac_jewelry import create_app
 
 app = create_app()
 

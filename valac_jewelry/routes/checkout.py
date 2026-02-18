@@ -211,7 +211,7 @@ def checkout():
             total=totals["total"],
             coupon_code=totals["coupon_code"],
             coupon_percent_base=totals["coupon_percent_base"],
-            preference_id=preference_id,
+            mp_preference_id=preference_id,
             mp_public_key=public_key,
             mp_init_point=init_point,
         )

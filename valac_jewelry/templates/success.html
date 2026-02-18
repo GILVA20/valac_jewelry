@@ -50,16 +50,22 @@
       <!-- Resumen dentro de la misma sección (debajo del listado) -->
       <div class="border rounded p-4 mt-4">
         <div class="flex justify-between">
-          <span class="font-medium">Subtotal artículos</span>
-          <span>${{ '%.2f' % (items_sum or 0) }}</span>
+          <span class="font-medium">Subtotal</span>
+          <span>${{ '%.2f' % (order.subtotal or 0) }}</span>
         </div>
+        {% if order.discount and order.discount > 0 %}
+        <div class="flex justify-between mt-1 text-green-600">
+          <span class="font-medium">Descuento</span>
+          <span>-${{ '%.2f' % order.discount }}</span>
+        </div>
+        {% endif %}
         <div class="flex justify-between mt-1">
           <span class="font-medium">Envío</span>
           <span>${{ '%.2f' % (order.shipping or 0) }}</span>
         </div>
-        <div class="flex justify-between mt-2 text-base">
-          <span class="font-semibold">Total (artículos + envío)</span>
-          <span class="font-semibold">${{ '%.2f' % (grand_sum or 0) }}</span>
+        <div class="flex justify-between mt-2 text-base border-t pt-2">
+          <span class="font-semibold">Total</span>
+          <span class="font-semibold">${{ '%.2f' % (order.total or 0) }}</span>
         </div>
       </div>
       {% else %}

@@ -7,32 +7,11 @@
 {% block content %}
 <main class="container mx-auto px-4 pb-40 md:pb-0 page-checkout">
 
-    <!-- Progress Bar: Carrito → Datos → Pago → Confirmación -->
-    <div class="mb-8">
-      <ul class="flex justify-between text-sm font-medium">
-        {% set steps = ['Carrito','Datos','Pago','Confirmación'] %}
-        {% for s in steps %}
-        <li class="flex-1 text-center">
-          <div class="{% if loop.index <= current_step %}text-yellow-500{% else %}text-gray-400{% endif %}">{{ s }}</div>
-          {% if not loop.last %}
-          <div class="h-1 {% if loop.index < current_step %}bg-yellow-500{% else %}bg-gray-200{% endif %} mx-auto mt-1 w-3/4"></div>
-          {% endif %}
-        </li>
-        {% endfor %}
-      </ul>
+    <!-- Título simple -->
+    <div class="mb-6 text-center">
+      <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Finalizar Compra</h1>
+      <p class="text-gray-500 mt-2">Completa tus datos y paga con MercadoPago</p>
     </div>
-  <!-- Breadcrumb para el proceso de checkout -->
-  <nav class="mb-6 text-sm text-gray-600" aria-label="Breadcrumb">
-    <ol class="list-reset flex">
-      <li><a href="{{ url_for('cart.view_cart') }}" class="text-blue-600 hover:underline">Carrito</a></li>
-      <li><span class="mx-2">></span></li>
-      <li><a href="{{ url_for('checkout.checkout') }}" class="text-blue-600 hover:underline">Datos</a></li>
-      <li><span class="mx-2">></span></li>
-      <li class="text-gray-500">Pago</li>
-      <li><span class="mx-2">></span></li>
-      <li class="text-gray-500">Confirmación</li>
-    </ol>
-  </nav>
 
   {# === NUEVO: variables de base/cupón para usar en ambos resúmenes === #}
   {% set _base = coupon_percent_base if coupon_percent_base is defined else 'products' %}
@@ -134,14 +113,11 @@
 
       /* Contenedor para el botón de MercadoPago: respeta header/banner */
       #mp-button-container {
-        margin-top: calc(var(--header-total, 88px) + 20vh);
-        display: flex;
-        justify-content: center;
+        display: block;
+        margin: 1rem 0;
       }
-      @media (max-width: 768px) {
-        #mp-button-container {
-          margin-top: calc(var(--header-total, 88px) + 15vh);
-        }
+      #wallet_container {
+        min-height: 100px;
       }
 
       .validation-message.valid { color: #38c172; display: block; }
@@ -217,78 +193,78 @@
           <label for="nombre"><i class="fas fa-user mr-2"></i>Nombre Completo</label>
           <div class="input-icon">
             <i class="fas fa-user"></i>
-            <input type="text" id="nombre" name="nombre" placeholder="Tu nombre" required>
+            <input type="text" id="nombre" name="nombre" placeholder="Tu nombre" required
+                   autocomplete="name">
           </div>
           <span id="nombre-msg" class="validation-message"></span>
         </div>
         <!-- Campo Dirección -->
         <div class="form-group">
-          <label for="direccion"><i class="fas fa-map-marker-alt mr-2"></i>Dirección</label>
+          <label for="direccion"><i class="fas fa-map-marker-alt mr-2"></i>Dirección Completa</label>
           <div class="input-icon">
             <i class="fas fa-map-marker-alt"></i>
-            <input type="text" id="direccion" name="direccion" placeholder="Calle, número, etc." required>
+            <input type="text" id="direccion" name="direccion" placeholder="Calle, número, colonia, ciudad" required
+                   autocomplete="street-address">
           </div>
           <span id="direccion-msg" class="validation-message"></span>
         </div>
-        <!-- Campo Estado -->
-        <div class="form-group">
-          <label for="estado"><i class="fas fa-flag mr-2"></i>Estado</label>
-          <input type="text" id="estado" name="estado" placeholder="Estado" required>
-          <span id="estado-msg" class="validation-message"></span>
-        </div>
-        <!-- Campo Colonia -->
-        <div class="form-group">
-          <label for="colonia"><i class="fas fa-map mr-2"></i>Colonia</label>
-          <input type="text" id="colonia" name="colonia" placeholder="Colonia" required>
-          <span id="colonia-msg" class="validation-message"></span>
-        </div>
-        <!-- Campo Ciudad -->
-        <div class="form-group">
-          <label for="ciudad"><i class="fas fa-city mr-2"></i>Ciudad</label>
-          <input type="text" id="ciudad" name="ciudad" placeholder="Ciudad" required>
-          <span id="ciudad-msg" class="validation-message"></span>
-        </div>
+        <!-- Campo Estado (oculto, valor por defecto) -->
+        <input type="hidden" id="estado" name="estado" value="México">
+        <!-- Campo Colonia (oculto) -->
+        <input type="hidden" id="colonia" name="colonia" value="-">
+        <!-- Campo Ciudad (oculto) -->
+        <input type="hidden" id="ciudad" name="ciudad" value="-">
         <!-- Campo Código Postal -->
         <div class="form-group">
           <label for="codigo_postal"><i class="fas fa-mail-bulk mr-2"></i>Código Postal</label>
-          <input type="text" id="codigo_postal" name="codigo_postal" placeholder="Código Postal" required>
+          <input type="text" id="codigo_postal" name="codigo_postal" placeholder="Código Postal" required
+                 inputmode="numeric" autocomplete="postal-code" pattern="[0-9]{5}">
           <span id="codigo_msg" class="validation-message"></span>
         </div>
         <!-- Campo Teléfono -->
         <div class="form-group">
           <label for="telefono"><i class="fas fa-phone mr-2"></i>Teléfono</label>
-          <input type="tel" id="telefono" name="telefono" placeholder="Ej. +521234567890" required>
+          <input type="tel" id="telefono" name="telefono" placeholder="Ej. +521234567890" required
+                 inputmode="tel" autocomplete="tel">
           <span id="telefono-msg" class="validation-message"></span>
         </div>
         <!-- Campo Correo -->
         <div class="form-group">
           <label for="email"><i class="fas fa-envelope mr-2"></i>Correo Electrónico</label>
-          <input type="email" id="email" name="email" placeholder="tu@correo.com" required>
+          <input type="email" id="email" name="email" placeholder="tu@correo.com" required
+                 inputmode="email" autocomplete="email">
+          <small class="text-gray-500 text-xs mt-1 block">
+            <i class="fas fa-envelope-open-text mr-1"></i>Te enviaremos la confirmación y tracking aquí
+          </small>
           <span id="email-msg" class="validation-message"></span>
         </div>
       </section>
 
-      <!-- Información de Pago -->
+      <!-- Información de Pago - MercadoPago automático -->
       <section class="form-section" data-aos="fade-up" data-aos-duration="1200">
-        <h2 class="mb-4 text-xl font-bold">Información de Pago</h2>
-        <div class="form-group">
-          <label for="metodo_pago"><i class="fas fa-credit-card mr-2"></i>Método de Pago</label>
-          <select id="metodo_pago" name="metodo_pago" required>
-            <option value="" disabled selected>-- Elige una opción --</option>
-            <option value="mercadopago">MercadoPago</option>
-            <option value="aplazo">Aplazo</option>
-            <!--<option value="mock_gateway">Pago Simulado</option>-->
-          </select>
+        <h2 class="mb-4 text-xl font-bold"><i class="fas fa-credit-card mr-2 text-blue-600"></i>Pago Seguro</h2>
+        
+        <!-- MercadoPago seleccionado por defecto (oculto) -->
+        <input type="hidden" id="metodo_pago" name="metodo_pago" value="mercadopago">
+        
+        <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div class="flex items-center gap-3 mb-3">
+            <img src="https://cdn.simpleicons.org/mercadopago" alt="MercadoPago" class="h-8">
+            <span class="font-semibold text-gray-800">Pago con MercadoPago</span>
+          </div>
+          <div class="flex flex-wrap gap-3 text-gray-600 text-sm">
+            <span><i class="fas fa-credit-card mr-1"></i>Tarjetas</span>
+            <span><i class="fas fa-store mr-1"></i>OXXO</span>
+            <span><i class="fas fa-university mr-1"></i>SPEI</span>
+            <span><i class="fas fa-calendar-alt mr-1"></i>Hasta 12 MSI</span>
+          </div>
+          <p class="text-xs text-gray-500 mt-3">
+            <i class="fas fa-shield-alt mr-1 text-green-600"></i>
+            No guardamos datos de tu tarjeta. Pago 100% seguro.
+          </p>
         </div>
-        <!-- Banner de Confirmación para MercadoPago -->
-        <div id="mp-confirm-banner">Método de pago seleccionado correctamente: MercadoPago</div>
-        <!-- Mensaje para Aplazo -->
-        <div id="aplazo-message">Aplazo no está disponible por el momento.</div>
       </section>
     </div>
-
-    <!-- Contenedor para el botón de MercadoPago (este se usará en vez del botón final si se activa MercadoPago) -->
-    <div id="mp-button-container"></div>
 
     <!-- Elementos de Confianza: Aquí se incluye un sello de seguridad y se podría agregar un testimonio o mini-carrito -->
     <section class="trust-section text-center mt-8">
@@ -331,16 +307,14 @@
                               <span>${{ '%.2f'|format(total) }}</span>
                             </div>
                           </div>
-            <button id="checkout-btn" type="submit"
-                    class="w-full py-3 bg-gradient-to-r from-yellow-500 to-yellow-600
-                           text-white font-semibold rounded-lg shadow hover:scale-[1.02]
-                           transition"
-                    aria-label="Pagar ahora">
-              Pagar Ahora
-              <span id="spinner" class="hidden inline-block ml-2 w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-            </button>
+            
+            <!-- Botón de MercadoPago (visible desde el inicio) -->
+            <div id="mp-button-container" class="w-full">
+              <div id="wallet_container"></div>
+            </div>
+            
             <div class="mt-3 text-center space-y-2">
-              <p class="text-xs text-gray-500">Transacción 100% segura (SSL)</p>
+              <p class="text-xs text-gray-500">Pago 100% seguro</p>
               <div
                 class="flex flex-wrap items-center justify-center gap-x-4 gap-y-2
                        grayscale opacity-80 hover:opacity-100 transition"
@@ -444,12 +418,20 @@
   // Toast helper
   function toast(msg,type='info'){
     const t=document.createElement('div');
-    t.className=`px-4 py-2 rounded shadow ${
-      type==='error'?'bg-red-500':'bg-green-500'
-    } text-white`;
+    const colors = {
+      'error': 'bg-red-500',
+      'success': 'bg-green-500',
+      'info': 'bg-blue-500'
+    };
+    t.className=`px-6 py-3 rounded-lg shadow-lg ${colors[type] || 'bg-blue-500'} text-white font-semibold`;
     t.textContent=msg;
-    document.getElementById('toast-container').append(t);
-    setTimeout(()=>t.remove(),4000);
+    const container = document.getElementById('toast-container');
+    container.appendChild(t);
+    setTimeout(()=>{
+      t.style.opacity = '0';
+      t.style.transition = 'opacity 0.3s';
+      setTimeout(() => t.remove(), 300);
+    }, 3500);
   }
 
   window.onload = async function() {
@@ -663,42 +645,115 @@
       msg.style.display = 'block';
     });
 
-    // Animación de carga al enviar el formulario (FIX: usar checkout-btn existente)
-    document.getElementById('checkout-form').addEventListener('submit', () => {
-      const checkoutBtn = document.getElementById('checkout-btn');
-      if (checkoutBtn) { checkoutBtn.classList.add('loading'); }
-      const sp = document.getElementById('spinner');
-      if (sp) { sp.classList.remove('hidden'); }
-    });
+    // Animación de carga al enviar el formulario - AHORA SE USA PARA ENVIAR DATOS ANTES DEL PAGO
+    const formElement = document.getElementById('checkout-form');
+    if (formElement) {
+      formElement.addEventListener('submit', async (e) => {
+        e.preventDefault(); // Prevenir submit tradicional
+      });
+    }
+
+    // Inicializar botón de MercadoPago si hay preference_id
+    const preferenceId = "{{ preference_id if preference_id else '' }}";
+    const mpPublicKey = "{{ mp_public_key if mp_public_key else '' }}";
+    
+    console.log('=== DEBUG MERCADOPAGO ===');
+    console.log('Preference ID:', preferenceId);
+    console.log('Public Key:', mpPublicKey);
+    console.log('Preference ID length:', preferenceId.length);
+    console.log('Public Key length:', mpPublicKey.length);
+    
+    if (preferenceId && mpPublicKey) {
+      console.log('✅ Iniciando MercadoPago con preference_id válido');
+      try {
+        const mp = new MercadoPago(mpPublicKey, { locale: "es-MX" });
+        
+        const bricksBuilder = mp.bricks();
+        
+        // Renderizar el botón de MercadoPago
+        await bricksBuilder.create('wallet', 'wallet_container', {
+          initialization: {
+            preferenceId: preferenceId,
+            redirectMode: 'self'  // Mantener en la misma pestaña
+          },
+          customization: {
+            texts: {
+              valueProp: 'smart_option',
+            },
+          },
+          callbacks: {
+            onReady: () => {
+              console.log('Botón de MercadoPago listo');
+            },
+            onSubmit: async () => {
+              // Capturar y enviar datos del formulario antes de proceder al pago
+              const formData = {
+                nombre: document.getElementById('nombre').value.trim(),
+                direccion: document.getElementById('direccion').value.trim(),
+                estado: document.getElementById('estado').value,
+                colonia: document.getElementById('colonia').value,
+                ciudad: document.getElementById('ciudad').value,
+                codigo_postal: document.getElementById('codigo_postal').value.trim(),
+                telefono: document.getElementById('telefono').value.trim(),
+                email: document.getElementById('email').value.trim()
+              };
+
+              // Validar campos básicos
+              if (!formData.nombre || !formData.direccion || !formData.email) {
+                toast('Por favor completa al menos Nombre, Dirección y Email antes de pagar', 'error');
+                return false; // Cancelar el pago
+              }
+
+              // Guardar datos en sessionStorage para recuperarlos después del pago
+              sessionStorage.setItem('checkout_data', JSON.stringify(formData));
+              
+              // Enviar datos al servidor
+              try {
+                await fetch('/api/create-preference', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify(formData)
+                });
+              } catch (error) {
+                console.error('Error guardando datos:', error);
+              }
+              
+              return true; // Permitir continuar con el pago
+            },
+            onError: (error) => {
+              console.error('Error en MercadoPago:', error);
+              toast('Error al procesar el pago', 'error');
+            }
+          }
+        });
+        
+        console.log('Botón de MercadoPago inicializado correctamente');
+      } catch (error) {
+        console.error('Error inicializando MercadoPago:', error);
+        toast('Error al cargar el botón de pago', 'error');
+      }
+    } else {
+      console.error('❌ No se pudo inicializar MercadoPago');
+      console.error('Preference ID válido?:', !!preferenceId);
+      console.error('Public Key válido?:', !!mpPublicKey);
+      
+      // Mostrar un mensaje al usuario
+      const walletContainer = document.getElementById('wallet_container');
+      if (walletContainer) {
+        walletContainer.innerHTML = `
+          <div class="p-4 bg-yellow-50 border border-yellow-200 rounded-lg text-center">
+            <p class="text-yellow-800 font-semibold mb-2">⚠️ Error al cargar el botón de pago</p>
+            <p class="text-yellow-700 text-sm">Por favor recarga la página o contacta a soporte</p>
+          </div>
+        `;
+      }
+    }
 
     // ✨ ADDITIONS ✨: Debug: Environment mode and MP public key (test/prod)
     console.log("DEBUG: Environment mode (backend flag 'sandbox'): ", "{{ sandbox if sandbox is defined else 'prod' }}");
-    console.log("DEBUG: MP_PUBLIC_KEY used: ", "{{ config['MP_PUBLIC_KEY'] }}");
-
-    // FIX: Render Wallet Brick con estilo compacto y posicionado a una altura adecuada
-    const preferenceId = "{{ preference_id|default('') }}";
-    if (preferenceId) {
-      const mpButtonContainer = document.getElementById("mp-button-container");
-      mpButtonContainer.style.display = "flex";
-      const mp = new MercadoPago("{{ config['MP_PUBLIC_KEY'] }}", { locale: "es-MX" });
-      mp.bricks().create("wallet", "mp-button-container", {
-        initialization: { preferenceId: preferenceId },
-        customization: {
-          visual: {
-            buttonBackground: "#003a80",  // color secundario azul oscuro
-            textColor: "#ffffff",
-            borderRadius: "6px"
-          },
-          texts: {
-            action: "pay",
-            valueProp: "Paga con seguridad"
-          }
-        }
-      });
-    } else {
-      console.warn("No se ha definido un 'preference_id'. El botón de MercadoPago no se mostrará.");
-    }
+    console.log("DEBUG: MP_PUBLIC_KEY used: ", "{{ config['MP_PUBLIC_KEY_TEST'] if config.get('FLASK_ENV') != 'production' else config['MP_PUBLIC_KEY'] }}");
   };
+
 </script>
 <script>
   (function robustHeaderOffset() {

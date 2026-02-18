@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "build-css": "tailwindcss -i C:/Repos/VALACJOYAS/static/css/styles.css -o C:/Repos/VALACJOYAS/static/css/output.css --minify"
+    "build-css": "tailwindcss -i ./static/css/styles.css -o ./static/css/output.css --minify",
+    "watch-css": "tailwindcss -i ./static/css/styles.css -o ./static/css/output.css --watch"
   },
   "repository": {
     "type": "git",

@@ -1,62 +1,179 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Resumen de tu orden</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Confirmación de Pedido #{{ order.id }} - VALAC Joyas</title>
 </head>
-<body style="font-family: Arial, sans-serif; padding: 20px; background-color: #f5f5f5;">
-  <div style="max-width: 600px; margin: 0 auto; background-color: #fff; padding: 24px; border-radius: 8px;">
-    <h2 style="text-align: center; color: #333;">¡Gracias por tu compra!</h2>
-    <p style="text-align: center;">Este es el resumen de tu orden:</p>
-    
-    <ul style="list-style: none; padding-left: 0;">
-      <li><strong>ID:</strong> {{ order.id }}</li>
-      <li><strong>Nombre:</strong> {{ order.nombre }}</li>
-      <li><strong>Dirección:</strong> {{ order["dirección_envío"] }}, {{ order.colonia }}, {{ order.ciudad }} {{ order.codigo_postal }}</li>
-      <li><strong>Teléfono:</strong> {{ order.telefono }}</li>
-      <li><strong>Email:</strong> {{ order.email }}</li>
-      <li><strong>Subtotal:</strong> ${{ "%.2f"|format(order.subtotal or 0.0) }}</li>
-      <li><strong>Envío:</strong> ${{ "%.2f"|format(order.shipping or 0.0) }}</li>
-      <li><strong>Descuento:</strong> ${{ "%.2f"|format(order.discount or 0.0) }}</li>
-      <li><strong>Total:</strong> ${{ "%.2f"|format(order.total or 0.0) }}</li>
-      <li><strong>Estado de pago:</strong> {{ order.estado_pago }}</li>
-    </ul>
-
-    <h3 style="margin-top: 30px;">Artículos Comprados:</h3>
-    {% if order_items and order_items|length > 0 %}
-    <table style="width: 100%; border-collapse: collapse;">
-      <thead>
-        <tr>
-          <th style="border: 1px solid #ddd; padding: 8px;">Artículo</th>
-          <th style="border: 1px solid #ddd; padding: 8px;">Precio Unitario</th>
-          <th style="border: 1px solid #ddd; padding: 8px;">Descuento</th>
-          <th style="border: 1px solid #ddd; padding: 8px;">Precio Final</th>
-          <th style="border: 1px solid #ddd; padding: 8px;">Cantidad</th>
-          <th style="border: 1px solid #ddd; padding: 8px;">Total Línea</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for item in order_items %}
-        <tr>
-          <td style="border: 1px solid #ddd; padding: 8px;">{{ item.nombre }}</td>
-          <td style="border: 1px solid #ddd; padding: 8px;">${{ '%.2f' % (item.unit_price or item.precio) }}</td>
-          <td style="border: 1px solid #ddd; padding: 8px;">${{ '%.2f' % (item.descuento or 0) }}</td>
-          <td style="border: 1px solid #ddd; padding: 8px;">${{ '%.2f' % (item.final_price or ((item.unit_price or item.precio) - (item.descuento or 0))) }}</td>
-          <td style="border: 1px solid #ddd; padding: 8px;">{{ item.cantidad }}</td>
-          <td style="border: 1px solid #ddd; padding: 8px;">${{ '%.2f' % ((item.final_price or (item.unit_price - (item.descuento or 0))) * item.cantidad) }}</td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-    {% else %}
-    <p>No se encontraron artículos en tu orden.</p>
-    {% endif %}
-
-    <p style="text-align: center; margin-top: 40px;">
-      <a href="https://valacjoyas.com" style="padding: 12px 20px; background-color: #d5a300; color: white; text-decoration: none; border-radius: 4px;">
-        Visitar VALAC Joyas
-      </a>
-    </p>
-  </div>
+<body style="margin: 0; padding: 0; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #f8f6f3; color: #333;">
+  
+  <!-- Contenedor principal -->
+  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f8f6f3;">
+    <tr>
+      <td style="padding: 40px 20px;">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+          
+          <!-- Header con logo -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%); padding: 30px 40px; text-align: center;">
+              <h1 style="margin: 0; color: #d4a853; font-size: 28px; font-weight: 300; letter-spacing: 4px;">VALAC JOYAS</h1>
+              <p style="margin: 8px 0 0 0; color: #999; font-size: 11px; letter-spacing: 2px; text-transform: uppercase;">Oro 10k y 14k</p>
+            </td>
+          </tr>
+          
+          <!-- Mensaje de agradecimiento -->
+          <tr>
+            <td style="padding: 40px 40px 20px 40px; text-align: center; border-bottom: 1px solid #eee;">
+              <div style="width: 60px; height: 60px; margin: 0 auto 20px auto; background-color: #e8f5e9; border-radius: 50%; line-height: 60px;">
+                <span style="color: #4caf50; font-size: 28px;">&#10003;</span>
+              </div>
+              <h2 style="margin: 0 0 10px 0; color: #1a1a1a; font-size: 24px; font-weight: 400;">¡Gracias por tu compra!</h2>
+              <p style="margin: 0; color: #666; font-size: 15px; line-height: 1.6;">
+                Hemos recibido tu pedido y lo estamos preparando con el mayor cuidado.
+              </p>
+            </td>
+          </tr>
+          
+          <!-- Número de orden -->
+          <tr>
+            <td style="padding: 25px 40px; background-color: #fafafa; text-align: center;">
+              <p style="margin: 0 0 5px 0; color: #888; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Número de Pedido</p>
+              <p style="margin: 0; color: #d4a853; font-size: 28px; font-weight: 600;">#{{ order.id }}</p>
+            </td>
+          </tr>
+          
+          <!-- Datos de envío -->
+          <tr>
+            <td style="padding: 30px 40px;">
+              <h3 style="margin: 0 0 15px 0; color: #1a1a1a; font-size: 16px; font-weight: 600; border-bottom: 2px solid #d4a853; padding-bottom: 10px; display: inline-block;">Datos de Envío</h3>
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                <tr>
+                  <td style="padding: 8px 0; color: #666; font-size: 14px;">
+                    <strong style="color: #333;">{{ order.nombre }}</strong><br>
+                    {{ order["dirección_envío"] or order.direccion_envio or '' }}<br>
+                    {% if order.colonia %}{{ order.colonia }}, {% endif %}{{ order.ciudad or '' }} {{ order.codigo_postal or '' }}<br>
+                    {% if order.telefono %}<span style="color: #888;">Tel:</span> {{ order.telefono }}<br>{% endif %}
+                    <span style="color: #888;">Email:</span> {{ order.email }}
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Artículos -->
+          <tr>
+            <td style="padding: 0 40px 30px 40px;">
+              <h3 style="margin: 0 0 15px 0; color: #1a1a1a; font-size: 16px; font-weight: 600; border-bottom: 2px solid #d4a853; padding-bottom: 10px; display: inline-block;">Artículos del Pedido</h3>
+              
+              {% if order_items and order_items|length > 0 %}
+              {% for item in order_items %}
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 15px;">
+                <tr>
+                  <td style="width: 80px; vertical-align: top;">
+                    {% if item.imagen %}
+                    <img src="{{ item.imagen }}" alt="{{ item.nombre }}" width="70" height="70" style="border-radius: 6px; object-fit: cover; border: 1px solid #eee;">
+                    {% else %}
+                    <div style="width: 70px; height: 70px; background-color: #f5f5f5; border-radius: 6px; text-align: center; line-height: 70px; color: #ccc; font-size: 24px;">&#9672;</div>
+                    {% endif %}
+                  </td>
+                  <td style="vertical-align: top; padding-left: 15px;">
+                    <p style="margin: 0 0 5px 0; color: #1a1a1a; font-size: 15px; font-weight: 500;">{{ item.nombre }}</p>
+                    {% if item.descripcion %}<p style="margin: 0 0 5px 0; color: #888; font-size: 12px;">{{ item.descripcion }}</p>{% endif %}
+                    <p style="margin: 0; color: #666; font-size: 13px;">Cantidad: {{ item.cantidad }}</p>
+                  </td>
+                  <td style="vertical-align: top; text-align: right; white-space: nowrap;">
+                    <p style="margin: 0; color: #1a1a1a; font-size: 15px; font-weight: 500;">${{ '%.2f' % (item.final_price * item.cantidad) }}</p>
+                    {% if item.descuento and item.descuento > 0 %}
+                    <p style="margin: 3px 0 0 0; color: #888; font-size: 12px; text-decoration: line-through;">${{ '%.2f' % (item.unit_price * item.cantidad) }}</p>
+                    {% endif %}
+                  </td>
+                </tr>
+              </table>
+              {% endfor %}
+              {% else %}
+              <p style="color: #888; font-size: 14px;">No se encontraron artículos.</p>
+              {% endif %}
+            </td>
+          </tr>
+          
+          <!-- Resumen de totales -->
+          <tr>
+            <td style="padding: 0 40px 30px 40px;">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #fafafa; border-radius: 8px; padding: 20px;">
+                <tr>
+                  <td style="padding: 20px;">
+                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                      <tr>
+                        <td style="padding: 5px 0; color: #666; font-size: 14px;">Subtotal</td>
+                        <td style="padding: 5px 0; color: #333; font-size: 14px; text-align: right;">${{ "%.2f"|format(order.subtotal or 0.0) }}</td>
+                      </tr>
+                      {% if order.discount and order.discount > 0 %}
+                      <tr>
+                        <td style="padding: 5px 0; color: #4caf50; font-size: 14px;">Descuento</td>
+                        <td style="padding: 5px 0; color: #4caf50; font-size: 14px; text-align: right;">-${{ "%.2f"|format(order.discount) }}</td>
+                      </tr>
+                      {% endif %}
+                      <tr>
+                        <td style="padding: 5px 0; color: #666; font-size: 14px;">Envío</td>
+                        <td style="padding: 5px 0; color: #333; font-size: 14px; text-align: right;">
+                          {% if order.shipping and order.shipping > 0 %}
+                          ${{ "%.2f"|format(order.shipping) }}
+                          {% else %}
+                          <span style="color: #4caf50;">Gratis</span>
+                          {% endif %}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td colspan="2" style="padding: 15px 0 5px 0; border-top: 2px solid #ddd;"></td>
+                      </tr>
+                      <tr>
+                        <td style="padding: 5px 0; color: #1a1a1a; font-size: 18px; font-weight: 600;">Total</td>
+                        <td style="padding: 5px 0; color: #d4a853; font-size: 20px; font-weight: 600; text-align: right;">${{ "%.2f"|format(order.total or 0.0) }} MXN</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          
+          <!-- Estado del pago -->
+          <tr>
+            <td style="padding: 0 40px 30px 40px; text-align: center;">
+              <div style="display: inline-block; background-color: #e8f5e9; color: #2e7d32; padding: 10px 25px; border-radius: 20px; font-size: 13px; font-weight: 500;">
+                Estado: {{ order.estado_pago or 'Completado' }}
+              </div>
+            </td>
+          </tr>
+          
+          <!-- Información adicional -->
+          <tr>
+            <td style="padding: 30px 40px; background-color: #fafafa; border-top: 1px solid #eee;">
+              <p style="margin: 0 0 15px 0; color: #666; font-size: 13px; line-height: 1.6; text-align: center;">
+                Tu pedido será enviado en los próximos días hábiles. Recibirás un correo con el número de seguimiento cuando tu paquete sea despachado.
+              </p>
+              <p style="margin: 0; color: #888; font-size: 12px; text-align: center;">
+                ¿Tienes alguna pregunta? Contáctanos por WhatsApp o responde a este correo.
+              </p>
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #1a1a1a; padding: 25px 40px; text-align: center;">
+              <p style="margin: 0 0 10px 0;">
+                <a href="https://valacjoyas.com" style="color: #d4a853; text-decoration: none; font-size: 14px; letter-spacing: 1px;">valacjoyas.com</a>
+              </p>
+              <p style="margin: 0; color: #666; font-size: 11px;">
+                &copy; {{ 2026 }} VALAC Joyas. Todos los derechos reservados.
+              </p>
+            </td>
+          </tr>
+          
+        </table>
+      </td>
+    </tr>
+  </table>
+  
 </body>
 </html>

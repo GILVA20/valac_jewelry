@@ -1,7 +1,7 @@
 import os
 import logging
 from decimal import Decimal
-from flask import Blueprint, render_template, request, redirect, flash, url_for, current_app, session
+from flask import Blueprint, render_template, request, redirect, flash, url_for, current_app, session, jsonify
 import mercadopago
 from supabase import create_client, Client
 
@@ -123,8 +123,86 @@ def checkout():
         # para compatibilidad con plantillas antiguas
         session['discount_amount'] = totals["discount"]
 
+        # Crear preferencia de MercadoPago para mostrar el botón desde el inicio
+        ENV = os.getenv("FLASK_ENV", "development").lower()
+        IS_PROD = ENV == "production"
+        
+        # Forzar modo test en localhost
+        if "localhost" in request.url_root or "127.0.0.1" in request.url_root:
+            IS_PROD = False
+            log.info("Forzando modo TEST porque estamos en localhost")
+        
+        token = (current_app.config["MP_ACCESS_TOKEN"] if IS_PROD else current_app.config["MP_ACCESS_TOKEN_TEST"])
+        public_key = (current_app.config["MP_PUBLIC_KEY"] if IS_PROD else current_app.config["MP_PUBLIC_KEY_TEST"])
+        
+        log.info(f"Modo: {'PRODUCCION' if IS_PROD else 'TEST'}")
+        log.info(f"Public Key: {public_key[:20]}..." if public_key else "Public Key: None")
+        
+        mp = mercadopago.SDK(token)
+
+        # IMPORTANTE: Siempre usar URLs de producción para back_urls y notification_url
+        # MercadoPago (incluso en sandbox) requiere URLs públicamente accesibles
+        # Las URLs localhost (127.0.0.1) causan error 400 con auto_return
+        base_url = "https://valacjoyas.com"
+        back_urls = {
+            "success": f"{base_url}/success",
+            "failure": f"{base_url}/failure",
+            "pending": f"{base_url}/pending",
+        }
+        notification_url = "https://valacjoyas.com/webhook"
+
+        preference_data = {
+            "items": [{
+                "title": "Orden de Compra VALAC Joyas",
+                "unit_price": float(totals["total"]),
+                "quantity": 1
+            }],
+            "back_urls": back_urls,
+            "auto_return": "approved",
+            "notification_url": notification_url,
+            "payment_methods": {
+                "installments": 18,
+                "default_installments": 6
+            },
+            "metadata": {"environment": "production" if IS_PROD else "sandbox"},
+        }
+
+        # Solo crear preferencia si hay productos en el carrito (total > 0)
+        preference_response = None
+        if totals["total"] > 0:
+            preference_response = mp.preference().create(preference_data)
+        
+        preference_id = None
+        init_point = None
+        
+        # Solo crear preferencia si hay productos en el carrito (total > 0)
+        if totals["total"] > 0:
+            log.info(f"Respuesta COMPLETA de MercadoPago: {preference_response}")
+            
+            if preference_response and "response" in preference_response:
+                pref = preference_response["response"]
+                log.info(f"Keys en response: {pref.keys()}")
+                if "id" in pref:
+                    preference_id = pref["id"]
+                    # En sandbox, MercadoPago devuelve sandbox_init_point
+                    # En producción, devuelve init_point
+                    init_point = pref.get("sandbox_init_point") or pref.get("init_point")
+                    log.info(f"Preference ID creado: {preference_id}")
+                    log.info(f"sandbox_init_point: {pref.get('sandbox_init_point')}")
+                    log.info(f"init_point: {pref.get('init_point')}")
+                    log.info(f"Init Point final: {init_point}")
+                else:
+                    log.error(f"No se encontró 'id' en la respuesta: {pref}")
+            else:
+                log.error(f"Respuesta inválida de MercadoPago: {preference_response}")
+        else:
+            log.warning("Carrito vacío - no se puede crear preferencia de MercadoPago")
+
+        if not preference_id:
+            log.warning("No se pudo crear preference_id, el botón de MP no se mostrará")
+
         return render_template(
-            'checkout.html',
+            'checkout_luxury.html',
             current_step=3,
             order_items=order_items,
             subtotal=totals["subtotal"],
@@ -133,6 +211,9 @@ def checkout():
             total=totals["total"],
             coupon_code=totals["coupon_code"],
             coupon_percent_base=totals["coupon_percent_base"],
+            preference_id=preference_id,
+            mp_public_key=public_key,
+            mp_init_point=init_point,
         )
 
     # ---------- POST: procesar pago ----------
@@ -285,4 +366,126 @@ def checkout():
         return redirect(url_for('mock_checkout.index', order_id=order_id))
 
     # Fallback
-    return render_template('checkout.html', current_step=3)
+    return redirect(url_for('checkout.checkout'))
+
+
+@checkout_bp.route('/api/create-preference', methods=['POST'])
+def create_preference():
+    """
+    API endpoint para crear preferencia de MercadoPago desde el frontend.
+    Devuelve el preference_id y public_key para renderizar el Wallet Button.
+    """
+    try:
+        # Extraer datos del request JSON
+        data = request.get_json()
+        if not data:
+            return jsonify({"error": "No se recibieron datos"}), 400
+
+        # Validar campos requeridos
+        required_fields = ['nombre', 'direccion', 'codigo_postal', 'telefono', 'email']
+        for field in required_fields:
+            if not data.get(field):
+                return jsonify({"error": f"Campo '{field}' es requerido"}), 400
+
+        # Sanitizar datos
+        nombre = sanitize_input(data.get('nombre'))
+        direccion_envio_in = sanitize_input(data.get('direccion'))
+        estado_envio = sanitize_input(data.get('estado', 'México'))
+        colonia = sanitize_input(data.get('colonia', '-'))
+        ciudad = sanitize_input(data.get('ciudad', '-'))
+        codigo_postal = sanitize_input(data.get('codigo_postal'))
+        telefono = sanitize_input(data.get('telefono'))
+        email = sanitize_input(data.get('email'))
+
+        # Normalizar estado
+        estado_mapping = {"hi": "Hidalgo", "hidalgo": "Hidalgo"}
+        estado_geografico = estado_mapping.get(estado_envio.lower(), estado_envio)
+
+        # Construir orden
+        order_items, subtotal_calc = build_order_items_and_subtotal()
+        if not order_items:
+            return jsonify({"error": "El carrito está vacío"}), 400
+
+        totals = snapshot_totals_fallback(subtotal_calc)
+        subtotal = totals["subtotal"]
+        shipping_cost = totals["shipping"]
+        total = totals["total"]
+
+        # Crear orden en DB
+        order_data = {
+            "nombre": nombre,
+            "dirección_envío": direccion_envio_in,
+            "estado_geografico": estado_geografico or None,
+            "colonia": colonia,
+            "ciudad": ciudad,
+            "codigo_postal": codigo_postal,
+            "telefono": telefono,
+            "email": email,
+            "método_pago": "MercadoPago",
+            "subtotal": subtotal,
+            "costo_envío": shipping_cost,
+            "total": total,
+            "estado_pago": "Pendiente",
+        }
+
+        order_id = create_order_in_db(order_data, order_items)
+        if not order_id:
+            return jsonify({"error": "Error al crear la orden"}), 500
+
+        # Determinar ambiente
+        ENV = os.getenv("FLASK_ENV", "development").lower()
+        IS_PROD = ENV == "production"
+        token = (current_app.config["MP_ACCESS_TOKEN"] if IS_PROD else current_app.config["MP_ACCESS_TOKEN_TEST"])
+        public_key = (current_app.config["MP_PUBLIC_KEY"] if IS_PROD else current_app.config["MP_PUBLIC_KEY_TEST"])
+        
+        mp = mercadopago.SDK(token)
+
+        base_url = "https://valacjoyas.com" if IS_PROD else request.url_root.rstrip('/')
+        back_urls = {
+            "success": f"{base_url}/success",
+            "failure": f"{base_url}/failure",
+            "pending": f"{base_url}/pending",
+        }
+        notification_url = "https://valacjoyas.com/webhook"
+
+        # Crear preferencia
+        preference_data = {
+            "items": [{
+                "title": "Orden de Compra VALAC Joyas",
+                "unit_price": float(total),
+                "quantity": 1
+            }],
+            "back_urls": back_urls,
+            "notification_url": notification_url,
+            "payment_methods": {
+                "installments": 18,
+                "default_installments": 6
+            },
+            "metadata": {"environment": "production" if IS_PROD else "sandbox"},
+            "external_reference": str(order_id)
+        }
+        
+        if IS_PROD:
+            preference_data["auto_return"] = "approved"
+
+        preference_response = mp.preference().create(preference_data)
+        if not preference_response or "response" not in preference_response:
+            log.error("Respuesta inválida de MercadoPago: %s", preference_response)
+            return jsonify({"error": "Error al crear la preferencia de pago"}), 500
+
+        pref = preference_response["response"]
+        if "id" not in pref:
+            log.error("Preferencia sin 'id'. Respuesta: %s", pref)
+            return jsonify({"error": "Error al crear la preferencia de pago"}), 500
+
+        preference_id = pref["id"]
+        
+        return jsonify({
+            "preference_id": preference_id,
+            "public_key": public_key,
+            "order_id": order_id
+        }), 200
+
+    except Exception as e:
+        log.exception("Error en create_preference API: %s", e)
+        return jsonify({"error": "Error al procesar el pago. Por favor, inténtalo de nuevo."}), 500

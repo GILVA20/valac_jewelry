@@ -1,0 +1,443 @@
+{% extends "base.html" %}
+
+{% block title %}Checkout - VALAC Joyas{% endblock %}
+
+{% block content %}
+<style>
+  /* ========== LUXURY CHECKOUT STYLES ========== */
+  :root {
+    --gold: #B8860B;
+    --white: #FFFFFF;
+    --gray-50: #FAFAFA;
+    --gray-100: #F5F5F5;
+    --gray-200: #E5E5E5;
+    --gray-400: #A3A3A3;
+    --gray-600: #525252;
+    --gray-800: #262626;
+  }
+
+  .checkout-page {
+    min-height: 100vh;
+    background: linear-gradient(180deg, var(--gray-50) 0%, var(--white) 100%);
+    padding-top: 120px;
+  }
+
+  /* Typography - Serif for elegance, Sans for forms */
+  .font-serif { font-family: 'Playfair Display', Georgia, serif; }
+  .font-sans { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+
+  /* Elegant Input Styling */
+  .luxury-input {
+    width: 100%;
+    padding: 1rem 1.25rem;
+    border: 1px solid var(--gray-200);
+    border-radius: 4px;
+    font-size: 1rem;
+    font-family: inherit;
+    background: var(--white);
+    transition: all 0.3s ease;
+  }
+
+  .luxury-input:focus {
+    outline: none;
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(184, 134, 11, 0.1);
+  }
+
+  .luxury-input::placeholder {
+    color: var(--gray-400);
+  }
+
+  .input-label {
+    display: block;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--gray-600);
+    margin-bottom: 0.5rem;
+  }
+
+  /* Sticky Summary Sidebar */
+  .summary-sidebar {
+    position: sticky;
+    top: 120px;
+    background: var(--white);
+    border: 1px solid var(--gray-200);
+    border-radius: 8px;
+    padding: 2rem;
+  }
+
+  /* Divider */
+  .divider {
+    height: 1px;
+    background: var(--gray-200);
+    margin: 1.5rem 0;
+  }
+
+  /* Empty Cart State */
+  .empty-cart {
+    text-align: center;
+    padding: 3rem 2rem;
+    background: var(--gray-50);
+    border-radius: 8px;
+    border: 1px dashed var(--gray-200);
+  }
+
+  /* Toast notifications */
+  .toast-container {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 9999;
+  }
+
+  .toast {
+    padding: 1rem 1.5rem;
+    border-radius: 4px;
+    margin-top: 0.5rem;
+    animation: slideIn 0.3s ease;
+  }
+
+  @keyframes slideIn {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+
+  /* Form validation */
+  .input-error {
+    border-color: #DC2626 !important;
+  }
+
+  .input-success {
+    border-color: #16A34A !important;
+  }
+</style>
+
+<main class="checkout-page">
+  <div class="container mx-auto px-4 py-8 max-w-6xl">
+    
+    <!-- Header -->
+    <header class="text-center mb-12">
+      <h1 class="font-serif text-3xl md:text-4xl text-gray-800 mb-2">Finalizar Compra</h1>
+      <p class="text-gray-500 text-sm tracking-wide">Checkout seguro con encriptación SSL</p>
+    </header>
+
+    {% if total > 0 %}
+    <!-- Main Grid: 60% Form / 40% Summary -->
+    <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
+      
+      <!-- Left Column: Form (60%) -->
+      <div class="lg:col-span-3 space-y-8">
+        
+        <!-- Shipping Information -->
+        <section class="bg-white rounded-lg border border-gray-200 p-6 md:p-8">
+          <h2 class="font-serif text-xl mb-6 text-gray-800">Información de Envío</h2>
+          
+          <form id="checkout-form" class="space-y-5" action="{{ url_for('checkout.checkout') }}" method="POST">
+            <!-- Hidden fields -->
+            <input type="hidden" id="metodo_pago" name="metodo_pago" value="MercadoPago">
+            <input type="hidden" name="estado" value="México">
+            <input type="hidden" name="colonia" value="Centro">
+            <input type="hidden" name="ciudad" value="Ciudad de México">
+            
+            <div>
+              <label for="nombre" class="input-label">Nombre Completo</label>
+              <input type="text" id="nombre" name="nombre" 
+                     class="luxury-input font-sans" 
+                     placeholder="Ingresa tu nombre completo"
+                     autocomplete="name" required>
+            </div>
+
+            <div>
+              <label for="direccion" class="input-label">Dirección de Envío</label>
+              <input type="text" id="direccion" name="direccion" 
+                     class="luxury-input font-sans" 
+                     placeholder="Calle, número, colonia, ciudad"
+                     autocomplete="street-address" required>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label for="codigo_postal" class="input-label">Código Postal</label>
+                <input type="text" id="codigo_postal" name="codigo_postal" 
+                       class="luxury-input font-sans" 
+                       placeholder="00000"
+                       inputmode="numeric" pattern="[0-9]{5}"
+                       autocomplete="postal-code" required>
+              </div>
+              <div>
+                <label for="telefono" class="input-label">Teléfono</label>
+                <input type="tel" id="telefono" name="telefono" 
+                       class="luxury-input font-sans" 
+                       placeholder="+52 000 000 0000"
+                       inputmode="tel"
+                       autocomplete="tel" required>
+              </div>
+            </div>
+
+            <div>
+              <label for="email" class="input-label">Correo Electrónico</label>
+              <input type="email" id="email" name="email" 
+                     class="luxury-input font-sans" 
+                     placeholder="tu@email.com"
+                     inputmode="email"
+                     autocomplete="email" required>
+              <p class="text-gray-400 text-xs mt-2">Recibirás confirmación y seguimiento aquí</p>
+            </div>
+
+            <!-- Hidden fields -->
+            <input type="hidden" id="estado" name="estado" value="México">
+            <input type="hidden" id="colonia" name="colonia" value="-">
+            <input type="hidden" id="ciudad" name="ciudad" value="-">
+          </form>
+        </section>
+
+        <!-- Payment Security Info -->
+        <section class="bg-white rounded-lg border border-gray-200 p-6 md:p-8">
+          <div class="flex items-center gap-3">
+            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+            </svg>
+            <div>
+              <p class="text-gray-800 font-medium">Pago 100% seguro</p>
+              <p class="text-gray-500 text-sm">Procesado por MercadoPago con encriptación SSL</p>
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- Right Column: Summary (40%) -->
+      <div class="lg:col-span-2">
+        <div class="summary-sidebar">
+          <h3 class="font-serif text-xl mb-6 text-gray-800">Resumen de Compra</h3>
+          
+          <!-- Order Items (optional - could show product thumbnails) -->
+          <div class="space-y-3 mb-6">
+            <div class="flex justify-between text-gray-600">
+              <span>Subtotal</span>
+              <span>${{ '%.2f'|format(subtotal) }} MXN</span>
+            </div>
+            
+            {% if discount and discount > 0 %}
+            <div class="flex justify-between text-green-600">
+              <span>Descuento{% if coupon_code %} ({{ coupon_code }}){% endif %}</span>
+              <span>-${{ '%.2f'|format(discount) }}</span>
+            </div>
+            {% endif %}
+            
+            <div class="flex justify-between text-gray-600">
+              <span>Envío</span>
+              <span>{% if shipping == 0 %}Gratis{% else %}${{ '%.2f'|format(shipping) }}{% endif %}</span>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="flex justify-between items-baseline mb-8">
+            <span class="font-serif text-lg text-gray-800">Total</span>
+            <span class="font-serif text-2xl text-gray-900">${{ '%.2f'|format(total) }} <small class="text-sm text-gray-500">MXN</small></span>
+          </div>
+
+          <!-- Mock Checkout Option (cuando SIMULAR_PAGO=True) -->
+          {% if config.get('SIMULAR_PAGO') %}
+          <button id="mock-pay-btn" type="button"
+                  style="display: flex; align-items: center; justify-content: center; gap: 0.75rem; width: 100%; padding: 1rem 1.5rem; background-color: #6B7280; color: white; font-weight: 600; border-radius: 0.5rem; border: none; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: all 0.2s; margin-bottom: 0.5rem;"
+                  onmouseover="this.style.backgroundColor='#4B5563'"
+                  onmouseout="this.style.backgroundColor='#6B7280'">
+            <span>🧪 Simular Pago (Modo Test)</span>
+          </button>
+          <p class="text-center text-gray-500 text-xs mb-4">— o pagar con —</p>
+          {% endif %}
+
+          <!-- MercadoPago Button -->
+          {% if mp_init_point %}
+          <button id="mp-pay-btn" type="button"
+                  style="display: flex; align-items: center; justify-content: center; gap: 0.75rem; width: 100%; padding: 1rem 1.5rem; background-color: #009EE3; color: white; font-weight: 600; border-radius: 0.5rem; border: none; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: all 0.2s;"
+                  onmouseover="this.style.backgroundColor='#007EB8'"
+                  onmouseout="this.style.backgroundColor='#009EE3'">
+            <!-- Logo MercadoPago -->
+            <svg style="width: 28px; height: 28px;" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M25 0C11.2 0 0 11.2 0 25s11.2 25 25 25 25-11.2 25-25S38.8 0 25 0z" fill="#fff"/>
+              <path d="M36.3 20.3c-.4-1.5-1.5-2.7-3-3.2-1.7-.6-3.5-.2-4.8.9-.3-.5-.7-.9-1.2-1.2-1.3-.9-3.1-1-4.5-.3-1.4.7-2.3 2.1-2.4 3.6 0 .3 0 .6.1.9-2.1.1-4 1.3-5 3.2-.5 1-.7 2.1-.5 3.2.2 1.1.7 2.1 1.5 2.9 1.6 1.6 4.1 2 6.1.9.4.9 1.1 1.6 2 2.1 1.4.8 3.1.7 4.4-.1.7-.4 1.2-1 1.6-1.7.7.3 1.5.4 2.3.3 1.5-.2 2.8-1.2 3.4-2.6.6-1.4.4-3-.5-4.2.7-1.4.7-3.1 0-4.5l-.1-.2z" fill="#009EE3"/>
+            </svg>
+            <span>Pagar con MercadoPago</span>
+          </button>
+          <p class="text-center text-gray-400 text-xs mt-3">Serás redirigido a MercadoPago para completar tu pago</p>
+          {% else %}
+          <div class="text-center p-4 bg-yellow-50 rounded border border-yellow-200">
+            <p class="text-yellow-700 text-sm mb-2">Error al conectar con MercadoPago</p>
+            <button onclick="location.reload()" class="text-xs text-yellow-600 underline">Reintentar</button>
+          </div>
+          {% endif %}
+
+          <div class="divider"></div>
+
+          <!-- Trust Signal -->
+          <p class="text-center text-gray-400 text-xs">Transacción segura · Datos encriptados</p>
+        </div>
+      </div>
+
+    </div>
+    {% else %}
+    <!-- Empty Cart State -->
+    <div class="max-w-md mx-auto">
+      <div class="empty-cart">
+        <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+        </svg>
+        <h2 class="font-serif text-xl text-gray-700 mb-2">Tu carrito está vacío</h2>
+        <p class="text-gray-500 text-sm mb-6">Explora nuestra colección y encuentra la joya perfecta</p>
+        <a href="{{ url_for('collection.collection') }}" 
+           class="inline-block px-6 py-3 bg-gray-900 text-white text-sm tracking-wide rounded hover:bg-gray-800 transition">
+          Ver Colección
+        </a>
+      </div>
+    </div>
+    {% endif %}
+
+  </div>
+</main>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toast-container"></div>
+
+{% endblock %}
+
+{% block scripts_extra %}
+<script>
+(function() {
+  'use strict';
+
+  const MP_INIT_POINT = "{{ mp_init_point if mp_init_point else '' }}";
+
+  // Toast notifications
+  function toast(message, type = 'info') {
+    const container = document.getElementById('toast-container');
+    const toastEl = document.createElement('div');
+    const colors = {
+      error: 'bg-red-500 text-white',
+      success: 'bg-green-500 text-white',
+      info: 'bg-gray-800 text-white'
+    };
+    toastEl.className = `toast ${colors[type] || colors.info}`;
+    toastEl.textContent = message;
+    container.appendChild(toastEl);
+    setTimeout(() => {
+      toastEl.style.opacity = '0';
+      setTimeout(() => toastEl.remove(), 300);
+    }, 4000);
+  }
+
+  // Form validation
+  function validateForm() {
+    const fields = ['nombre', 'direccion', 'codigo_postal', 'telefono', 'email'];
+    let valid = true;
+    let firstError = null;
+    
+    fields.forEach(field => {
+      const input = document.getElementById(field);
+      if (!input) return;
+      
+      const value = input.value.trim();
+      input.classList.remove('input-error', 'input-success');
+      
+      if (!value) {
+        input.classList.add('input-error');
+        if (!firstError) firstError = input;
+        valid = false;
+      } else {
+        input.classList.add('input-success');
+      }
+    });
+    
+    // Email validation
+    const email = document.getElementById('email');
+    if (email && email.value) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email.value)) {
+        email.classList.add('input-error');
+        if (!firstError) firstError = email;
+        valid = false;
+      }
+    }
+    
+    if (firstError) {
+      firstError.focus();
+      firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    
+    return valid;
+  }
+
+  // Real-time validation
+  document.querySelectorAll('.luxury-input').forEach(input => {
+    input.addEventListener('blur', function() {
+      if (this.value.trim()) {
+        this.classList.remove('input-error');
+        this.classList.add('input-success');
+      }
+    });
+  });
+
+  // Pay button click handler
+  const payBtn = document.getElementById('mp-pay-btn');
+  const mockBtn = document.getElementById('mock-pay-btn');
+  const form = document.getElementById('checkout-form');
+  const metodoPagoInput = document.getElementById('metodo_pago');
+  
+  // MercadoPago button
+  if (payBtn) {
+    payBtn.addEventListener('click', function() {
+      if (!validateForm()) {
+        toast('Por favor completa todos los campos', 'error');
+        return;
+      }
+      
+      // Show loading state
+      payBtn.disabled = true;
+      payBtn.innerHTML = `
+        <svg class="animate-spin w-5 h-5" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <span>Procesando...</span>
+      `;
+      
+      // Submit form with MercadoPago
+      metodoPagoInput.value = 'MercadoPago';
+      form.submit();
+    });
+  }
+  
+  // Mock button (testing)
+  if (mockBtn) {
+    mockBtn.addEventListener('click', function() {
+      if (!validateForm()) {
+        toast('Por favor completa todos los campos', 'error');
+        return;
+      }
+      
+      // Show loading state
+      mockBtn.disabled = true;
+      mockBtn.innerHTML = `
+        <svg class="animate-spin w-5 h-5" style="display:inline" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <span>Simulando...</span>
+      `;
+      
+      // Submit form with mock_gateway
+      metodoPagoInput.value = 'mock_gateway';
+      form.submit();
+    });
+  }
+
+  console.log('=== VALAC Checkout Debug ===');
+  console.log('Init Point:', MP_INIT_POINT ? 'OK' : 'Missing');
+
+})();
+</script>
+{% endblock %}

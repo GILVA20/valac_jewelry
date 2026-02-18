@@ -102,62 +102,88 @@ def create_preference():
         return jsonify({"id": preference["id"]}), 200
 
     except Exception as e:
-        logging.exception("DEBUG: Error al crear preferencia:")
-        return jsonify({"error": str(e)}), 500
+        logging.exception("Error al crear preferencia de MercadoPago")
+        # NO exponer el error interno al usuario
+        return jsonify({"error": "Error al procesar el pago. Por favor, inténtalo de nuevo."}), 500
 
 
 @mp_checkout_bp.route('/webhook', methods=['POST'])
 def webhook():
+    """
+    Webhook de Mercado Pago - Procesa notificaciones de pago.
+    IMPORTANTE: Consulta la API de MP para confirmar el estado real del pago.
+    """
     try:
-        # Validar firma
-        signature = request.headers.get("X-MercadoPago-Signature", "")
-        expected_signature = os.getenv("MP_WEBHOOK_SECRET", "default_secret")
-        if signature != expected_signature:
-            logging.error("DEBUG: Firma de webhook inválida: %s", signature)
-            return "Firma inválida", 403
-
-        data = request.get_json()
-        logging.debug("DEBUG: Datos recibidos en webhook: %s", data)
-
-        # Extraer y sanitizar external_reference
-        ext_ref = sanitize_input(data.get("external_reference", ""))
-        if not ext_ref:
-            logging.debug("DEBUG: external_reference ausente en webhook")
-            return "external_reference es obligatorio", 400
-
-        payment_status = sanitize_input(data.get("status", ""))
-        transaction_id = sanitize_input(data.get("id", ""))
-
-        logging.debug(
-            "DEBUG: Webhook data sanitized: external_reference=%s, status=%s, transaction_id=%s",
-            ext_ref, payment_status, transaction_id
-        )
-
-        # Mapear estado
-        if payment_status == "approved":
-            new_status = "Completado"
-        elif payment_status == "rejected":
-            new_status = "Rechazado"
-        else:
-            new_status = "Pendiente"
-
-        # Actualizar orden en Supabase
-        data_update = {
-            "estado_pago": new_status,
-            "fecha_actualizacion": "now()"
-        }
-        if transaction_id:
-            data_update["transaction_id"] = transaction_id
-
-        logging.debug("DEBUG: Actualizando orden %s con datos: %s", ext_ref, data_update)
-        response = supabase.table("orders").update(data_update).eq("id", ext_ref).execute()
-        if response.error:
-            logging.error("DEBUG: Error actualizando la orden: %s", response.error)
-            return "Error actualizando la orden", 500
-
-        logging.debug("DEBUG: Orden %s actualizada a %s", ext_ref, new_status)
-        return "OK", 200
-
+        data = request.get_json() or {}
+        logging.info("Webhook MP recibido: type=%s, action=%s", data.get('type'), data.get('action'))
+        
+        # MP envía diferentes tipos de notificaciones
+        notification_type = data.get('type')
+        
+        # Solo procesamos notificaciones de pago
+        if notification_type == 'payment':
+            payment_id = data.get('data', {}).get('id')
+            
+            if not payment_id:
+                logging.warning("Webhook sin payment_id")
+                return jsonify({"status": "ignored", "reason": "no payment_id"}), 200
+            
+            # CRÍTICO: Consultar la API de MP para obtener datos REALES del pago
+            # No confiar solo en los datos del webhook
+            token = current_app.config.get("MP_ACCESS_TOKEN") or os.getenv("MP_ACCESS_TOKEN")
+            mp_sdk = mercadopago.SDK(token)
+            
+            payment_response = mp_sdk.payment().get(payment_id)
+            
+            if payment_response.get('status') != 200:
+                logging.error("Error consultando pago %s en MP: %s", payment_id, payment_response)
+                return jsonify({"status": "error", "reason": "mp_api_error"}), 200
+            
+            payment_data = payment_response.get('response', {})
+            
+            # Obtener external_reference (nuestro order_id)
+            ext_ref = payment_data.get('external_reference')
+            if not ext_ref:
+                logging.warning("Pago %s sin external_reference", payment_id)
+                return jsonify({"status": "ignored", "reason": "no external_reference"}), 200
+            
+            payment_status = payment_data.get('status', '')
+            transaction_id = str(payment_id)
+            
+            logging.info("Procesando pago: order_id=%s, status=%s, payment_id=%s", 
+                        ext_ref, payment_status, payment_id)
+            
+            # Mapear estado de MP a estado interno
+            status_mapping = {
+                "approved": "Completado",
+                "authorized": "Completado",
+                "pending": "Pendiente",
+                "in_process": "Pendiente",
+                "rejected": "Rechazado",
+                "cancelled": "Cancelado",
+                "refunded": "Reembolsado",
+                "charged_back": "Contracargo"
+            }
+            new_status = status_mapping.get(payment_status, "Pendiente")
+            
+            # Actualizar orden en Supabase
+            data_update = {
+                "estado_pago": new_status,
+                "transaction_id": transaction_id
+            }
+            
+            response = supabase.table("orders").update(data_update).eq("id", ext_ref).execute()
+            
+            if not response.data:
+                logging.error("No se encontró orden %s para actualizar", ext_ref)
+            else:
+                logging.info("Orden %s actualizada a '%s' (payment_id=%s)", ext_ref, new_status, payment_id)
+            
+        # Siempre responder 200 para que MP no reintente
+        return jsonify({"status": "ok"}), 200
+        
     except Exception as e:
-        logging.exception("DEBUG: Error en el webhook:")
-        return "Error en el webhook", 500
+        # Log del error pero NO exponerlo
+        logging.exception("Error procesando webhook de MP")
+        # Responder 200 para evitar reintentos infinitos de MP
+        return jsonify({"status": "error_logged"}), 200

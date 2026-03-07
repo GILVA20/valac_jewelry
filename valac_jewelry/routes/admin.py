@@ -205,21 +205,71 @@ class SupabaseProductAdmin(BaseView):
             if not any(name_lower.endswith(ext) for ext in allowed):
                 return jsonify({"error": "Formato no permitido. Usa JPG/PNG/WEBP"}), 400
 
-            # Genera una clave única
+            # --- Optimización: convertir a WebP + redimensionar ---
             import tempfile
             import shutil
             import mimetypes
+            from PIL import Image
+            import io
 
-            ext = os.path.splitext(name_lower)[1]
-            key = f"products/{int(time.time() * 1000)}-{uuid.uuid4().hex}{ext}"
+            MAX_DIMENSION = 1200   # px lado mayor
+            WEBP_QUALITY  = 80
 
-            mime = f.mimetype or mimetypes.guess_type(f.filename)[0] or "application/octet-stream"
-
-            # Escribe a archivo temporal (storage3 abre el path con open())
-            tmp = tempfile.NamedTemporaryFile(delete=False)
+            f.stream.seek(0)
             try:
+                img = Image.open(f.stream)
+                # Convertir RGBA/P a RGB (WebP lossy no soporta transparencia)
+                if img.mode in ("RGBA", "P"):
+                    img = img.convert("RGB")
+                # Redimensionar si excede el máximo
+                if max(img.size) > MAX_DIMENSION:
+                    img.thumbnail((MAX_DIMENSION, MAX_DIMENSION), Image.LANCZOS)
+                # Guardar como WebP optimizado
+                buffer = io.BytesIO()
+                img.save(buffer, format="WEBP", quality=WEBP_QUALITY, optimize=True)
+                buffer.seek(0)
+                optimized_bytes = buffer.read()
+                current_app.logger.info(
+                    "[storage_upload] Imagen optimizada: %s → WebP %dx%d (%d KB)",
+                    f.filename, img.size[0], img.size[1], len(optimized_bytes) // 1024
+                )
+            except Exception as pil_err:
+                current_app.logger.warning(
+                    "[storage_upload] Pillow no pudo procesar, subiendo raw: %s", pil_err
+                )
                 f.stream.seek(0)
-                shutil.copyfileobj(f.stream, tmp)
+                optimized_bytes = f.stream.read()
+                # Mantener extensión y mime originales como fallback
+                ext_fallback = os.path.splitext(name_lower)[1]
+                key_fb = f"products/{int(time.time() * 1000)}-{uuid.uuid4().hex}{ext_fallback}"
+                mime_fb = f.mimetype or mimetypes.guess_type(f.filename)[0] or "application/octet-stream"
+                # Escribir a tmp y subir sin conversión
+                tmp = tempfile.NamedTemporaryFile(delete=False, suffix=ext_fallback)
+                tmp.write(optimized_bytes)
+                tmp_path = tmp.name
+                tmp.close()
+                sb = self._get_service_supabase()
+                sb.storage.from_("CatalogoJoyasValacJoyas").upload(
+                    key_fb, tmp_path, {"content-type": mime_fb, "x-upsert": "false"},
+                )
+                try:
+                    os.remove(tmp_path)
+                except Exception:
+                    pass
+                pub = sb.storage.from_("CatalogoJoyasValacJoyas").get_public_url(key_fb)
+                public_url = _extract_public_url(pub)
+                if not public_url:
+                    return jsonify({"error": "No se pudo obtener URL pública"}), 500
+                return jsonify({"url": f"{public_url}?t={int(time.time() * 1000)}"}), 200
+
+            # Clave siempre .webp
+            key = f"products/{int(time.time() * 1000)}-{uuid.uuid4().hex}.webp"
+            mime = "image/webp"
+
+            # Escribe a archivo temporal
+            tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".webp")
+            try:
+                tmp.write(optimized_bytes)
                 tmp_path = tmp.name
             finally:
                 try:

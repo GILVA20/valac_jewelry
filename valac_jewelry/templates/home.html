@@ -60,28 +60,12 @@
   #product-grid .text-gray-600{ color:var(--lux-muted) !important; }
   #product-grid .line-through{ color:#8B9097 !important; }
 
-  /* ---------- CATEGORÍAS QUICK NAV CON FONDO ---------- */
-  .gender-toggle button{
-    border:1px solid #e5e7eb; padding:.5rem .9rem; border-radius:.5rem; font-weight:600;
-  }
-  .gender-toggle button.active{
-    background:#111; color:var(--lux-gold); border-color:#000;
-  }
-  .cat-tile{
-    position:relative; border-radius:.75rem; overflow:hidden; background:#f7f7f7;
-    display:flex; align-items:center; justify-content:center; aspect-ratio: 5/4;
-    box-shadow: 0 6px 18px rgba(0,0,0,.06);
-  }
-  .cat-tile span{ font-weight:700; letter-spacing:.2px; }
-
-  /* Fondo con fade */
-  #cat-bg{ position:absolute; inset:0; background-size:cover; background-position:center; transition:opacity .35s ease; }
-  .opacity-0{ opacity:0 !important; }
+  /* ---------- COLECCIÓN GRID ---------- */
+  #home-collection .group:hover{ box-shadow:0 8px 24px rgba(31,41,55,0.08); }
+  #home-collection h3{ color:var(--lux-text); }
+  #home-collection .text-gray-600{ color:var(--lux-muted) !important; }
+  #home-collection .line-through{ color:#8B9097 !important; }
 </style>
-
-{# Preload de fondos para evitar flicker #}
-<link rel="preload" as="image" href="{{ SUPABASE_STORAGE_URL }}gold-earring.jpg">
-<link rel="preload" as="image" href="{{ SUPABASE_STORAGE_URL }}cadenasjorge.jpg">
 {% endblock %}
 
 {% block content %}
@@ -110,49 +94,16 @@
     </div>
   </section>
 
-  {# ---------- BLOQUE COMERCIAL: OFERTAS o NOVEDADES ---------- #}
+  {# ---------- COLECCIÓN COMPLETA ---------- #}
   <section id="productos-destacados" class="py-10 sm:py-12 bg-white">
     <div class="container mx-auto px-4">
-      <h2 class="text-2xl sm:text-3xl font-semibold mb-6 sm:mb-8 text-center text-gray-800">Productos Destacados</h2>
-      <div id="product-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8"></div>
+      <h2 class="text-2xl sm:text-3xl font-semibold mb-6 sm:mb-8 text-center text-gray-800">Nuestra Colección</h2>
+      <div id="home-collection" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8"></div>
       <div class="mt-8 text-center">
-        <a href="/collection?sort=novedades" class="bg-yellow-500 text-white px-5 sm:px-6 py-3 rounded-lg text-lg sm:text-xl hover:bg-yellow-600 transition-colors inline-block">
+        <a href="/collection" class="bg-yellow-500 text-white px-5 sm:px-6 py-3 rounded-lg text-lg sm:text-xl hover:bg-yellow-600 transition-colors inline-block">
           Ver Colección Completa
         </a>
       </div>
-    </div>
-  </section>
-
-  {# ---------- ACCESOS RÁPIDOS POR CATEGORÍA + TOGGLE GÉNERO CON FONDO ---------- #}
-  <section
-    id="cat-section"
-    class="relative my-12 rounded-2xl overflow-hidden ring-1 ring-black/5 shadow-lg"
-    data-bg-mujer="{{ SUPABASE_STORAGE_URL }}gold-earring.jpg"
-    data-bg-hombre="{{ SUPABASE_STORAGE_URL }}cadenasjorge.jpg"
-  >
-    <!-- Fondo intercambiable + velo -->
-    <div id="cat-bg" style="background-image:url('{{ SUPABASE_STORAGE_URL }}gold-earring.jpg')"></div>
-    <div class="absolute inset-0 bg-white/78 md:bg-white/70"></div>
-
-    <div class="relative z-10 container mx-auto px-4 py-6 md:py-8">
-      <div class="flex items-center justify-between mb-4">
-        <h3 class="text-xl sm:text-2xl font-semibold">Explora por categoría</h3>
-        <div class="gender-toggle space-x-2">
-          <button type="button" data-gender="Mujer" class="active">Mujer</button>
-          <button type="button" data-gender="Hombre">Hombre</button>
-        </div>
-      </div>
-
-      <div id="cats-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-        {# Tiles con href dinámico por JS #}
-        <a class="cat-tile flex-col" data-cat="aretes"   href="#"><span>Aretes</span></a>
-        <a class="cat-tile flex-col" data-cat="cadenas"  href="#"><span>Cadenas</span></a>
-        <a class="cat-tile flex-col" data-cat="anillos"  href="#"><span>Anillos</span></a>
-        <a class="cat-tile flex-col" data-cat="dijes"    href="#"><span>Dijes</span></a>
-        <a class="cat-tile flex-col" data-cat="pulsos"   href="#"><span>Pulsos</span></a>
-      </div>
-
-      <p class="text-sm text-gray-500 mt-2">* Unisex aparece en ambos.</p>
     </div>
   </section>
 
@@ -198,74 +149,31 @@
 {% block scripts_extra %}
 <script type="module">
   import { supabase as supabaseClient } from "/static/js/supabase-client.js";
-  // --------- Helpers: construir links de categoría ---------
-  const setCategoryLinks = (genero) => {
-    document.querySelectorAll('#cats-grid a[data-cat]').forEach(a => {
-      const cat = a.getAttribute('data-cat');
-      a.href = `/collection?genero=${encodeURIComponent(genero)}&category=${encodeURIComponent(cat)}&mix_unisex=1&sort=novedades`;
-    });
-  };
 
-  // --------- Fondo por género (fade) + toggle ---------
-  const catSection = document.getElementById('cat-section');
-  const catBg      = document.getElementById('cat-bg');
-  const btns       = document.querySelectorAll('.gender-toggle button');
-
-  function setGeneroCategorias(gen){
-    // Links
-    setCategoryLinks(gen);
-    // Botones activos
-    btns.forEach(b => b.classList.toggle('active', b.dataset.gender === gen));
-    // Fondo (con pequeño fade)
-    const url = gen === 'Mujer' ? catSection.dataset.bgMujer : catSection.dataset.bgHombre;
-    catBg.classList.add('opacity-0');
-    setTimeout(() => {
-      catBg.style.backgroundImage = `url('${url}')`;
-      catBg.classList.remove('opacity-0');
-    }, 120);
-  }
-
-  // Estado inicial
-  let currentGender = 'Mujer';
-  setGeneroCategorias(currentGender);
-
-  // Eventos
-  btns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      currentGender = btn.dataset.gender;
-      setGeneroCategorias(currentGender);
-    });
-  });
-
-  // --------- Carga dinámica de productos: Ofertas -> Novedades ----------
+  // --------- Carga de colección: productos con stock, más caros primero ----------
   document.addEventListener("DOMContentLoaded", async function(){
     try{
-
-  const { data: products, error } = await supabaseClient
+      const { data: products, error } = await supabaseClient
         .from('products')
         .select(`
           id, nombre, descripcion, precio, descuento_pct, precio_descuento,
           tipo_producto, genero, tipo_oro, imagen, created_at, stock_total,
           product_images ( imagen, orden )
-        `);
+        `)
+        .gt('stock_total', 0)
+        .order('precio', { ascending: false })
+        .limit(9);
 
       if (error) { console.error(error); return; }
 
       const hasOffer = (p) => Number(p.descuento_pct) > 0 && Number(p.precio_descuento) > 0 && Number(p.precio_descuento) < Number(p.precio);
-      const effectivePrice = (p) => hasOffer(p) ? Number(p.precio_descuento) : Number(p.precio);
       const mxn = (n) => Number(n).toLocaleString('es-MX',{style:'currency',currency:'MXN'});
 
-      const ofertas = products.filter(p => hasOffer(p) && Number(p.stock_total) > 0).sort((a,b)=> effectivePrice(a)-effectivePrice(b));
-      const novedades = products.filter(p => !hasOffer(p) && Number(p.stock_total) > 0).sort((a,b)=> new Date(b.created_at)-new Date(a.created_at));
-
-      const titulo = document.querySelector('#productos-destacados h2');
-      const lista = (ofertas.length ? (titulo.textContent='Ofertas', ofertas) : (titulo.textContent='Novedades', novedades)).slice(0,6);
-
-      const grid = document.getElementById('product-grid');
+      const grid = document.getElementById('home-collection');
       grid.innerHTML = '';
       const placeholder = "{{ config['SUPABASE_STORAGE_URL'] }}placeholder.jpg";
 
-      lista.forEach((product, i) => {
+      products.forEach((product, i) => {
         let mainImage = placeholder, hoverImage = null;
         if (product.product_images?.length){
           const sorted = [...product.product_images].sort((a,b)=> a.orden-b.orden);

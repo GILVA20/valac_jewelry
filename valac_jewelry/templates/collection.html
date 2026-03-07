@@ -483,17 +483,17 @@
               <h3 class="text-xl font-semibold text-[#424242] mt-2">${product.nombre}</h3>
 
               ${oferta ? `
-                <p class="text-gray-500 line-through mt-1">${mxn(product.precio)}</p>
+                <p class="price-tag text-gray-500 line-through mt-1">${mxn(product.precio)}</p>
                 <div class="flex items-baseline gap-2">
-                  <p class="text-2xl font-bold text-red-600">${mxn(product.precio_descuento)}</p>
+                  <p class="price-tag text-2xl font-bold text-red-600">${mxn(product.precio_descuento)}</p>
                   <span class="offer-chip chip-emi" aria-label="Meses sin intereses">3 y 6 MSI</span>
                 </div>
-                <p class="text-sm ahorro-text mt-1">
+                <p class="price-tag text-sm ahorro-text mt-1">
                   Ahorras ${mxn(ahorroAbs)} (${Number(product.descuento_pct)}%) ·
                   <span class="offer-chip chip-time">Oferta limitada</span>
                 </p>
               ` : `
-                <p class="text-2xl font-semibold text-gray-800 mt-2">${mxn(product.precio)}</p>
+                <p class="price-tag text-2xl font-semibold text-gray-800 mt-2">${mxn(product.precio)}</p>
               `}
 
               ${lowStock}

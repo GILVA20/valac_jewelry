@@ -99,14 +99,14 @@
         <h1 class="text-3xl md:text-4xl font-bold text-[#333333] mb-6 font-playfair break-words min-h-[3rem]">{{ product.nombre }}</h1>
 
         {% if product.descuento_pct and product.descuento_pct > 0 %}
-          <p class="text-gray-500 line-through mt-4 text-lg">
+          <p class="price-tag text-gray-500 line-through mt-4 text-lg">
             ${{ '%.2f'|format(product.precio) }}
           </p>
-          <p class="text-3xl font-bold text-red-600 mt-1">
+          <p class="price-tag text-3xl font-bold text-red-600 mt-1">
             ${{ '%.2f'|format(product.precio_descuento) }}
           </p>
         {% else %}
-          <p class="text-3xl font-semibold text-gray-800 mt-4">
+          <p class="price-tag text-3xl font-semibold text-gray-800 mt-4">
             ${{ '%.2f'|format(product.precio) }}
           </p>
         {% endif %}
@@ -218,10 +218,10 @@
 
             <h3 class="mt-4 text-xl font-semibold text-[#424242]">{{ rp.nombre }}</h3>
             {% if rp.descuento_pct and rp.descuento_pct > 0 %}
-              <p class="text-gray-500 line-through mt-1">${{ '%.2f'|format(rp.precio) }}</p>
-              <p class="text-lg font-bold text-red-600">${{ '%.2f'|format(rp.precio_descuento) }}</p>
+              <p class="price-tag text-gray-500 line-through mt-1">${{ '%.2f'|format(rp.precio) }}</p>
+              <p class="price-tag text-lg font-bold text-red-600">${{ '%.2f'|format(rp.precio_descuento) }}</p>
             {% else %}
-              <p class="text-lg font-semibold text-gray-800 mt-2">${{ '%.2f'|format(rp.precio) }}</p>
+              <p class="price-tag text-lg font-semibold text-gray-800 mt-2">${{ '%.2f'|format(rp.precio) }}</p>
             {% endif %}
             <a href="{{ url_for('products.product_detail', product_id=rp.id) }}"
                class="inline-block mt-4 bg-[#d5a300] text-white px-4 py-2 rounded hover:bg-[#b38f00] transition-colors">

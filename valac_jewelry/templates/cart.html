@@ -33,10 +33,10 @@
             <h3 class="text-xl md:text-2xl font-semibold text-[#333333] font-playfair">{{ p.nombre }}</h3>
 
             {% if p.descuento_pct and p.descuento_pct > 0 %}
-              <p class="text-gray-500 line-through mt-2">${{ "%.2f"|format(p.precio) }}</p>
-              <p class="text-lg font-bold text-red-600 mt-1">${{ "%.2f"|format(p.unit_price) }}</p>
+              <p class="price-tag text-gray-500 line-through mt-2">${{ "%.2f"|format(p.precio) }}</p>
+              <p class="price-tag text-lg font-bold text-red-600 mt-1">${{ "%.2f"|format(p.unit_price) }}</p>
             {% else %}
-              <p class="text-gray-800 mt-2 font-bold">${{ "%.2f"|format(p.unit_price) }}</p>
+              <p class="price-tag text-gray-800 mt-2 font-bold">${{ "%.2f"|format(p.unit_price) }}</p>
             {% endif %}
 
             <!-- Cantidad (form para actualizar) -->
@@ -79,19 +79,19 @@
       <!-- 1) Productos -->
       <div class="flex justify-between mb-2">
         <span class="text-gray-700">Productos:</span>
-        <span class="font-bold text-gray-900">${{ '%.2f'|format(_subtotal) }}</span>
+        <span class="price-tag font-bold text-gray-900">${{ '%.2f'|format(_subtotal) }}</span>
       </div>
 
       <!-- 2) Envío -->
       <div class="flex justify-between mb-2">
         <span class="text-gray-700">Envío:</span>
-        <span class="font-bold text-gray-900">${{ '%.2f'|format(_shipping) }}</span>
+        <span class="price-tag font-bold text-gray-900">${{ '%.2f'|format(_shipping) }}</span>
       </div>
 
       <!-- 3) Subtotal -->
       <div class="flex justify-between mb-2 border-t pt-2">
         <span class="text-gray-700">Subtotal (productos + envío):</span>
-        <span class="font-bold text-gray-900">${{ '%.2f'|format(_precoup) }}</span>
+        <span class="price-tag font-bold text-gray-900">${{ '%.2f'|format(_precoup) }}</span>
       </div>
 
       <!-- 4) Descuento -->
@@ -104,13 +104,13 @@
             <small class="text-gray-500">aplicado sólo sobre productos</small>
           {% endif %}:
         </span>
-        <span id="discountAmount" class="font-bold text-gray-900">-${{ '%.2f'|format(_disc) }}</span>
+        <span id="discountAmount" class="price-tag font-bold text-gray-900">-${{ '%.2f'|format(_disc) }}</span>
       </div>
 
       <!-- 5) Total -->
       <div class="flex justify-between mb-4 border-t pt-2">
         <span class="text-gray-700">Total:</span>
-        <span id="total" class="font-bold text-gray-900">${{ '%.2f'|format(_total) }}</span>
+        <span id="total" class="price-tag font-bold text-gray-900">${{ '%.2f'|format(_total) }}</span>
       </div>
 
       <!-- Cupón -->

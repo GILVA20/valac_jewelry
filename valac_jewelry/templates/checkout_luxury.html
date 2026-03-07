@@ -217,19 +217,19 @@
           <div class="space-y-3 mb-6">
             <div class="flex justify-between text-gray-600">
               <span>Subtotal</span>
-              <span>${{ '%.2f'|format(subtotal) }} MXN</span>
+              <span class="price-tag">${{ '%.2f'|format(subtotal) }} MXN</span>
             </div>
             
             {% if discount and discount > 0 %}
             <div class="flex justify-between text-green-600">
               <span>Descuento{% if coupon_code %} ({{ coupon_code }}){% endif %}</span>
-              <span>-${{ '%.2f'|format(discount) }}</span>
+              <span class="price-tag">-${{ '%.2f'|format(discount) }}</span>
             </div>
             {% endif %}
             
             <div class="flex justify-between text-gray-600">
               <span>Envío</span>
-              <span>{% if shipping == 0 %}Gratis{% else %}${{ '%.2f'|format(shipping) }}{% endif %}</span>
+              <span class="price-tag">{% if shipping == 0 %}Gratis{% else %}${{ '%.2f'|format(shipping) }}{% endif %}</span>
             </div>
           </div>
 
@@ -237,7 +237,7 @@
 
           <div class="flex justify-between items-baseline mb-8">
             <span class="font-serif text-lg text-gray-800">Total</span>
-            <span class="font-serif text-2xl text-gray-900">${{ '%.2f'|format(total) }} <small class="text-sm text-gray-500">MXN</small></span>
+            <span class="price-tag font-serif text-2xl text-gray-900">${{ '%.2f'|format(total) }} <small class="text-sm text-gray-500">MXN</small></span>
           </div>
 
           <!-- Mock Checkout Option (cuando SIMULAR_PAGO=True) -->

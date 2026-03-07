@@ -23,11 +23,11 @@
           <div id="order-details">
             <div class="flex justify-between mb-1">
               <span>Subtotal:</span>
-              <span>${{ '%.2f'|format(subtotal) }}</span>
+              <span class="price-tag">${{ '%.2f'|format(subtotal) }}</span>
             </div>
             <div class="flex justify-between mb-1">
               <span>Envío:</span>
-              <span>${{ '%.2f'|format(shipping) }}</span>
+              <span class="price-tag">${{ '%.2f'|format(shipping) }}</span>
             </div>
             {% if discount and discount > 0 %}
             <div class="flex justify-between mb-1 text-red-600">
@@ -39,12 +39,12 @@
                   <small class="text-gray-600">(aplicado sólo sobre productos)</small>
                 {% endif %}
               </span>
-              <span>-${{ '%.2f'|format(discount) }}</span>
+              <span class="price-tag">-${{ '%.2f'|format(discount) }}</span>
             </div>
             {% endif %}
             <div class="flex justify-between font-bold border-t pt-1">
               <span>Total:</span>
-              <span>${{ '%.2f'|format(total) }}</span>
+              <span class="price-tag">${{ '%.2f'|format(total) }}</span>
             </div>
           </div>   
   </section>
@@ -283,7 +283,7 @@
                          <div class="space-y-2 text-gray-700">
                             <div class="flex justify-between">
                               <span>Subtotal</span>
-                              <span>${{ '%.2f'|format(subtotal) }}</span>
+                              <span class="price-tag">${{ '%.2f'|format(subtotal) }}</span>
                             </div>
                             {% if discount > 0 %}
                             <div class="flex justify-between text-red-600">
@@ -295,16 +295,16 @@
                                   <small class="text-gray-600">(aplicado sólo sobre productos)</small>
                                 {% endif %}
                               </span>
-                              <span>–${{ '%.2f'|format(discount) }}</span>
+                              <span class="price-tag">–${{ '%.2f'|format(discount) }}</span>
                             </div>
                             {% endif %}
                             <div class="flex justify-between">
                               <span>Envío</span>
-                              <span>${{ '%.2f'|format(shipping) }}</span>
+                              <span class="price-tag">${{ '%.2f'|format(shipping) }}</span>
                             </div>
                             <div class="border-t pt-2 flex justify-between font-bold">
                               <span>Total</span>
-                              <span>${{ '%.2f'|format(total) }}</span>
+                              <span class="price-tag">${{ '%.2f'|format(total) }}</span>
                             </div>
                           </div>
             

@@ -285,22 +285,10 @@
 </script>
 
 <script>
+  // sessionId se inicializa aquí para que trackBuyClick lo use;
+  // el tracking de view y navigation lo maneja partials/tracking.html (evitar duplicados).
   const sessionId = localStorage.getItem("valac_session_id") || crypto.randomUUID();
   localStorage.setItem("valac_session_id", sessionId);
-
-  // TRACK general de navegación
-  fetch("/admin/analytics/track_navigation", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ path: window.location.pathname, session_id: sessionId })
-  });
-
-  // Registrar vista del producto
-   fetch("/admin/analytics/track_view/{{ product.id }}", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ session_id: sessionId })
-  });
 
   // Función para click en comprar
   function trackBuyClick(productId) {

@@ -7,8 +7,8 @@ main_bp = Blueprint('main', __name__)
 @main_bp.route('/')
 def home():
     supabase = current_app.supabase
-    # Se obtiene únicamente los primeros 3 productos
-    response = supabase.table("products").select("*").limit(3).execute()
+    # Los 3 productos más caros con stock
+    response = supabase.table("products").select("*").gt("stock_total", 0).order("precio", desc=True).limit(3).execute()
     products = response.data if response.data else []
     return render_template('home.html', products=products)
 

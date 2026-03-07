@@ -62,6 +62,27 @@
     padding: 0.2rem 0.4rem;
     border-radius: 0.25rem;
   }
+
+  /* Producto agotado: atenuado + escala de grises */
+  .product-card--agotado {
+    opacity: 0.55;
+    filter: grayscale(70%);
+    transition: opacity 0.3s, filter 0.3s;
+  }
+  .product-card--agotado:hover {
+    opacity: 0.75;
+    filter: grayscale(40%);
+  }
+  .btn-agotado {
+    border: 2px solid #d1d5db;
+    color: #9ca3af;
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.375rem;
+    text-decoration: none;
+    display: inline-block;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
   .rating-stars {
     color: #ffc107;
   }
@@ -377,16 +398,33 @@
           });
         }
 
-        // === ORDEN SIEMPRE: Ofertas (asc por precio_descuento), luego Normales (asc por precio) ===
-        const ofertas = filteredProducts
-          .filter(p => hasOffer(p))
-          .sort((a, b) => Number(a.precio_descuento) - Number(b.precio_descuento));
+        // === ESTRATEGIA: Productos en stock primero, agotados al final ===
+        const effectivePrice = (p) => hasOffer(p) ? Number(p.precio_descuento) : Number(p.precio);
 
-        const normales = filteredProducts
-          .filter(p => !hasOffer(p))
-          .sort((a, b) => Number(a.precio) - Number(b.precio));
+        // Separar en stock vs agotados
+        const inStock    = filteredProducts.filter(p => Number(p.stock_total) > 0);
+        const outOfStock = filteredProducts.filter(p => Number(p.stock_total) <= 0);
 
-        const ordered = [...ofertas, ...normales];
+        // Función de orden según selector del usuario
+        const sortFn = (arr) => {
+          switch (sort) {
+            case 'precio_asc':
+              return arr.sort((a, b) => effectivePrice(a) - effectivePrice(b));
+            case 'precio_desc':
+              return arr.sort((a, b) => effectivePrice(b) - effectivePrice(a));
+            case 'novedades':
+              return arr.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            default: {
+              // Ofertas primero, luego normales (cada grupo por precio asc)
+              const of = arr.filter(p => hasOffer(p)).sort((a, b) => Number(a.precio_descuento) - Number(b.precio_descuento));
+              const no = arr.filter(p => !hasOffer(p)).sort((a, b) => Number(a.precio) - Number(b.precio));
+              return [...of, ...no];
+            }
+          }
+        };
+
+        // Productos con stock ordenados + agotados al final (también ordenados)
+        const ordered = [...sortFn(inStock), ...sortFn(outOfStock)];
 
         // === Render ===
         const productGrid = document.getElementById('product-grid');
@@ -413,16 +451,17 @@
           const oferta = hasOffer(product);
           const ahorroAbs = oferta ? (Number(product.precio) - Number(product.precio_descuento)) : 0;
 
-          const stockBadge = Number(product.stock_total) === 0
+          const isOutOfStock = Number(product.stock_total) <= 0;
+          const stockBadge = isOutOfStock
             ? `<div class="absolute top-2 left-2 bg-red-600 text-white px-2 py-1 rounded text-sm z-10">AGOTADO</div>`
             : ``;
 
-          const lowStock = (Number(product.stock_total) > 0 && Number(product.stock_total) <= 3)
+          const lowStock = (!isOutOfStock && Number(product.stock_total) <= 3)
             ? `<p class="mt-1 text-sm" style="color:#7A0019;font-weight:600;">🔥 ¡Últimas ${product.stock_total} piezas!</p>`
             : ``;
 
           productGrid.innerHTML += `
-            <div class="relative bg-white p-5 rounded-lg shadow-md overflow-hidden group product-card" data-aos="fade-up" data-aos-delay="${index * 50}">
+            <div class="relative bg-white p-5 rounded-lg shadow-md overflow-hidden group product-card ${isOutOfStock ? 'product-card--agotado' : ''}" data-aos="fade-up" data-aos-delay="${index * 50}">
               ${oferta ? `
                 <span class="discount-badge" aria-label="Producto en oferta">
                   OFERTA ${Number(product.descuento_pct)}%
@@ -432,9 +471,11 @@
 
               <div class="relative w-full h-64 overflow-hidden">
                 <img src="${mainImage}" alt="${product.nombre}"
+                     loading="lazy"
                      class="w-full h-full object-cover transition-opacity duration-300 ${hoverImage ? 'group-hover:opacity-0' : ''}">
                 ${hoverImage ? `
                   <img src="${hoverImage}" alt="${product.nombre} hover"
+                       loading="lazy"
                        class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-300 group-hover:opacity-100">
                 ` : ``}
               </div>
@@ -459,10 +500,14 @@
 
               <p class="text-sm text-gray-600 mt-1 leading-snug font-medium">Oro: ${product.tipo_oro} | Género: ${product.genero}</p>
               <div class="mt-4">
-                <a href="/producto/${product.id}" class="btn-detalles ${oferta ? 'cta-offer' : ''}"
-                   onclick="fetch('/api/product-view/${product.id}', { method: 'POST' }).catch(console.error);">
-                  ${oferta ? 'Comprar ahora' : 'Ver detalles'}
-                </a>
+                ${isOutOfStock ? `
+                  <span class="btn-agotado">Agotado</span>
+                ` : `
+                  <a href="/producto/${product.id}" class="btn-detalles ${oferta ? 'cta-offer' : ''}"
+                     onclick="fetch('/api/product-view/${product.id}', { method: 'POST' }).catch(console.error);">
+                    ${oferta ? 'Comprar ahora' : 'Ver detalles'}
+                  </a>
+                `}
               </div>
             </div>
           `;
@@ -483,13 +528,13 @@
         });
       });
 
-      // El selector visual "Ordenar por" permanece, pero el orden efectivo es ofertas→resto
+      // Selector de orden: ahora funcional — recarga productos con nuevo sort
       const sortSelect = document.getElementById('sort');
       if (sortSelect) {
         sortSelect.addEventListener('change', () => {
           const currentUrl = new URL(window.location.href);
           currentUrl.searchParams.set('sort', sortSelect.value);
-          window.location.href = currentUrl.toString(); // recarga con nuevo valor (no afecta el orden global ofertas→resto)
+          window.location.href = currentUrl.toString();
         });
       }
     } catch (err) {

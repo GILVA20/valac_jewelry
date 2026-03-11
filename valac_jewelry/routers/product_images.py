@@ -50,7 +50,7 @@ def handle_image(file, local_path=""):
         for f in files:
             logging.debug(" - %s", f["name"])
         if any(f["name"] == filename for f in files):
-            public_url = f"{current_app.config.get('SUPABASE_STORAGE_URL')}{filename}"
+            public_url = f"{current_app.config.get('CDN_BASE_URL')}{filename}"
             logging.info("Imagen %s: Duplicado detectado. Reutilizando URL.", original_filename)
             return public_url, "duplicado", md5_hash
     except Exception as e:
@@ -70,7 +70,7 @@ def handle_image(file, local_path=""):
     try:
         upload_response = supabase.storage.from_(bucket).upload(filename, content)
         if upload_response:
-            public_url = f"{current_app.config.get('SUPABASE_STORAGE_URL')}{filename}"
+            public_url = f"{current_app.config.get('CDN_BASE_URL')}{filename}"
             logging.info("Imagen %s: Subida exitosa. URL: %s", original_filename, public_url)
             return public_url, "subido", md5_hash
         else:

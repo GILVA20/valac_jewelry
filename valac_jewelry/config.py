@@ -5,6 +5,7 @@ class Config:
     SUPABASE_URL = os.environ.get('SUPABASE_URL')
     SUPABASE_KEY = os.environ.get('SUPABASE_KEY')
     SUPABASE_STORAGE_URL = os.environ.get('SUPABASE_STORAGE_URL')
+    CDN_BASE_URL = os.environ.get('CDN_BASE_URL') or os.environ.get('SUPABASE_STORAGE_URL')
     MP_MAX_INSTALLMENTS = os.environ.get('MP_MAX_INSTALLMENTS')
     SIMULAR_PAGO = os.environ.get('SIMULAR_PAGO', 'False').lower() == 'true'
     # ✨ ADDITIONS ✨

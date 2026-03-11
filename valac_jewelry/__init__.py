@@ -52,7 +52,10 @@ def create_app():
     
     @app.context_processor
     def inject_supabase_storage_url():
-        return dict(SUPABASE_STORAGE_URL=app.config.get("SUPABASE_STORAGE_URL"))
+        return dict(
+            SUPABASE_STORAGE_URL=app.config.get("SUPABASE_STORAGE_URL"),
+            CDN_BASE_URL=app.config.get("CDN_BASE_URL"),
+        )
     
     login_manager = LoginManager()
     login_manager.init_app(app)

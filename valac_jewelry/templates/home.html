@@ -75,7 +75,7 @@
   <section class="container mx-auto px-4">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
       <a href="/collection?genero=Mujer&mix_unisex=1" class="gender-card group" aria-label="Entrar a Colección Mujer">
-        <img src="{{ SUPABASE_STORAGE_URL }}jasmin-chew-UBeNYvk6ED0-unsplash.jpg" alt="Colección Mujer">
+        <img src="{{ CDN_BASE_URL }}jasmin-chew-UBeNYvk6ED0-unsplash.jpg" alt="Colección Mujer">
         <div class="gender-overlay">
           <h2 class="text-2xl sm:text-3xl font-playfair drop-shadow">Colección Mujer</h2>
           <p class="opacity-90">Anillos, cadenas, aretes, dijes y pulsos en oro 10k y 14k.</p>
@@ -84,7 +84,7 @@
       </a>
 
       <a href="/collection?genero=Hombre&mix_unisex=1" class="gender-card group" aria-label="Entrar a Colección Hombre">
-        <img src="{{ SUPABASE_STORAGE_URL }}mangoldchain.jpg" alt="Colección Hombre">
+        <img src="{{ CDN_BASE_URL }}mangoldchain.jpg" alt="Colección Hombre">
         <div class="gender-overlay">
           <h2 class="text-2xl sm:text-3xl font-playfair drop-shadow">Colección Hombre</h2>
           <p class="opacity-90">Cadenas, dijes, pulsos y más. Unisex incluido.</p>
@@ -111,7 +111,7 @@
   <section class="py-10 sm:py-12 bg-white text-gray-800">
     <div class="container mx-auto px-4 flex flex-col md:flex-row items-center gap-6 md:gap-8">
       <div class="md:w-1/2" data-aos="fade-right" data-aos-duration="1000">
-        <img src="{{ SUPABASE_STORAGE_URL }}our-story.jpg" alt="Nuestra Historia" class="rounded-lg shadow-lg w-full h-auto object-cover">
+        <img src="{{ CDN_BASE_URL }}our-story.jpg" alt="Nuestra Historia" class="rounded-lg shadow-lg w-full h-auto object-cover">
       </div>
       <div class="md:w-1/2 md:pl-2" data-aos="fade-left" data-aos-duration="1000">
         <h2 class="text-2xl sm:text-3xl font-semibold mb-4 sm:mb-6">Nuestra Historia</h2>
@@ -171,7 +171,7 @@
 
       const grid = document.getElementById('home-collection');
       grid.innerHTML = '';
-      const placeholder = "{{ config['SUPABASE_STORAGE_URL'] }}placeholder.jpg";
+      const placeholder = "{{ CDN_BASE_URL }}placeholder.jpg";
 
       products.forEach((product, i) => {
         let mainImage = placeholder, hoverImage = null;

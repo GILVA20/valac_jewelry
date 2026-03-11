@@ -103,6 +103,18 @@ def _info(msg: str) -> None:
     flash(msg, "info")
 
 
+def _build_cdn_url(storage_key: str) -> str:
+    """Construye URL pública via CDN_BASE_URL con fallback a Supabase."""
+    cdn = _get_cfg("CDN_BASE_URL")
+    if cdn:
+        if storage_key.startswith("products/") and cdn.rstrip("/").endswith("/products"):
+            filename = storage_key[len("products/"):]
+            return f"{cdn}{filename}" if cdn.endswith("/") else f"{cdn}/{filename}"
+        return f"{cdn.rstrip('/')}/{storage_key.lstrip('/')}"
+    base = _get_cfg("SUPABASE_URL")
+    return f"{base}/storage/v1/object/public/CatalogoJoyasValacJoyas/{storage_key}"
+
+
 # ============================================================
 # Vista Admin
 # ============================================================
@@ -256,10 +268,7 @@ class SupabaseProductAdmin(BaseView):
                     os.remove(tmp_path)
                 except Exception:
                     pass
-                pub = sb.storage.from_("CatalogoJoyasValacJoyas").get_public_url(key_fb)
-                public_url = _extract_public_url(pub)
-                if not public_url:
-                    return jsonify({"error": "No se pudo obtener URL pública"}), 500
+                public_url = _build_cdn_url(key_fb)
                 return jsonify({"url": f"{public_url}?t={int(time.time() * 1000)}"}), 200
 
             # Clave siempre .webp
@@ -293,11 +302,8 @@ class SupabaseProductAdmin(BaseView):
             except Exception:
                 pass
 
-            # Obtener URL pública (manejar distintos retornos)
-            pub = sb.storage.from_("CatalogoJoyasValacJoyas").get_public_url(key)
-            public_url = _extract_public_url(pub)
-            if not public_url:
-                return jsonify({"error": "No se pudo obtener URL pública"}), 500
+            # Construir URL pública via CDN
+            public_url = _build_cdn_url(key)
 
             # Cache bust
             return jsonify({"url": f"{public_url}?t={int(time.time() * 1000)}"}), 200

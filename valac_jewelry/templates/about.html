@@ -5,7 +5,7 @@
 {% block content %}
 <main class="pt-24">
   <!-- Banner Superior Opcional -->
-  <section class="relative bg-cover bg-center" style="background-image: url('{{ SUPABASE_STORAGE_URL }}about-banner.jpg'); height: 400px;" data-aos="fade-in" data-aos-duration="1000">
+  <section class="relative bg-cover bg-center" style="background-image: url('{{ CDN_BASE_URL }}about-banner.jpg'); height: 400px;" data-aos="fade-in" data-aos-duration="1000">
     <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
       <h1 class="text-4xl md:text-5xl font-playfair text-white">Sobre Nosotros</h1>
     </div>
@@ -85,7 +85,7 @@
     <div class="container mx-auto px-4 text-center">
       <h2 class="section-title" data-aos="fade-up" data-aos-duration="1000">Inspiración</h2>
       <div class="mt-8" data-aos="fade-up" data-aos-duration="1200">
-        <img src="{{ SUPABASE_STORAGE_URL }}goldbracelet.jpg" alt="Gold Bracelet" class="mx-auto rounded-lg shadow-lg">
+        <img src="{{ CDN_BASE_URL }}goldbracelet.jpg" alt="Gold Bracelet" class="mx-auto rounded-lg shadow-lg">
       </div>
     </div>
   </section>

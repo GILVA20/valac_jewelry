@@ -400,6 +400,27 @@ class SupabaseProductAdmin(BaseView):
         return redirect(url_for("supabase_products.index"))
 
     # ---------------------------
+    # Toggle destacado
+    # ---------------------------
+    @expose("/toggle-destacado/<product_id>", methods=["POST"])
+    def toggle_destacado(self, product_id: str):
+        sb = self.app_sb
+        try:
+            # Leer estado actual
+            current = sb.table("products").select("destacado").eq("id", product_id).execute()
+            if not current.data:
+                _error("Producto no encontrado")
+                return redirect(url_for("supabase_products.index"))
+
+            new_val = not bool(current.data[0].get("destacado"))
+            sb.table("products").update({"destacado": new_val}).eq("id", product_id).execute()
+            _success(f"Producto {'destacado' if new_val else 'sin destacar'}")
+        except Exception:
+            current_app.logger.exception("[toggle_destacado] Error")
+            _error("Error al cambiar estado destacado")
+        return redirect(url_for("supabase_products.index"))
+
+    # ---------------------------
     # API: Edición rápida (AJAX/Inline)
     # ---------------------------
     @expose("/api/quick-update/<product_id>", methods=["PATCH"])

@@ -158,9 +158,11 @@
         .select(`
           id, nombre, descripcion, precio, descuento_pct, precio_descuento,
           tipo_producto, genero, tipo_oro, imagen, created_at, stock_total,
+          destacado,
           product_images ( imagen, orden )
         `)
         .gt('stock_total', 0)
+        .order('destacado', { ascending: false, nullsFirst: false })
         .order('precio', { ascending: false })
         .limit(9);
 

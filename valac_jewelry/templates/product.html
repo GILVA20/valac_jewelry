@@ -292,7 +292,7 @@
 
   // Función para click en comprar
   function trackBuyClick(productId) {
-    fetch(`/admin/analytics/track_buy_click/${productId}`, {
+    fetch(`/admin/analytics/t/b/${productId}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ session_id: sessionId })
@@ -306,7 +306,7 @@
       const productId = this.dataset.id;
       const sessionId = localStorage.getItem("valac_session_id");
 
-      fetch(`/admin/analytics/track_view/${productId}`, {
+      fetch(`/admin/analytics/t/v/${productId}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ session_id: sessionId })

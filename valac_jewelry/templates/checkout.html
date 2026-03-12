@@ -266,10 +266,30 @@
       </section>
     </div>
 
-    <!-- Elementos de Confianza: Aquí se incluye un sello de seguridad y se podría agregar un testimonio o mini-carrito -->
-    <section class="trust-section text-center mt-8">
-      <p class="text-sm text-gray-600">Compra 100% segura con SSL</p>
-      <p class="mt-2 italic text-sm text-gray-700">“+10,000 compras seguras”</p>
+    <!-- Elementos de confianza -->
+    <section class="mt-8 mb-4">
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+        <div class="p-3 bg-white rounded-lg shadow-sm">
+          <i class="fas fa-shield-alt text-green-600 text-xl mb-1"></i>
+          <p class="text-xs text-gray-600 font-medium">Pago 100% seguro</p>
+          <p class="text-[10px] text-gray-400">Encriptación SSL</p>
+        </div>
+        <div class="p-3 bg-white rounded-lg shadow-sm">
+          <i class="fas fa-truck text-blue-600 text-xl mb-1"></i>
+          <p class="text-xs text-gray-600 font-medium">Envío a todo México</p>
+          <p class="text-[10px] text-gray-400">Gratis desde $8,500</p>
+        </div>
+        <div class="p-3 bg-white rounded-lg shadow-sm">
+          <i class="fas fa-gem text-yellow-600 text-xl mb-1"></i>
+          <p class="text-xs text-gray-600 font-medium">Oro 10k y 14k</p>
+          <p class="text-[10px] text-gray-400">Certificado de autenticidad</p>
+        </div>
+        <div class="p-3 bg-white rounded-lg shadow-sm">
+          <i class="fas fa-calendar-alt text-purple-600 text-xl mb-1"></i>
+          <p class="text-xs text-gray-600 font-medium">Hasta 6 MSI</p>
+          <p class="text-[10px] text-gray-400">Con Mercado Pago</p>
+        </div>
+      </div>
     </section>
     
 
@@ -317,22 +337,21 @@
               <p class="text-xs text-gray-500">Pago 100% seguro</p>
               <div
                 class="flex flex-wrap items-center justify-center gap-x-4 gap-y-2
-                       grayscale opacity-80 hover:opacity-100 transition"
+                       opacity-80 hover:opacity-100 transition"
                 aria-label="Métodos de pago disponibles"
               >
-                <img src="https://cdn.simpleicons.org/visa"            alt="Visa"             title="Visa"            class="h-5 md:h-6 w-auto align-middle" loading="lazy" />
-                <img src="https://cdn.simpleicons.org/mastercard"      alt="Mastercard"       title="Mastercard"      class="h-5 md:h-6 w-auto align-middle" loading="lazy" />
-                <img src="https://cdn.simpleicons.org/americanexpress" alt="American Express" title="American Express" class="h-5 md:h-6 w-auto align-middle" loading="lazy" />
+                <img src="https://img.icons8.com/color/48/visa.png" alt="Visa" title="Visa" class="h-6 w-auto align-middle" loading="lazy" />
+                <img src="https://img.icons8.com/color/48/mastercard-logo.png" alt="Mastercard" title="Mastercard" class="h-6 w-auto align-middle" loading="lazy" />
+                <img src="https://img.icons8.com/color/48/amex.png" alt="American Express" title="American Express" class="h-6 w-auto align-middle" loading="lazy" />
                 <span class="hidden md:inline-block w-px h-6 bg-gray-300"></span>
-                <img src="https://cdn.simpleicons.org/mercadopago"     alt="Mercado Pago"     title="Mercado Pago"    class="h-5 md:h-6 w-auto align-middle" loading="lazy" />
-                <img src="https://cdn.simpleicons.org/oxxo"            alt="OXXO Pay"         title="OXXO Pay"        class="h-5 md:h-6 w-auto align-middle" loading="lazy" />
-                <img src="https://cdn.simpleicons.org/spei"            alt="SPEI"             title="Transferencia SPEI" class="h-5 md:h-6 w-auto align-middle" loading="lazy" />
+                <img src="{{ url_for('static', filename='images/MP_CMYK_HANDSHAKE_color_horizontal.png') }}" alt="Mercado Pago" title="Mercado Pago" class="h-6 w-auto align-middle" loading="lazy" />
               </div>
               <p class="text-[11px] text-gray-500">
                 Aceptamos tarjetas • OXXO • SPEI — *Hasta 6 MSI con Mercado Pago
               </p>
-              <p class="text-sm italic text-gray-600">
-                “+10,000 compras seguras”
+              <p class="text-xs text-gray-500 mt-1">
+                <i class="fas fa-gem mr-1 text-yellow-600"></i>
+                Joyería con certificado de autenticidad
               </p>
             </div>
           </div>

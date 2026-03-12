@@ -180,13 +180,12 @@
   <script>
     // Track WhatsApp clicks para analytics
     function trackWhatsAppClick(location) {
-      if (typeof gtag !== 'undefined') {
-        gtag('event', 'whatsapp_click', {
-          'event_category': 'engagement',
-          'event_label': location
-        });
-      }
-      console.log('WhatsApp click:', location);
+      const sid = window.VALAC_SESSION_ID || '';
+      fetch('/admin/analytics/t/n', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: '/wa-click/' + location, session_id: sid })
+      }).catch(() => {});
     }
   </script>
 

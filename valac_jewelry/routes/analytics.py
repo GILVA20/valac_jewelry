@@ -177,8 +177,7 @@ class AnalyticsAdmin(BaseView):
                 {"name": "Colección", "path": "/collection"},
                 {"name": "Detalle de producto", "path_prefix": "/producto/"},
                 {"name": "Click en comprar", "path_prefix": "/buy-click/"},
-                {"name": "Checkout", "path": "/checkout"},
-                {"name": "Pago exitoso", "path": "/success"},
+                {"name": "WhatsApp click", "path_prefix": "/wa-click/"},
             ]
             funnel_data = []
             for stage in funnel_stages:
@@ -192,6 +191,27 @@ class AnalyticsAdmin(BaseView):
             # ---------- KPIs ----------
             total_views = len(pv_rows)
             total_buy_clicks = sum(1 for p in paths if p and p.startswith("/buy-click/"))
+
+            # ---------- WhatsApp clicks ----------
+            wa_clicks = [p for p in paths if p and p.startswith("/wa-click/")]
+            total_wa_clicks = len(wa_clicks)
+            wa_per_product = Counter()
+            for p in wa_clicks:
+                tag = p.replace("/wa-click/", "")
+                if tag.startswith("product_"):
+                    try:
+                        pid = int(tag.replace("product_", ""))
+                        wa_per_product[pid] += 1
+                    except ValueError:
+                        pass
+            wa_product_clicks = sorted(
+                [
+                    {"product_id": pid, "nombre": product_names.get(pid, f"Producto ID {pid}"), "clicks": cnt}
+                    for pid, cnt in wa_per_product.items()
+                ],
+                key=lambda x: x["clicks"],
+                reverse=True,
+            )[:20]
 
             # ---------- Ubicaciones (Top regiones/ciudades) ----------
             cities_counter = Counter()
@@ -216,6 +236,8 @@ class AnalyticsAdmin(BaseView):
             flash("Error al cargar analíticas. Revisa los logs.", "error")
             product_views, navigation, all_product_views = [], [], []
             total_views, total_buy_clicks = 0, 0
+            total_wa_clicks = 0
+            wa_product_clicks = []
             funnel_data = []
             top_cities, top_regions = [], []
             location_set = set()
@@ -228,6 +250,8 @@ class AnalyticsAdmin(BaseView):
             navigation=navigation,
             total_views=total_views,
             total_buy_clicks=total_buy_clicks,
+            total_wa_clicks=total_wa_clicks,
+            wa_product_clicks=wa_product_clicks,
             total_locations=len(location_set),
             funnel_data=funnel_data,
             top_cities=top_cities,
@@ -236,6 +260,7 @@ class AnalyticsAdmin(BaseView):
 
     # -------------------- Endpoints de tracking --------------------
 
+    @expose('/t/v/<int:product_id>', methods=['POST'])
     @expose('/track_view/<int:product_id>', methods=['POST'])
     def track_view(self, product_id):
         try:
@@ -256,6 +281,7 @@ class AnalyticsAdmin(BaseView):
             logger.error("Error en track_view: %s", e)
             return "", 204
 
+    @expose('/t/n', methods=['POST'])
     @expose('/track_navigation', methods=['POST'])
     def track_navigation(self):
         try:
@@ -275,6 +301,7 @@ class AnalyticsAdmin(BaseView):
             logger.error("Error en track_navigation: %s", e)
             return "", 204
 
+    @expose('/t/b/<int:product_id>', methods=['POST'])
     @expose('/track_buy_click/<int:product_id>', methods=['POST'])
     def track_buy_click(self, product_id):
         try:

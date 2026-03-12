@@ -75,11 +75,12 @@
         <a href="#geo-cities" class="badge">Top ciudades</a>
         <a href="#geo-regions" class="badge">Top estados</a>
         <a href="#no-views" class="badge">Sin vistas</a>
+        <a href="#wa-clicks" class="badge">WhatsApp clicks</a>
       </div>
     </div>
 
     <!-- KPI CARDS -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-10">
       <div class="bg-white p-6 rounded-xl shadow-sm text-center">
         <p class="text-sm text-gray-500 mb-1">🔍 Total de vistas</p>
         <p class="text-2xl font-semibold text-gray-800">{{ total_views }}</p>
@@ -95,6 +96,10 @@
       <div class="bg-white p-6 rounded-xl shadow-sm text-center">
         <p class="text-sm text-gray-500 mb-1">🌍 Ubicaciones distintas</p>
         <p class="text-2xl font-semibold text-gray-800">{{ total_locations }}</p>
+      </div>
+      <div class="bg-white p-6 rounded-xl shadow-sm text-center">
+        <p class="text-sm text-gray-500 mb-1">📱 WhatsApp clicks</p>
+        <p class="text-2xl font-semibold text-green-700">{{ total_wa_clicks }}</p>
       </div>
     </div>
 
@@ -349,6 +354,47 @@
             {% endfor %}
             {% if not top_regions or top_regions|length == 0 %}
             <tr><td colspan="3" class="px-6 py-6 text-center text-gray-500">Sin datos</td></tr>
+            {% endif %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- WHATSAPP CLICKS PER PRODUCT -->
+    <section id="wa-clicks" class="table-section mb-12">
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-2xl font-bold flex items-center gap-2">
+          <i data-lucide="message-circle" class="w-5 h-5 text-green-600"></i>
+          WhatsApp Clicks por Producto
+          <span class="sub">(Top {{ wa_product_clicks|length if wa_product_clicks else 0 }})</span>
+        </h2>
+        <button class="btn" data-export="#tblWA">
+          <i data-lucide="download" class="w-4 h-4"></i> Exportar CSV
+        </button>
+      </div>
+      <div class="overflow-x-auto">
+        <table id="tblWA" class="min-w-full bg-white rounded-lg shadow-sm">
+          <thead class="bg-gray-100 text-left text-sm font-semibold">
+            <tr>
+              <th class="px-6 py-3 w-14">#</th>
+              <th class="px-6 py-3">Producto</th>
+              <th class="px-6 py-3 w-32 sortable" data-type="num">Clicks WA <span class="dir">↕</span></th>
+              <th class="px-6 py-3 w-28">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="text-sm divide-y divide-gray-200">
+            {% for wc in wa_product_clicks %}
+            <tr class="hover:bg-gray-50">
+              <td class="px-6 py-3">{{ loop.index }}</td>
+              <td class="px-6 py-3">{{ wc.nombre }}</td>
+              <td class="px-6 py-3">{{ wc.clicks }}</td>
+              <td class="px-6 py-3">
+                <a class="text-indigo-600 hover:underline" target="_blank" href="/producto/{{ wc.product_id }}">Ver</a>
+              </td>
+            </tr>
+            {% endfor %}
+            {% if not wa_product_clicks or wa_product_clicks|length == 0 %}
+            <tr><td colspan="4" class="px-6 py-6 text-center text-gray-500">Sin clicks de WhatsApp aún</td></tr>
             {% endif %}
           </tbody>
         </table>

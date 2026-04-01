@@ -5,6 +5,8 @@ instance/
 repo_code_structure.txt
 *.log
 *.pyc
+.env
+.env.*
 # Python
 *.pyc
 *.pyo

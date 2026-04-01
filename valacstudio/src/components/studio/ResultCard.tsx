@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { StageResult } from "@/lib/studio-types";
 import { Button } from "@/components/ui/button";
-import { Check, AlertTriangle, ChevronDown, ChevronUp, RotateCcw, SkipForward } from "lucide-react";
+import { Check, AlertTriangle, ChevronDown, ChevronUp, RotateCcw, SkipForward, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -13,6 +13,7 @@ interface Props {
   onSkip: () => void;
   showDescription?: boolean;
   displayImage?: string;
+  retrying?: boolean;
 }
 
 export function ResultCard({
@@ -24,6 +25,7 @@ export function ResultCard({
   onSkip,
   showDescription = false,
   displayImage,
+  retrying = false,
 }: Props) {
   const [showDesc, setShowDesc] = useState(false);
   const approved = result.status === "approved";
@@ -33,6 +35,7 @@ export function ResultCard({
     <div
       className={cn(
         "rounded-xl border bg-card overflow-hidden transition-all",
+        retrying && "opacity-60",
         isSelected ? "border-primary ring-2 ring-primary/20" : "border-border"
       )}
     >
@@ -42,6 +45,11 @@ export function ResultCard({
           alt={`Resultado ${index + 1}`}
           className="w-full aspect-square object-cover"
         />
+        {retrying && (
+          <div className="absolute inset-0 flex items-center justify-center bg-background/60">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        )}
         <div className="absolute top-2 left-2">
           {approved ? (
             <span className="inline-flex items-center gap-1 text-xs font-body font-medium px-2 py-1 rounded-full bg-success text-success-foreground">
@@ -66,14 +74,15 @@ export function ResultCard({
             size="sm"
             className="flex-1 text-xs"
             onClick={onSelect}
+            disabled={retrying}
           >
             <Check className="h-3 w-3 mr-1" />
             {isSelected ? "Seleccionada" : "Usar esta"}
           </Button>
-          <Button variant="outline" size="sm" onClick={onRetry} className="text-xs">
-            <RotateCcw className="h-3 w-3" />
+          <Button variant="outline" size="sm" onClick={onRetry} className="text-xs" disabled={retrying}>
+            <RotateCcw className={cn("h-3 w-3", retrying && "animate-spin")} />
           </Button>
-          <Button variant="ghost" size="sm" onClick={onSkip} className="text-xs">
+          <Button variant="ghost" size="sm" onClick={onSkip} className="text-xs" disabled={retrying}>
             <SkipForward className="h-3 w-3" />
           </Button>
         </div>

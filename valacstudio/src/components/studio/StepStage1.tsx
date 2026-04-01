@@ -13,6 +13,7 @@ interface Props {
 
 export function StepStage1({ state, update }: Props) {
   const [loading, setLoading] = useState(false);
+  const [retryingIndices, setRetryingIndices] = useState<Set<number>>(new Set());
   const [phase, setPhase] = useState<"analyzing" | "generating">("analyzing");
   const [error, setError] = useState("");
   const isBulk = state.modo === "bulk";
@@ -67,6 +68,41 @@ export function StepStage1({ state, update }: Props) {
     update({ selectedResults: sel });
   };
 
+  async function retrySingle(index: number) {
+    setRetryingIndices((prev) => new Set(prev).add(index));
+    try {
+      const img = state.rawImages[index];
+      const image = img.startsWith("data:") ? img.split(",")[1] : img;
+      const res = await generateStage1({
+        images: [image],
+        sexo: state.sexo,
+        categoria: state.categoria,
+        modo: "individual",
+      });
+      if (res.results.length > 0) {
+        const newResults = [...state.stage1Results];
+        newResults[index] = res.results[0];
+        const wasSelected = state.selectedResults.includes(index);
+        const isNowApproved = res.results[0].status === "approved";
+        let newSelected = state.selectedResults;
+        if (isNowApproved && !wasSelected) {
+          newSelected = [...newSelected, index];
+        } else if (!isNowApproved && wasSelected) {
+          newSelected = newSelected.filter((x) => x !== index);
+        }
+        update({ stage1Results: newResults, selectedResults: newSelected });
+      }
+    } catch {
+      // keep existing result on error
+    } finally {
+      setRetryingIndices((prev) => {
+        const next = new Set(prev);
+        next.delete(index);
+        return next;
+      });
+    }
+  }
+
   if (loading) {
     return (
       <ProcessingStatus
@@ -106,7 +142,7 @@ export function StepStage1({ state, update }: Props) {
             index={i}
             isSelected={state.selectedResults.includes(i)}
             onSelect={() => toggleSelect(i)}
-            onRetry={runGeneration}
+            onRetry={() => retrySingle(i)}
             onSkip={() => {
               update({
                 selectedResults: state.selectedResults.filter((x) => x !== i),
@@ -114,6 +150,7 @@ export function StepStage1({ state, update }: Props) {
             }}
             showDescription
             displayImage={result.product_image_base64}
+            retrying={retryingIndices.has(i)}
           />
         ))}
       </div>

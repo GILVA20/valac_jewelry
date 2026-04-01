@@ -13,6 +13,7 @@ interface Props {
 
 export function StepStage2({ state, update }: Props) {
   const [loading, setLoading] = useState(false);
+  const [retryingIndices, setRetryingIndices] = useState<Set<number>>(new Set());
   const [phase, setPhase] = useState<"analyzing" | "generating">("analyzing");
   const [error, setError] = useState("");
   const isBulk = state.modo === "bulk";
@@ -75,6 +76,46 @@ export function StepStage2({ state, update }: Props) {
     update({ selectedFinals: sel });
   };
 
+  async function retrySingle(index: number) {
+    setRetryingIndices((prev) => new Set(prev).add(index));
+    try {
+      const stage1Idx = state.selectedResults[index];
+      const prodImg = state.stage1Results[stage1Idx].image_base64;
+      const studioImg = state.stage1Results[stage1Idx].product_image_base64 || prodImg;
+      const desc = state.stage1Results[stage1Idx].description || "";
+
+      const res = await generateStage2({
+        product_images: [prodImg],
+        product_studio_images: [studioImg],
+        base_image: state.selectedBase,
+        sexo: state.sexo,
+        categoria: state.categoria,
+        descriptions: [desc],
+      });
+      if (res.results.length > 0) {
+        const newResults = [...state.stage2Results];
+        newResults[index] = res.results[0];
+        const wasSelected = state.selectedFinals.includes(index);
+        const isNowApproved = res.results[0].status === "approved";
+        let newSelected = state.selectedFinals;
+        if (isNowApproved && !wasSelected) {
+          newSelected = [...newSelected, index];
+        } else if (!isNowApproved && wasSelected) {
+          newSelected = newSelected.filter((x) => x !== index);
+        }
+        update({ stage2Results: newResults, selectedFinals: newSelected });
+      }
+    } catch {
+      // keep existing result on error
+    } finally {
+      setRetryingIndices((prev) => {
+        const next = new Set(prev);
+        next.delete(index);
+        return next;
+      });
+    }
+  }
+
   if (loading) {
     return (
       <ProcessingStatus
@@ -114,12 +155,13 @@ export function StepStage2({ state, update }: Props) {
             index={i}
             isSelected={state.selectedFinals.includes(i)}
             onSelect={() => toggleSelect(i)}
-            onRetry={runGeneration}
+            onRetry={() => retrySingle(i)}
             onSkip={() => {
               update({
                 selectedFinals: state.selectedFinals.filter((x) => x !== i),
               });
             }}
+            retrying={retryingIndices.has(i)}
           />
         ))}
       </div>

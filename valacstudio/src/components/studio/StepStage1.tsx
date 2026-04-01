@@ -68,7 +68,7 @@ export function StepStage1({ state, update }: Props) {
     update({ selectedResults: sel });
   };
 
-  async function retrySingle(index: number) {
+  async function retrySingle(index: number, feedback?: string) {
     setRetryingIndices((prev) => new Set(prev).add(index));
     try {
       const img = state.rawImages[index];
@@ -78,6 +78,7 @@ export function StepStage1({ state, update }: Props) {
         sexo: state.sexo,
         categoria: state.categoria,
         modo: "individual",
+        feedback: feedback ? [feedback] : undefined,
       });
       if (res.results.length > 0) {
         const newResults = [...state.stage1Results];
@@ -142,7 +143,7 @@ export function StepStage1({ state, update }: Props) {
             index={i}
             isSelected={state.selectedResults.includes(i)}
             onSelect={() => toggleSelect(i)}
-            onRetry={() => retrySingle(i)}
+            onRetry={(feedback?: string) => retrySingle(i, feedback)}
             onSkip={() => {
               update({
                 selectedResults: state.selectedResults.filter((x) => x !== i),

@@ -302,7 +302,7 @@ def _stage1_validation_prompt(desc: str) -> str:
     )
 
 
-def _process_stage1_single(img_b64: str) -> dict:
+def _process_stage1_single(img_b64: str, feedback: str = "") -> dict:
     """Stage 1: Claude analyzes the raw photo → Gemini generates product shot."""
     # 1 ─ Claude analyses the raw photo
     analysis = _ask_claude_json(STAGE1_ANALYSIS_PROMPT, img_b64)
@@ -311,6 +311,11 @@ def _process_stage1_single(img_b64: str) -> dict:
 
     # 2 ─ Gemini generates a clean product photo from the original
     product_prompt = _stage1_gemini_prompt(desc, tamaño)
+    if feedback:
+        product_prompt += (
+            "\n\nUSER CORRECTION — APPLY THESE FIXES:\n"
+            + feedback
+        )
     try:
         product_b64 = _gemini_edit_image(product_prompt, [img_b64])
         product_status = "approved"
@@ -478,10 +483,15 @@ def _stage2_validation_prompt(desc: str) -> str:
     )
 
 
-def _process_stage2_single(prod_b64: str, base_b64: str, sexo: str, desc: str) -> dict:
+def _process_stage2_single(prod_b64: str, base_b64: str, sexo: str, desc: str, feedback: str = "") -> dict:
     """Process one product image through Stage 2 compositing."""
     # 1 ─ Claude builds mounting prompt
     mounting_prompt, _tamaño = _stage2_build_prompt(prod_b64, base_b64, sexo, desc)
+    if feedback:
+        mounting_prompt += (
+            "\n\nUSER CORRECTION — APPLY THESE FIXES:\n"
+            + feedback
+        )
 
     # 2 ─ Gemini composites (base + product images)
     generated_b64 = _gemini_edit_image(mounting_prompt, [base_b64, prod_b64])
@@ -540,14 +550,16 @@ def generate_stage1():
     """Stage 1: raw photo → Claude analysis → Gemini product photo → Claude QC."""
     data = request.get_json(force=True)
     images = data.get("images", [])
+    feedbacks = data.get("feedback", [])
 
     if not images:
         return jsonify({"error": "No images provided"}), 400
 
     results = []
-    for img_b64 in images:
+    for idx, img_b64 in enumerate(images):
+        fb = feedbacks[idx] if idx < len(feedbacks) else ""
         try:
-            result = _process_stage1_single(img_b64)
+            result = _process_stage1_single(img_b64, feedback=fb)
             results.append(result)
         except Exception as e:
             logger.exception("Stage 1 error for one image")
@@ -572,6 +584,7 @@ def generate_stage2():
     base_image_key = data.get("base_image", "")
     sexo = data.get("sexo", "")
     descriptions = data.get("descriptions", [])
+    feedbacks = data.get("feedback", [])
 
     if not product_images or not base_image_key:
         return jsonify({"error": "Missing product images or base image key"}), 400
@@ -593,8 +606,9 @@ def generate_stage2():
     results = []
     for i, prod_b64 in enumerate(product_images):
         desc = descriptions[i] if i < len(descriptions) else ""
+        fb = feedbacks[i] if i < len(feedbacks) else ""
         try:
-            result = _process_stage2_single(prod_b64, base_b64, sexo, desc)
+            result = _process_stage2_single(prod_b64, base_b64, sexo, desc, feedback=fb)
             results.append(result)
         except Exception as e:
             logger.exception("Stage 2 error for one image")

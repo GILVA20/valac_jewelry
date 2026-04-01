@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { StageResult } from "@/lib/studio-types";
 import { Button } from "@/components/ui/button";
-import { Check, AlertTriangle, ChevronDown, ChevronUp, RotateCcw, SkipForward, Loader2 } from "lucide-react";
+import { Check, AlertTriangle, ChevronDown, ChevronUp, RotateCcw, SkipForward, Loader2, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Props {
@@ -9,7 +9,7 @@ interface Props {
   index: number;
   isSelected: boolean;
   onSelect: () => void;
-  onRetry: () => void;
+  onRetry: (feedback?: string) => void;
   onSkip: () => void;
   showDescription?: boolean;
   displayImage?: string;
@@ -28,8 +28,17 @@ export function ResultCard({
   retrying = false,
 }: Props) {
   const [showDesc, setShowDesc] = useState(false);
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [feedback, setFeedback] = useState("");
   const approved = result.status === "approved";
   const imageSrc = displayImage || result.image_base64;
+
+  const handleRetry = () => {
+    const fb = feedback.trim();
+    onRetry(fb || undefined);
+    setFeedback("");
+    setShowFeedback(false);
+  };
 
   return (
     <div
@@ -79,13 +88,45 @@ export function ResultCard({
             <Check className="h-3 w-3 mr-1" />
             {isSelected ? "Seleccionada" : "Usar esta"}
           </Button>
-          <Button variant="outline" size="sm" onClick={onRetry} className="text-xs" disabled={retrying}>
+          <Button
+            variant={showFeedback ? "default" : "outline"}
+            size="sm"
+            onClick={() => setShowFeedback(!showFeedback)}
+            className="text-xs"
+            disabled={retrying}
+          >
+            <MessageSquare className="h-3 w-3" />
+          </Button>
+          <Button variant="outline" size="sm" onClick={handleRetry} className="text-xs" disabled={retrying}>
             <RotateCcw className={cn("h-3 w-3", retrying && "animate-spin")} />
           </Button>
           <Button variant="ghost" size="sm" onClick={onSkip} className="text-xs" disabled={retrying}>
             <SkipForward className="h-3 w-3" />
           </Button>
         </div>
+
+        {showFeedback && (
+          <div className="space-y-2">
+            <textarea
+              value={feedback}
+              onChange={(e) => setFeedback(e.target.value)}
+              placeholder="Ej: El oro se ve muy amarillo, debería ser más rosado. La cadena está muy gruesa..."
+              className="w-full rounded-lg border border-input bg-background px-3 py-2 text-xs font-body placeholder:text-muted-foreground/60 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none resize-none"
+              rows={3}
+              disabled={retrying}
+            />
+            <Button
+              variant="gold"
+              size="sm"
+              className="w-full text-xs"
+              onClick={handleRetry}
+              disabled={retrying || !feedback.trim()}
+            >
+              <RotateCcw className="h-3 w-3 mr-1" />
+              Regenerar con correcciones
+            </Button>
+          </div>
+        )}
 
         {showDescription && result.description && (
           <button

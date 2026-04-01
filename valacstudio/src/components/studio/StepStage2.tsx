@@ -76,7 +76,7 @@ export function StepStage2({ state, update }: Props) {
     update({ selectedFinals: sel });
   };
 
-  async function retrySingle(index: number) {
+  async function retrySingle(index: number, feedback?: string) {
     setRetryingIndices((prev) => new Set(prev).add(index));
     try {
       const stage1Idx = state.selectedResults[index];
@@ -91,6 +91,7 @@ export function StepStage2({ state, update }: Props) {
         sexo: state.sexo,
         categoria: state.categoria,
         descriptions: [desc],
+        feedback: feedback ? [feedback] : undefined,
       });
       if (res.results.length > 0) {
         const newResults = [...state.stage2Results];
@@ -155,7 +156,7 @@ export function StepStage2({ state, update }: Props) {
             index={i}
             isSelected={state.selectedFinals.includes(i)}
             onSelect={() => toggleSelect(i)}
-            onRetry={() => retrySingle(i)}
+            onRetry={(feedback?: string) => retrySingle(i, feedback)}
             onSkip={() => {
               update({
                 selectedFinals: state.selectedFinals.filter((x) => x !== i),

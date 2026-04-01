@@ -7,6 +7,7 @@ export async function generateStage1(data: {
   sexo: string;
   categoria: string;
   modo: string;
+  feedback?: string[];
 }): Promise<{ results: StageResult[] }> {
   const res = await fetch(`${BASE}/generate/stage1`, {
     method: "POST",
@@ -24,6 +25,7 @@ export async function generateStage2(data: {
   sexo: string;
   categoria: string;
   descriptions: string[];
+  feedback?: string[];
 }): Promise<{ results: StageResult[] }> {
   const res = await fetch(`${BASE}/generate/stage2`, {
     method: "POST",

@@ -27,6 +27,17 @@ export function StepResultado({ state, update }: Props) {
 
   const isBulk = state.modo === "bulk";
 
+  /** Turn a description into a short, filesystem-safe slug. */
+  const slugify = (text?: string): string => {
+    if (!text) return "imagen";
+    return text
+      .toLowerCase()
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")   // strip accents
+      .replace(/[^a-z0-9]+/g, "_")                        // non-alnum → _
+      .replace(/^_|_$/g, "")                               // trim edges
+      .slice(0, 60);                                       // cap length
+  };
+
   // Build image pairs: product (from stage1) + mounted (from stage2)
   const imagePairs: ImagePair[] = state.selectedFinals.map((finalIdx) => {
     const stage1Idx = state.selectedResults[finalIdx];
@@ -48,9 +59,10 @@ export function StepResultado({ state, update }: Props) {
 
   const downloadAll = () => {
     imagePairs.forEach((pair, i) => {
-      downloadImage(pair.productImage, `valac_producto_${i + 1}.png`);
+      const slug = slugify(pair.description);
+      downloadImage(pair.productImage, `valac_producto_${slug}.png`);
       setTimeout(() => {
-        downloadImage(pair.mountedImage, `valac_montaje_${i + 1}.png`);
+        downloadImage(pair.mountedImage, `valac_montaje_${slug}.png`);
       }, 300 * (i + 1));
     });
   };
@@ -108,13 +120,13 @@ export function StepResultado({ state, update }: Props) {
         {imagePairs.map((pair, i) => (
           <div key={i} className="rounded-xl border border-border bg-card overflow-hidden">
             {/* Pair header */}
-            {isBulk && (
-              <div className="px-4 pt-3 pb-1">
-                <span className="text-xs font-body font-medium text-muted-foreground uppercase tracking-wider">
-                  Imagen {i + 1}
-                </span>
-              </div>
-            )}
+            <div className="px-4 pt-3 pb-1">
+              <span className="text-xs font-body font-medium text-muted-foreground uppercase tracking-wider">
+                {pair.description
+                  ? pair.description.slice(0, 80) + (pair.description.length > 80 ? "…" : "")
+                  : `Imagen ${i + 1}`}
+              </span>
+            </div>
 
             <div className="grid grid-cols-2 gap-px bg-border">
               {/* Product image */}
@@ -134,7 +146,7 @@ export function StepResultado({ state, update }: Props) {
                     variant="outline"
                     size="sm"
                     className="flex-1 text-xs"
-                    onClick={() => downloadImage(pair.productImage, `valac_producto_${i + 1}.png`)}
+                    onClick={() => downloadImage(pair.productImage, `valac_producto_${slugify(pair.description)}.png`)}
                   >
                     <Download className="h-3 w-3 mr-1" />
                     Descargar
@@ -168,7 +180,7 @@ export function StepResultado({ state, update }: Props) {
                     variant="outline"
                     size="sm"
                     className="flex-1 text-xs"
-                    onClick={() => downloadImage(pair.mountedImage, `valac_montaje_${i + 1}.png`)}
+                    onClick={() => downloadImage(pair.mountedImage, `valac_montaje_${slugify(pair.description)}.png`)}
                   >
                     <Download className="h-3 w-3 mr-1" />
                     Descargar
@@ -185,15 +197,6 @@ export function StepResultado({ state, update }: Props) {
                 </div>
               </div>
             </div>
-
-            {/* Pair description */}
-            {pair.description && (
-              <div className="px-4 py-2 border-t border-border">
-                <p className="text-xs text-muted-foreground font-body line-clamp-2">
-                  {pair.description}
-                </p>
-              </div>
-            )}
 
             {/* Retry per pair */}
             <div className="px-4 pb-3 flex justify-end">

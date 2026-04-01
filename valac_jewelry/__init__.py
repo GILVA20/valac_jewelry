@@ -129,6 +129,11 @@ def create_app():
     admin.add_view(ReportsAdmin(name='Reportes', endpoint='reports'))
     admin.add_view(AnalyticsAdmin(name='Analytics', endpoint='analytics'))
     admin.add_view(CouponsAdminView(name='Cupones', endpoint='admin_coupons'))
+
+    # VALAC Studio – AI photography
+    from .routes.studio import studio_bp
+    app.register_blueprint(studio_bp)
+
     return app
 
 if __name__ == '__main__':

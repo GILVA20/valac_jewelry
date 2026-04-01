@@ -28,6 +28,13 @@ class Config:
     # WhatsApp Business - Número de VALAC Joyas
     WHATSAPP_NUMBER = os.environ.get('WHATSAPP_NUMBER', '527718574647')
 
+    # VALAC Studio – AI photography
+    ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY')
+    GOOGLE_GENAI_API_KEY = os.environ.get('GOOGLE_GENAI_API_KEY')
+    CLAUDE_MODEL = os.environ.get('CLAUDE_MODEL', 'claude-sonnet-4-20250514')
+    GEMINI_IMAGEN_MODEL = os.environ.get('GEMINI_IMAGEN_MODEL', 'imagen-4.0-fast-generate-001')
+    GEMINI_FLASH_MODEL = os.environ.get('GEMINI_FLASH_MODEL', 'gemini-2.5-flash-image')
+
 class DevelopmentConfig(Config):
     DEBUG = True
 

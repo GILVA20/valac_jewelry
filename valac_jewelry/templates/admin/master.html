@@ -1,0 +1,11 @@
+{% extends admin_base_template %}
+{% import 'admin/layout.html' as layout with context %}
+
+{% block main_menu %}
+<ul class="nav navbar-nav">
+  {{ layout.menu() }}
+  <li{% if request.path.startswith('/admin/studio') %} class="active"{% endif %}>
+    <a href="/admin/studio/">VALAC Studio</a>
+  </li>
+</ul>
+{% endblock %}

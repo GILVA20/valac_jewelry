@@ -209,47 +209,80 @@ def _validate_with_claude(image_b64: str, validation_prompt: str) -> dict:
 
 
 STAGE1_ANALYSIS_PROMPT = """\
-You are a luxury jewelry expert, gemologist, and professional product photographer.
+You are a professional jewelry photography director and product describer \
+for AI image generation. Your output will be fed DIRECTLY to an image \
+generation model (Gemini). The model has NO common sense — it cannot infer \
+what it cannot see described.
 
-Analyze this raw jewelry photo carefully. Extract every technical detail visible.
+Analyze this raw jewelry photo with extreme precision. Describe the EXACT \
+morphology of the object, not the category.
+
+RULES:
+- NEVER use vague words: "distinctive", "elegant", "beautiful", "unique" \
+  — describe SHAPE not QUALITY.
+- Estimate dimensions in mm.
+- Describe textures as a materials photographer would: \
+  "diagonal groove pattern creating V-shaped light reflections".
+- For multi-metal pieces: specify exactly which zones are yellow / white / rose gold.
+- If there are multiple pieces (e.g. pair of earrings), describe the count \
+  and arrangement.
 
 Return ONLY valid JSON with these fields:
 {
-  "metal": string — exact alloy and finish \
-(e.g. "14k yellow gold, high polish", "sterling silver .925, matte brushed"),
-  "tipo": string — technical jewelry type with full name \
-(e.g. "Byzantine chain bracelet", "pavé hoop earring", "solitaire pendant"),
-  "acabado": string — surface finish detail \
-(e.g. "high polish with micro-brushed inner surfaces", "hammered texture"),
-  "piedras": string or null — stones with cut, color, approximate size \
-(e.g. "round red cubic zirconia, approx 2mm, bezel set" or null),
+  "metal": string — exact alloy, color temperature, and finish per zone \
+(e.g. "14k warm yellow gold, high mirror polish on flat faces, \
+brushed satin on edges"),
+  "tipo": string — technical jewelry type \
+(e.g. "hoop earring", "figaro chain bracelet", "solitaire pendant"),
   "tamaño": "small and delicate" | "medium" | "statement",
-  "link_gauge": string or null — wire/link thickness estimate if chain \
-(e.g. "approx 1.5mm wire gauge"),
-  "clasp": string or null — clasp type if visible \
-(e.g. "lobster claw clasp with .925 barrel endcap"),
-  "descripcion_completa": string — ONE highly detailed sentence in English \
-describing this exact piece for a Gemini product photo generation prompt. \
-Include: metal, finish, type, structural details, stones if any, \
-approximate dimensions, and key visual characteristics that make \
-this piece unique. Minimum 40 words.
+  "silhouette": string — exact geometric shape name, proportions, \
+cross-section profile, and dimensions in mm. \
+(e.g. "elongated capsule/pill shape, 28mm tall × 10mm wide × 3mm thick, \
+flat beveled edges, rounded end-caps"),
+  "surface_texture": string — finish type per zone with pattern geometry \
+(e.g. "body: 6 raised longitudinal facets with mirror polish creating \
+prismatic light catch. Edges: micro-brushed satin. Inner surface: smooth \
+mirror polish"),
+  "structural_details": string — closure mechanism, hinges, connectors, \
+moving parts, construction method \
+(e.g. "snap-hinge closure at top with cylindrical barrel connector, \
+single-piece stamped construction"),
+  "decorative_elements": string or null — stones (shape, size, color, \
+setting type, position), enamel (color, shape, coverage), applied motifs \
+(hearts/crosses/text with exact position), mixed metals per zone \
+(e.g. "3 calado heart motifs on front face: left=yellow gold, \
+center=white gold, right=rose gold, each 4mm wide" or null),
+  "piece_count": string — how many pieces visible and their spatial \
+relationship (e.g. "pair of 2 identical earrings shown side by side, \
+faces forward, 5mm apart"),
+  "descripcion_completa": string — A STRUCTURED description (minimum 80 words) \
+in English written for an image generation model. Must include ALL of the \
+following in labeled sections:\n\
+SILHOUETTE: [exact shape, dimensions, cross-section]\n\
+SURFACE: [finish types per zone, texture patterns, reflectivity]\n\
+STRUCTURE: [closure, connectors, construction]\n\
+DECORATIONS: [stones/enamel/motifs with positions]\n\
+ARRANGEMENT: [piece count, orientation, which details face camera]\n\
+METAL: [alloy, color temperature, which zones are which finish]\n\
+This description must be precise enough that someone who has NEVER seen \
+this piece can recreate it exactly from text alone.
 }
 
-CRITICAL RULES:
-- Always note if the piece is small or delicate (affects scale rendering)
-- Be specific about metal color temperature \
-  (warm yellow gold vs cool white gold vs silver)
-- Describe the structural complexity (simple smooth band vs \
-  multi-component chain link vs intricate filigree)
-- Return ONLY valid JSON, no markdown, no extra text
+CRITICAL:
+- Return ONLY valid JSON, no markdown, no extra text.
+- Every field must describe what you SEE, not what category it belongs to.
+- If you cannot determine a detail, estimate it and note "(estimated)".
 """
 
 
 def _stage1_gemini_prompt(desc: str, tamaño: str) -> str:
     return (
         "You are a professional jewelry product photographer and photo retoucher. "
-        "Generate a hyper-realistic, editorial-quality product photograph. "
-        "\n\nJEWELRY PIECE:\n"
+        "Generate a hyper-realistic, editorial-quality product photograph.\n\n"
+        "CRITICAL INSTRUCTION: Reproduce the EXACT piece described below. "
+        "Do NOT invent new shapes, do NOT simplify geometry, do NOT change proportions. "
+        "Every detail in the description MUST appear in the generated image.\n"
+        "\nJEWELRY PIECE (reproduce EXACTLY):\n"
         f"{desc}\n"
         "\nBACKGROUND & SETTING:\n"
         "- Pure white background (#FFFFFF), perfectly clean, no gradients\n"

@@ -4,8 +4,9 @@ VALAC Studio – AI-powered jewelry photography blueprint.
 Endpoints
 ---------
 GET  /admin/studio/               → Serve React SPA
-POST /admin/studio/generate/stage1 → Raw photo → product photo
-POST /admin/studio/generate/stage2 → Product photo + base → lifestyle photo
+POST /admin/studio/generate/stage1 → Start async Stage 1 job → returns job_id
+POST /admin/studio/generate/stage2 → Start async Stage 2 job → returns job_id
+GET  /admin/studio/job/<job_id>    → Poll job status/result
 GET  /admin/studio/products        → Active products list
 POST /admin/studio/save            → Upload image to Supabase Storage
 """
@@ -14,7 +15,9 @@ import os
 import json
 import base64
 import time
+import uuid
 import logging
+import threading
 
 from flask import Blueprint, current_app, request, jsonify, send_file
 from flask_login import login_required
@@ -22,6 +25,10 @@ from flask_login import login_required
 logger = logging.getLogger(__name__)
 
 studio_bp = Blueprint("studio", __name__, url_prefix="/admin/studio")
+
+# ── In-memory job store (single-dyno safe) ───────────────────────────
+_jobs: dict[str, dict] = {}
+_jobs_lock = threading.Lock()
 
 
 # ── Lazy SDK clients ─────────────────────────────────────────────────
@@ -528,6 +535,40 @@ def _process_stage2_single(prod_b64: str, base_b64: str, sexo: str, desc: str, f
     }
 
 
+# ── Async job helpers ────────────────────────────────────────────────
+
+
+def _create_job() -> str:
+    job_id = uuid.uuid4().hex[:12]
+    with _jobs_lock:
+        _jobs[job_id] = {"status": "processing", "result": None}
+    return job_id
+
+
+def _complete_job(job_id: str, result: dict):
+    with _jobs_lock:
+        _jobs[job_id] = {"status": "done", "result": result}
+
+
+def _fail_job(job_id: str, error: str):
+    with _jobs_lock:
+        _jobs[job_id] = {"status": "error", "result": {"error": error}}
+
+
+def _run_in_thread(app, job_id: str, fn, *args, **kwargs):
+    """Run fn inside Flask app context and complete/fail the job."""
+    def _worker():
+        with app.app_context():
+            try:
+                result = fn(*args, **kwargs)
+                _complete_job(job_id, result)
+            except Exception as e:
+                logger.exception("Job %s failed", job_id)
+                _fail_job(job_id, str(e))
+    t = threading.Thread(target=_worker, daemon=True)
+    t.start()
+
+
 # ── Routes ───────────────────────────────────────────────────────────
 
 
@@ -544,6 +585,22 @@ def index():
     return send_file(index_path)
 
 
+@studio_bp.route("/job/<job_id>")
+@login_required
+def poll_job(job_id):
+    """Poll an async job status."""
+    with _jobs_lock:
+        job = _jobs.get(job_id)
+    if not job:
+        return jsonify({"error": "Job not found"}), 404
+    if job["status"] == "processing":
+        return jsonify({"status": "processing"})
+    # Clean up completed job
+    with _jobs_lock:
+        _jobs.pop(job_id, None)
+    return jsonify({"status": job["status"], **job["result"]})
+
+
 @studio_bp.route("/generate/stage1", methods=["POST"])
 @login_required
 def generate_stage1():
@@ -555,24 +612,28 @@ def generate_stage1():
     if not images:
         return jsonify({"error": "No images provided"}), 400
 
-    results = []
-    for idx, img_b64 in enumerate(images):
-        fb = feedbacks[idx] if idx < len(feedbacks) else ""
-        try:
-            result = _process_stage1_single(img_b64, feedback=fb)
-            results.append(result)
-        except Exception as e:
-            logger.exception("Stage 1 error for one image")
-            results.append(
-                {
+    job_id = _create_job()
+    app = current_app._get_current_object()
+
+    def _do_stage1():
+        results = []
+        for idx, img_b64 in enumerate(images):
+            fb = feedbacks[idx] if idx < len(feedbacks) else ""
+            try:
+                result = _process_stage1_single(img_b64, feedback=fb)
+                results.append(result)
+            except Exception as e:
+                logger.exception("Stage 1 error for one image")
+                results.append({
                     "image_base64": "",
                     "status": "review",
                     "reason": f"Error processing image: {e}",
                     "description": "",
-                }
-            )
+                })
+        return {"results": results}
 
-    return jsonify({"results": results})
+    _run_in_thread(app, job_id, _do_stage1)
+    return jsonify({"job_id": job_id})
 
 
 @studio_bp.route("/generate/stage2", methods=["POST"])
@@ -603,24 +664,28 @@ def generate_stage2():
     with open(base_path, "rb") as f:
         base_b64 = base64.b64encode(f.read()).decode()
 
-    results = []
-    for i, prod_b64 in enumerate(product_images):
-        desc = descriptions[i] if i < len(descriptions) else ""
-        fb = feedbacks[i] if i < len(feedbacks) else ""
-        try:
-            result = _process_stage2_single(prod_b64, base_b64, sexo, desc, feedback=fb)
-            results.append(result)
-        except Exception as e:
-            logger.exception("Stage 2 error for one image")
-            results.append(
-                {
+    job_id = _create_job()
+    app = current_app._get_current_object()
+
+    def _do_stage2():
+        results = []
+        for i, prod_b64 in enumerate(product_images):
+            desc = descriptions[i] if i < len(descriptions) else ""
+            fb = feedbacks[i] if i < len(feedbacks) else ""
+            try:
+                result = _process_stage2_single(prod_b64, base_b64, sexo, desc, feedback=fb)
+                results.append(result)
+            except Exception as e:
+                logger.exception("Stage 2 error for one image")
+                results.append({
                     "image_base64": "",
                     "status": "review",
                     "reason": f"Error compositing: {e}",
-                }
-            )
+                })
+        return {"results": results}
 
-    return jsonify({"results": results})
+    _run_in_thread(app, job_id, _do_stage2)
+    return jsonify({"job_id": job_id})
 
 
 @studio_bp.route("/products")

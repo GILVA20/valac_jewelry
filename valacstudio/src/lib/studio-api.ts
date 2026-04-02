@@ -2,6 +2,18 @@ import type { StageResult, Product } from "./studio-types";
 
 const BASE = "/admin/studio";
 
+async function pollJob<T>(jobId: string): Promise<T> {
+  while (true) {
+    await new Promise((r) => setTimeout(r, 3000));
+    const res = await fetch(`${BASE}/job/${jobId}`);
+    if (!res.ok) throw new Error("Error polling job");
+    const data = await res.json();
+    if (data.status === "processing") continue;
+    if (data.status === "error") throw new Error(data.error || "Job failed");
+    return data as T;
+  }
+}
+
 export async function generateStage1(data: {
   images: string[];
   sexo: string;
@@ -15,7 +27,8 @@ export async function generateStage1(data: {
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error("Error en Stage 1");
-  return res.json();
+  const { job_id } = await res.json();
+  return pollJob<{ results: StageResult[] }>(job_id);
 }
 
 export async function generateStage2(data: {
@@ -33,7 +46,8 @@ export async function generateStage2(data: {
     body: JSON.stringify(data),
   });
   if (!res.ok) throw new Error("Error en Stage 2");
-  return res.json();
+  const { job_id } = await res.json();
+  return pollJob<{ results: StageResult[] }>(job_id);
 }
 
 export async function saveToProduct(data: {

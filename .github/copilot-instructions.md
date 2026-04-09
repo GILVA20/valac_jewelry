@@ -100,3 +100,43 @@ totals = compute_totals(cart_items, coupon_code)
 - Indica el archivo exacto (ruta relativa) donde va cada cambio.
 - Si necesitas más contexto de un archivo, pídelo con su ruta.
 - No uses Flask-SQLAlchemy ni ORM adicional; solo supabase-py.
+
+## WORKFLOW DE OPTIMIZACIÓN DE TOKENS
+
+### TRIAGE AUTOMÁTICO (OBLIGATORIO en cada interacción)
+Antes de responder, clasifica la petición del usuario en una de estas categorías y actúa según corresponda:
+
+| Si el usuario pide... | Entonces... |
+|------------------------|-------------|
+| Feature nueva, diseño, cambio que toca 4+ archivos, refactoring grande | **PLANEAR PRIMERO**: Genera un plan de tasks numerados (formato de `/plan-feature`). NO escribas código directamente. Cada task debe ser autocontenido para ejecutarse después con Sonnet. |
+| Ejecutar un task de un plan existente, implementar cambio en 1-3 archivos, bug fix, editar template, query | **EJECUTAR DIRECTO**: Implementa el cambio con diff mínimo. Lee archivos antes de editar. |
+| Pregunta sobre el código, "qué hace esto", "dónde está", explicación | **RESPONDER BREVE**: Máximo 5 líneas. Lee archivos si necesitas. |
+
+### Cómo saber cuándo PLANEAR vs EJECUTAR:
+- ¿Toca más de 3 archivos? → PLANEAR
+- ¿Requiere decisión arquitectónica? → PLANEAR
+- ¿Es un CRUD, fix, o ajuste localizado? → EJECUTAR
+- ¿El usuario ya tiene un plan con tasks? → EJECUTAR el task indicado
+
+### Formato del plan (cuando aplique):
+```
+# Feature: [nombre]
+## Task 1: [título]
+- **Archivo(s)**: ruta
+- **Cambio**: qué hacer
+- **Verificación**: cómo probar
+## Task 2: ...
+```
+
+### Prompts disponibles para el usuario:
+- `/plan-feature` (Opus) → investigar + plan de tasks
+- `/execute-task` (Sonnet) → ejecutar un task del plan
+- `/sonnet-build` (Sonnet) → fix/cambio directo sin plan
+- `/quick-ask` (Haiku) → pregunta rápida
+
+### Reglas anti-desperdicio (OBLIGATORIAS):
+- NUNCA repetir el contexto de este archivo en las respuestas
+- NUNCA listar la estructura de archivos ya documentada aquí
+- Respuestas ≤ 30 líneas por defecto. Expandir solo si se pide explícitamente
+- Usar `#file:` references para adjuntar archivos en vez de pedir lectura
+- Guardar planes en memoria de sesión para no re-enviarlos

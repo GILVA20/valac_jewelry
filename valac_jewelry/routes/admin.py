@@ -421,30 +421,27 @@ class SupabaseProductAdmin(BaseView):
         return redirect(url_for("supabase_products.index"))
 
     # ---------------------------
-    # Toggle estado
+    # Toggle activo
     # ---------------------------
-    _ESTADO_CYCLE = {"borrador": "activo", "activo": "archivado", "archivado": "borrador"}
-
     @expose("/toggle-estado/<product_id>", methods=["POST"])
     def toggle_estado(self, product_id: str):
         sb = self.app_sb
         try:
-            current = sb.table("products").select("estado, imagen").eq("id", product_id).execute()
+            current = sb.table("products").select("activo, imagen").eq("id", product_id).execute()
             if not current.data:
                 _error("Producto no encontrado")
                 return redirect(url_for("supabase_products.index"))
 
             row = current.data[0]
-            current_estado = row.get("estado") or "activo"
-            new_estado = self._ESTADO_CYCLE.get(current_estado, "activo")
+            is_active = bool(row.get("activo"))
 
             # No permitir activar sin imagen
-            if new_estado == "activo" and not row.get("imagen"):
+            if not is_active and not row.get("imagen"):
                 _error("No se puede activar un producto sin imagen.")
                 return redirect(url_for("supabase_products.index"))
 
-            sb.table("products").update({"estado": new_estado}).eq("id", product_id).execute()
-            _success(f"Estado cambiado a '{new_estado}'")
+            sb.table("products").update({"activo": not is_active}).eq("id", product_id).execute()
+            _success(f"Producto {'activado' if not is_active else 'desactivado'}")
         except Exception:
             current_app.logger.exception("[toggle_estado] Error")
             _error("Error al cambiar estado")

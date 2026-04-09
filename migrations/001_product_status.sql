@@ -1,25 +1,22 @@
 -- ============================================================
--- Migración 001: Campo estado + imagen nullable + external_id
+-- Migración 001: imagen nullable + external_id + índice activo
 -- Tabla: products
 -- Ejecutar en: Supabase Dashboard → SQL Editor
+-- 
+-- NOTA: El campo 'activo' (boolean) YA EXISTE en la tabla.
+--       Todos los 63 productos actuales tienen activo=True.
+--       Esta migración solo agrega lo que falta.
 -- ============================================================
 
--- 1. Campo estado (activo | borrador | archivado)
-ALTER TABLE products
-  ADD COLUMN IF NOT EXISTS estado TEXT NOT NULL DEFAULT 'activo'
-  CONSTRAINT products_estado_check CHECK (estado IN ('activo', 'borrador', 'archivado'));
-
--- 2. Hacer imagen nullable (para productos sin imagen aún)
+-- 1. Hacer imagen nullable (para productos en borrador sin foto aún)
 ALTER TABLE products
   ALTER COLUMN imagen DROP NOT NULL;
 
--- 3. Campo external_id para referencias externas (importaciones CSV, ERPs, etc.)
+-- 2. Campo external_id para sync con Google Sheets / CSV
 ALTER TABLE products
   ADD COLUMN IF NOT EXISTS external_id TEXT;
 
--- Índices de soporte
-CREATE INDEX IF NOT EXISTS idx_products_estado       ON products (estado);
-CREATE INDEX IF NOT EXISTS idx_products_external_id  ON products (external_id);
-
--- Backfill: todos los existentes quedan activos (ya tiene default, pero por seguridad)
-UPDATE products SET estado = 'activo' WHERE estado IS NULL;
+-- 3. Índices de soporte
+CREATE INDEX IF NOT EXISTS idx_products_activo      ON products (activo);
+CREATE INDEX IF NOT EXISTS idx_products_external_id ON products (external_id)
+  WHERE external_id IS NOT NULL;

@@ -183,7 +183,7 @@ class BulkUploadAdminView(BaseView):
                     "tipo_oro": product["tipo_oro"],
                     "imagen": product.get("imagen") or None,
                     "stock_total": product.get("stock_inicial", 0),
-                    "estado": "borrador",
+                    "activo": False,
                 }
                 resp = supabase.table("products").insert(row).execute()
                 if resp.data:

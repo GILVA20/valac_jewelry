@@ -70,7 +70,7 @@ def collection_home():
     query = supabase.table("products").select(
         "id, nombre, descripcion, precio, descuento_pct, precio_descuento, " +
         "tipo_producto, genero, tipo_oro, imagen, created_at"
-    ).eq("estado", "activo")
+    ).eq("activo", True)
     logger.debug("📥 Query base creada")
 
     # Parámetros de la URL

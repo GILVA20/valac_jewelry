@@ -14,7 +14,7 @@ def product_detail(product_id):
         abort(404, description="Producto no encontrado")
 
     product = response.data
-    if product.get("estado") not in (None, "activo"):
+    if not product.get("activo", True):
         abort(404, description="Producto no encontrado")
 
     # 🔄 MVP 1: Cargar imágenes múltiples del producto desde product_images

@@ -127,13 +127,11 @@
                 </a>
               </td>
               <td class="border p-3 text-center">
-                {% set estado = prod.estado or 'activo' %}
-                {% set badge_color = {'activo': 'bg-green-100 text-green-800', 'borrador': 'bg-yellow-100 text-yellow-800', 'archivado': 'bg-gray-200 text-gray-600'} %}
                 <form method="POST" action="{{ url_for('supabase_products.toggle_estado', product_id=prod.id) }}" style="display:inline;">
                   <button type="submit"
-                    class="text-xs font-semibold px-2 py-1 rounded-full {{ badge_color.get(estado, 'bg-gray-100 text-gray-700') }} hover:opacity-75 transition"
-                    title="Ciclar estado: borrador → activo → archivado">
-                    {{ estado }}
+                    class="text-xs font-semibold px-2 py-1 rounded-full {{ 'bg-green-100 text-green-800' if prod.activo else 'bg-yellow-100 text-yellow-800' }} hover:opacity-75 transition"
+                    title="{{ 'Desactivar producto' if prod.activo else 'Activar producto' }}">
+                    {{ 'activo' if prod.activo else 'borrador' }}
                   </button>
                 </form>
               </td>

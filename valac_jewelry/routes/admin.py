@@ -654,6 +654,57 @@ class SupabaseProductAdmin(BaseView):
         return redirect(url_for(".index"))
 
     # ---------------------------
+    # Activación / Desactivación masiva
+    # ---------------------------
+    @expose("/bulk_activate", methods=["POST"])
+    def bulk_activate(self):
+        sb = self.app_sb
+        ids = request.form.getlist("product_ids")
+        if not ids:
+            _error("No se seleccionaron productos.")
+            return redirect(url_for(".index"))
+
+        activated = 0
+        skipped = 0
+        for pid in ids:
+            resp = sb.table("products").select("activo, imagen").eq("id", pid).execute()
+            if not resp.data:
+                continue
+            row = resp.data[0]
+            if bool(row.get("activo")):
+                continue  # ya activo
+            if not row.get("imagen"):
+                skipped += 1
+                continue  # sin imagen, no se puede activar
+            sb.table("products").update({"activo": True}).eq("id", pid).execute()
+            activated += 1
+
+        msg = f"{activated} producto(s) activado(s)."
+        if skipped:
+            msg += f" {skipped} omitido(s) (sin imagen)."
+        _success(msg) if activated else _info(msg)
+        return redirect(url_for(".index"))
+
+    @expose("/bulk_deactivate", methods=["POST"])
+    def bulk_deactivate(self):
+        sb = self.app_sb
+        ids = request.form.getlist("product_ids")
+        if not ids:
+            _error("No se seleccionaron productos.")
+            return redirect(url_for(".index"))
+
+        deactivated = 0
+        for pid in ids:
+            resp = sb.table("products").select("activo").eq("id", pid).execute()
+            if not resp.data or not bool(resp.data[0].get("activo")):
+                continue  # no existe o ya borrador
+            sb.table("products").update({"activo": False}).eq("id", pid).execute()
+            deactivated += 1
+
+        _success(f"{deactivated} producto(s) desactivado(s).")
+        return redirect(url_for(".index"))
+
+    # ---------------------------
     # Alta
     # ---------------------------
     @expose("/new", methods=["GET", "POST"])
@@ -807,7 +858,13 @@ class SupabaseProductAdmin(BaseView):
                 "tipo_producto": (tipo_producto or "").strip() or None,
                 "genero": (genero or "").strip() or None,
                 "tipo_oro": (tipo_oro or "").strip() or None,
-                "imagen": portada,  # puede quedar None si no cambia
+                "imagen": portada,
+                # Campos de inventario/costos
+                "peso_gramos":       _coerce_float(request.form.get("peso_gramos")),
+                "precio_por_gramo":  _coerce_float(request.form.get("precio_por_gramo")),
+                "precio_costo":      _coerce_float(request.form.get("precio_costo")),
+                "estado_inventario": request.form.get("estado_inventario") or "disponible",
+                "devolucion_a":      request.form.get("devolucion_a") or None,
             }
             clean_update_data = {k: v for k, v in update_data.items() if v is not None}
             current_app.logger.debug("[edit_product] UPDATE payload: %s", clean_update_data)

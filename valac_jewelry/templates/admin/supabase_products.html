@@ -52,7 +52,7 @@
     </div>
 
     <!-- Filtros Rápidos de Fechas -->
-    <div class="mb-6 flex gap-2">
+    <div class="mb-6 flex gap-2 flex-wrap">
       <button id="filter-todos" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 active">
         Todos
       </button>
@@ -61,6 +61,19 @@
       </button>
       <button id="filter-antiguos" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
         Stock Antiguo (+30 días)
+      </button>
+      <span class="border-l border-gray-300 h-8 mx-1 self-center"></span>
+      <button id="filter-inv-todos" class="bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg transition duration-300 inv-filter active" data-inv="todos">
+        📦 Inventario: Todos
+      </button>
+      <button id="filter-inv-disponible" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 inv-filter" data-inv="disponible">
+        🟢 Disponible
+      </button>
+      <button id="filter-inv-vendido" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 inv-filter" data-inv="vendido">
+        🔴 Vendido
+      </button>
+      <button id="filter-inv-devolucion" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 inv-filter" data-inv="devolucion">
+        🟡 Devolución
       </button>
     </div>
 
@@ -88,6 +101,21 @@
         >
           Quitar descuento
         </button>
+        <span class="border-l border-gray-300 h-8 mx-2"></span>
+        <button
+          formaction="{{ url_for('.bulk_activate') }}"
+          formmethod="post"
+          class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300"
+        >
+          <i class="fas fa-check-circle mr-1"></i>Activar
+        </button>
+        <button
+          formaction="{{ url_for('.bulk_deactivate') }}"
+          formmethod="post"
+          class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300"
+        >
+          <i class="fas fa-pause-circle mr-1"></i>Desactivar
+        </button>
       </div>
 
       <!-- Tabla de productos con select y columnas de descuento -->
@@ -98,6 +126,7 @@
               <th class="border p-3"><input type="checkbox" id="select_all" /></th>
               <th class="border p-3 text-center text-gray-700" title="Destacado">⭐</th>
               <th class="border p-3 text-center text-gray-700">Estado</th>
+              <th class="border p-3 text-center text-gray-700">Inv.</th>
               <th class="border p-3 text-left text-gray-700">Acciones</th>
               <th class="border p-3 text-left text-gray-700 cursor-pointer" data-sort="id">ID</th>
               <th class="border p-3 text-left text-gray-700 cursor-pointer" data-sort="created_at">Fecha Alta</th>
@@ -134,6 +163,19 @@
                     {{ 'activo' if prod.activo else 'borrador' }}
                   </button>
                 </form>
+              </td>
+              <td class="border p-3 text-center" data-inv="{{ prod.estado_inventario or 'disponible' }}">
+                {% set inv = prod.estado_inventario or 'disponible' %}
+                {% if inv == 'vendido' %}
+                  <span class="text-xs font-semibold px-2 py-1 rounded-full bg-red-100 text-red-800" title="Vendido">🔴 Vendido</span>
+                {% elif inv == 'devolucion' %}
+                  <span class="text-xs font-semibold px-2 py-1 rounded-full bg-yellow-100 text-yellow-800"
+                        title="Devolución{% if prod.devolucion_a %}: {{ prod.devolucion_a }}{% endif %}">
+                    🟡 Dev.{% if prod.devolucion_a %} ({{ prod.devolucion_a }}){% endif %}
+                  </span>
+                {% else %}
+                  <span class="text-xs font-semibold px-2 py-1 rounded-full bg-emerald-100 text-emerald-800" title="Disponible">🟢 Disp.</span>
+                {% endif %}
               </td>
               <td class="border p-3">
                 <a href="{{ url_for('.edit_product', id=prod.id) }}" class="text-blue-500 hover:text-blue-600 mr-2" title="Editar">
@@ -367,6 +409,30 @@
         rows.forEach(row => tbody.appendChild(row)); // reordenar
       });
     });
+
+    // Filtros de estado de inventario
+    let currentInvFilter = 'todos';
+    document.querySelectorAll('.inv-filter').forEach(btn => {
+      btn.addEventListener('click', () => {
+        currentInvFilter = btn.dataset.inv;
+        document.querySelectorAll('.inv-filter').forEach(b => b.classList.remove('active', 'ring-2', 'ring-white'));
+        btn.classList.add('active', 'ring-2', 'ring-white');
+        applyInvFilter();
+      });
+    });
+
+    function applyInvFilter() {
+      document.querySelectorAll('tbody tr').forEach(row => {
+        const invCell = row.querySelector('td[data-inv]');
+        if (!invCell) return;
+        const inv = invCell.dataset.inv;
+        if (currentInvFilter === 'todos' || inv === currentInvFilter) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    }
   </script>
 
 <!-- Script para Edición Inline -->

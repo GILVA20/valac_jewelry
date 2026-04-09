@@ -87,9 +87,69 @@
         <label for="tipo_oro" class="block text-gray-700 font-medium mb-2">Tipo de Oro:</label>
         <select id="tipo_oro" name="tipo_oro" required
                 class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-          <option value="10k" {% if product.tipo_oro == "10k" %}selected{% endif %}>10k</option>
-          <option value="14k" {% if product.tipo_oro == "14k" %}selected{% endif %}>14k</option>
+          <option value="10k"       {% if product.tipo_oro == "10k"       %}selected{% endif %}>10k</option>
+          <option value="14k"       {% if product.tipo_oro == "14k"       %}selected{% endif %}>14k</option>
+          <option value="Plata .925"{% if product.tipo_oro == "Plata .925"%}selected{% endif %}>Plata .925</option>
         </select>
+      </div>
+
+      <!-- ── Costos y Peso (privado, solo admin) ─────────────────── -->
+      <div class="mb-2 mt-8 border-t pt-4">
+        <h3 class="text-base font-semibold text-gray-600 mb-4">Costos y Peso <span class="text-xs text-gray-400">(privado, no visible en tienda)</span></h3>
+        <div class="grid grid-cols-2 gap-4 mb-4">
+          <div>
+            <label for="peso_gramos" class="block text-gray-700 font-medium mb-1">Peso (gramos):</label>
+            <input type="number" step="0.01" id="peso_gramos" name="peso_gramos" min="0"
+                   class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                   value="{{ product.peso_gramos or '' }}"
+                   placeholder="ej. 2.4">
+          </div>
+          <div>
+            <label for="precio_por_gramo" class="block text-gray-700 font-medium mb-1">Precio por gramo ($):</label>
+            <input type="number" step="0.01" id="precio_por_gramo" name="precio_por_gramo" min="0"
+                   class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                   value="{{ product.precio_por_gramo or '' }}"
+                   placeholder="ej. 977">
+          </div>
+        </div>
+        <div class="mb-4">
+          <label for="precio_costo" class="block text-gray-700 font-medium mb-1">
+            Costo calculado ($):
+            <span class="text-xs text-gray-500 font-normal">(peso × precio/g + $150 envío)</span>
+          </label>
+          <div class="flex gap-2 items-center">
+            <input type="number" step="0.01" id="precio_costo" name="precio_costo" min="0"
+                   class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-indigo-50"
+                   value="{{ product.precio_costo or '' }}"
+                   placeholder="Auto-calculado">
+            <button type="button" id="btn-recalc"
+                    class="bg-indigo-500 hover:bg-indigo-600 text-white text-sm px-3 py-2 rounded-lg whitespace-nowrap transition">
+              ↻ Recalcular
+            </button>
+          </div>
+          <p class="text-xs text-gray-400 mt-1">Puedes sobrescribir el valor manualmente. PF = costo × 2.</p>
+        </div>
+      </div>
+
+      <!-- ── Estado de Inventario ────────────────────────────────── -->
+      <div class="mb-6 mt-2">
+        <h3 class="text-base font-semibold text-gray-600 mb-4 border-t pt-4">Estado de Inventario</h3>
+        <div class="mb-4">
+          <label for="estado_inventario" class="block text-gray-700 font-medium mb-1">Estado:</label>
+          <select id="estado_inventario" name="estado_inventario"
+                  class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="disponible" {% if (product.estado_inventario or 'disponible') == 'disponible' %}selected{% endif %}>🟢 Disponible</option>
+            <option value="vendido"    {% if product.estado_inventario == 'vendido'    %}selected{% endif %}>🔴 Vendido</option>
+            <option value="devolucion" {% if product.estado_inventario == 'devolucion' %}selected{% endif %}>🟡 Devolución</option>
+          </select>
+        </div>
+        <div id="devolucion_a_block" class="mb-4 {% if product.estado_inventario != 'devolucion' %}hidden{% endif %}">
+          <label for="devolucion_a" class="block text-gray-700 font-medium mb-1">¿A quién fue la devolución?</label>
+          <input type="text" id="devolucion_a" name="devolucion_a"
+                 class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-yellow-400"
+                 value="{{ product.devolucion_a or '' }}"
+                 placeholder="ej. Mamá / Proveedor Hernández">
+        </div>
       </div>
 
       <!-- Campo oculto portada y buffer de nuevas imágenes -->
@@ -415,6 +475,31 @@
       }
     }
     if (form && submitBtn) form.addEventListener("submit", postWithFeedback);
+
+  // Auto-cálculo de costo y precio
+  function recalcCosto() {
+    const peso  = parseFloat(document.getElementById('peso_gramos').value) || 0;
+    const ppg   = parseFloat(document.getElementById('precio_por_gramo').value) || 0;
+    if (peso && ppg) {
+      const costo = Math.round((peso * ppg + 150) * 100) / 100;
+      document.getElementById('precio_costo').value = costo.toFixed(2);
+      // Sugerir PF = costo × 2 si el precio actual coincide con el anterior cálculo o está vacío
+      const precioInput = document.getElementById('precio');
+      const currentPrecio = parseFloat(precioInput.value) || 0;
+      const expectedPF = Math.round(costo * 2 * 100) / 100;
+      // Solo actualizar precio si no fue editado manualmente (heurística: es múltiplo de 2 × algún costo)
+      precioInput.placeholder = `Sugerido: $${expectedPF.toFixed(2)} (costo×2)`;
+    }
+  }
+  document.getElementById('peso_gramos').addEventListener('input', recalcCosto);
+  document.getElementById('precio_por_gramo').addEventListener('input', recalcCosto);
+  document.getElementById('btn-recalc').addEventListener('click', recalcCosto);
+
+  // Mostrar/ocultar campo devolucion_a
+  document.getElementById('estado_inventario').addEventListener('change', function() {
+    const block = document.getElementById('devolucion_a_block');
+    block.classList.toggle('hidden', this.value !== 'devolucion');
+  });
   </script>
 </body>
 </html>

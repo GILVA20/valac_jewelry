@@ -6,6 +6,11 @@ import unicodedata
 import csv
 import io
 
+try:
+    import openpyxl
+except ImportError:
+    openpyxl = None
+
 # ---------------------------------------------------------------------------
 # Tablas de mapeo para formato Excel VALAC
 # ---------------------------------------------------------------------------
@@ -29,6 +34,9 @@ _HEADER_MAP = {
     "arete/brazalete/cadenas/pulsos": "tipo_producto_raw",
     "arete/brazalete/cu":  "tipo_producto_raw",
     "arete/brazalete":     "tipo_producto_raw",
+    "tipo (arete/brazalete/collar)": "tipo_producto_raw",
+    "tipo (arete/braz alete/collar)": "tipo_producto_raw",
+    "tipo(arete/brazalete/collar)": "tipo_producto_raw",
     "tipo":                "tipo_producto_raw",
     "tipo producto":       "tipo_producto_raw",
     "tipo_producto":       "tipo_producto_raw",
@@ -57,9 +65,13 @@ _HEADER_MAP = {
 # Linea → tipo_oro
 _LINEA_ORO = {
     "f10":   "10k",
+    "f10s":  "10k",
     "f14":   "14k",
+    "f14s":  "14k",
     "f925":  "Plata .925",
+    "f925s": "Plata .925",
     "fp":    "Plata .925",
+    "fps":   "Plata .925",
     "925":   "Plata .925",
     "plata": "Plata .925",
 }
@@ -112,19 +124,39 @@ def _map_headers(fieldnames):
         if norm in _HEADER_MAP:
             mapping[h] = _HEADER_MAP[norm]
             continue
-        # Luego busca si alguna clave conocida es prefijo del header (ej. "Arete/Brazalete/Cu...")
+        # Busca si alguna clave conocida es prefijo/sufijo del header o viceversa
+        matched = False
         for key, val in _HEADER_MAP.items():
-            if norm.startswith(key) or key.startswith(norm):
+            if val is None:
+                continue
+            # "tipo (arete/brazalete/collar)" contiene "arete/brazalete"
+            if key in norm or norm in key:
                 mapping[h] = val
+                matched = True
                 break
-        else:
+        if not matched:
             mapping[h] = None  # columna desconocida, ignorar
     return mapping
 
 
+def _xlsx_to_csv_bytes(raw: bytes) -> bytes:
+    """Convierte un archivo .xlsx a CSV (bytes) leyendo la primera hoja."""
+    if openpyxl is None:
+        raise RuntimeError("openpyxl no está instalado. pip install openpyxl")
+    wb = openpyxl.load_workbook(io.BytesIO(raw), read_only=True, data_only=True)
+    ws = wb.active
+    output = io.StringIO()
+    writer = csv.writer(output)
+    for row in ws.iter_rows(values_only=True):
+        # Convertir None a cadena vacía
+        writer.writerow([(str(cell) if cell is not None else "") for cell in row])
+    wb.close()
+    return output.getvalue().encode("utf-8")
+
+
 def process_csv(file):
     """
-    Procesa CSV exportado del Excel de inventario VALAC.
+    Procesa CSV o XLSX exportado del Excel de inventario VALAC.
     Acepta tanto el formato Excel (Nombre de Pieza, Linea, Peso, etc.)
     como el formato legacy (nombre, precio, tipo_producto, ...).
     """
@@ -133,6 +165,16 @@ def process_csv(file):
 
     try:
         raw = file.read()
+
+        # Detectar si es xlsx (ZIP magic bytes PK\x03\x04)
+        if raw[:4] == b'PK\x03\x04':
+            logging.info("Archivo detectado como XLSX, convirtiendo a CSV...")
+            try:
+                raw = _xlsx_to_csv_bytes(raw)
+            except Exception as e:
+                errors.append(f"Error al leer el archivo Excel: {e}")
+                return {"valid_rows": valid_rows, "errors": errors}
+
         for enc in ("utf-8-sig", "utf-8", "latin-1"):
             try:
                 text = raw.decode(enc)
@@ -143,7 +185,23 @@ def process_csv(file):
             errors.append("No se pudo decodificar el archivo. Guarda el CSV como UTF-8.")
             return {"valid_rows": valid_rows, "errors": errors}
 
-        reader = csv.DictReader(io.StringIO(text))
+        # Normalizar line endings para que csv module lea correctamente
+        # NO splitear por \n — csv.DictReader maneja campos quoted con newlines internos
+        text = text.replace('\r\n', '\n').replace('\r', '\n')
+
+        # Detectar delimitador: Excel en español usa ; en vez de ,
+        first_line = text.split('\n')[0] if text else ""
+        if first_line.count(';') > first_line.count(','):
+            delimiter = ';'
+        else:
+            delimiter = ','
+
+        reader = csv.DictReader(io.StringIO(text), delimiter=delimiter)
+
+        # Debug: log headers detectados y mapeo
+        logging.info("CSV headers raw: %s", reader.fieldnames)
+        logging.info("CSV delimiter: '%s'", delimiter)
+        logging.info("CSV first line: %s", first_line[:200])
     except Exception as e:
         errors.append(f"Error al leer el CSV: {e}")
         return {"valid_rows": valid_rows, "errors": errors}
@@ -153,6 +211,7 @@ def process_csv(file):
         return {"valid_rows": valid_rows, "errors": errors}
 
     header_map = _map_headers(reader.fieldnames)
+    logging.info("Header mapping: %s", header_map)
     fila_num = 1
 
     for raw_row in reader:
@@ -161,8 +220,13 @@ def process_csv(file):
             errors.append("Límite de 200 productos por carga alcanzado.")
             break
 
-        # Normalizar valores
-        row = {k: (v.strip() if isinstance(v, str) else v) for k, v in raw_row.items()}
+        # Normalizar valores — limpiar newlines internos de celdas multi-línea
+        row = {}
+        for k, v in raw_row.items():
+            if isinstance(v, str):
+                # "Pulso Rolex\nBi Color 21\ncm" → "Pulso Rolex Bi Color 21 cm"
+                v = " ".join(v.split())
+            row[k] = v
 
         # Traducir headers al campo interno
         r = {}
@@ -297,6 +361,23 @@ class BulkUploadAdminView(BaseView):
             supabase = current_app.supabase
             inserted = 0
             insert_errors = []
+
+            # Detectar columnas disponibles en la tabla
+            _INVENTORY_COLS = {"peso_gramos", "precio_por_gramo", "precio_costo",
+                               "estado_inventario", "devolucion_a"}
+            try:
+                probe = supabase.table("products").select("*").limit(1).execute()
+                db_cols = set(probe.data[0].keys()) if probe.data else set()
+                has_inventory = _INVENTORY_COLS.issubset(db_cols)
+            except Exception:
+                has_inventory = False
+
+            if not has_inventory:
+                current_app.logger.warning(
+                    "Columnas de inventario no encontradas en BD. "
+                    "Ejecuta migrations/002_inventory_tracking.sql en Supabase SQL Editor."
+                )
+
             for product in valid_rows:
                 row = {
                     "nombre":            product["nombre"],
@@ -308,13 +389,16 @@ class BulkUploadAdminView(BaseView):
                     "imagen":            product.get("imagen") or None,
                     "stock_total":       product.get("stock_inicial", 1),
                     "activo":            False,
-                    "peso_gramos":       product.get("peso_gramos"),
-                    "precio_por_gramo":  product.get("precio_por_gramo"),
-                    "precio_costo":      product.get("precio_costo"),
-                    "estado_inventario": product.get("estado_inventario", "disponible"),
-                    "devolucion_a":      product.get("devolucion_a"),
                     "external_id":       product.get("external_id"),
                 }
+                if has_inventory:
+                    row.update({
+                        "peso_gramos":       product.get("peso_gramos"),
+                        "precio_por_gramo":  product.get("precio_por_gramo"),
+                        "precio_costo":      product.get("precio_costo"),
+                        "estado_inventario": product.get("estado_inventario", "disponible"),
+                        "devolucion_a":      product.get("devolucion_a"),
+                    })
                 # Quitar Nones para no pisar defaults de BD
                 row = {k: v for k, v in row.items() if v is not None}
                 resp = supabase.table("products").insert(row).execute()

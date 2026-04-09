@@ -8,7 +8,11 @@ def product_detail(product_id):
     Muestra la página de detalle de un producto específico.
     """
     supabase = current_app.supabase
-    response = supabase.table('products').select('*').eq('id', product_id).single().execute()
+    _PUBLIC_FIELDS = (
+        "id, nombre, descripcion, precio, descuento_pct, precio_descuento, "
+        "tipo_producto, genero, tipo_oro, imagen, stock_total, destacado, created_at"
+    )
+    response = supabase.table('products').select(_PUBLIC_FIELDS).eq('id', product_id).single().execute()
     
     if not response.data:
         abort(404, description="Producto no encontrado")
@@ -26,8 +30,9 @@ def product_detail(product_id):
     product['images'] = images_resp.data or []
 
     related_resp = supabase.table('products')\
-                    .select('*, product_images(imagen,orden)')\
+                    .select('id, nombre, precio, descuento_pct, precio_descuento, tipo_producto, imagen, product_images(imagen,orden)')\
                     .eq('tipo_producto', product['tipo_producto'])\
+                    .eq('activo', True)\
                     .neq('id', product_id)\
                     .limit(4)\
                     .execute()

@@ -9,7 +9,7 @@ def home():
     supabase = current_app.supabase
     # Destacados primero, luego por precio desc
     response = (supabase.table("products")
-        .select("*")
+        .select("id, nombre, descripcion, precio, descuento_pct, precio_descuento, tipo_producto, genero, tipo_oro, imagen, stock_total, destacado")
         .eq("activo", True)
         .gt("stock_total", 0)
         .order("destacado", desc=True)

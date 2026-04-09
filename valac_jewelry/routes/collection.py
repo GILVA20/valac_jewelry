@@ -94,7 +94,7 @@ def collection_home():
             query = query.in_("genero", genero_filter)
         else:
             genero_filter = genero
-            query = query.eq("genero", f"%{genero}%")
+            query = query.eq("genero", genero)
 
     if price_min.isdigit():
         query = query.gte("precio", int(price_min))

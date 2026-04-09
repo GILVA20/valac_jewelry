@@ -2,280 +2,129 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
-  <title>Carga Masiva de Productos - ValacJoyas</title>
+  <title>Carga Masiva — ValacJoyas Admin</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
-  <!-- FontAwesome para iconos -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
   <style>
-    .drag-over { border-color: #007BFF !important; }
-    .custom-file-upload {
-      display: inline-block;
-      padding: 8px 16px;
-      cursor: pointer;
-      background-color: #007BFF;
-      color: white;
-      border-radius: 4px;
-      font-size: 16px;
-      margin-top: 10px;
-    }
-    .custom-file-upload:hover { background-color: #0056b3; }
+    #drop-zone { transition: all .2s; }
+    #drop-zone.drag-over { border-color: #3b82f6; background: #eff6ff; }
   </style>
 </head>
-<body class="bg-gray-100 p-6">
-  <div class="max-w-3xl mx-auto bg-white p-8 rounded-lg shadow-lg">
-    <h1 class="text-3xl font-bold mb-6 text-center text-dark">Subida Masiva 🚀</h1>
-    
-    <!-- Sección 1: Drag & Drop CSV -->
-    <div id="drop-zone" class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer transition hover:border-blue-500">
-      <p class="text-gray-500">Arrastra y suelta el archivo CSV aquí o haz clic para seleccionar</p>
-      <input type="file" id="csv-input" accept=".csv" class="hidden">
-    </div>
-    
-    <!-- Sección 2: Rutas de Imágenes (opcional) -->
-    <div class="mt-6">
-      <label for="image-paths" class="block text-gray-700 font-medium mb-2">Rutas de imágenes (opcional):</label>
-      <div class="flex items-center space-x-4">
-        <input type="text" id="image-paths" placeholder="Ingresa rutas separadas por coma" class="flex-grow border rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
-        <button id="btn-search-images" class="bg-blue-500 hover:bg-blue-600 text-white font-bold px-4 py-2 rounded">
-          <i class="fas fa-search mr-2"></i> Buscar
-        </button>
-      </div>
-    </div>
-    
-    <!-- Sección 3: Vista Previa de Productos -->
-    <div id="preview" class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4"></div>
-    
-    <!-- Sección 4: Barra de Progreso -->
-    <div id="progress-bar" class="mt-6 w-full bg-gray-300 rounded-full h-4 overflow-hidden">
-      <div id="progress-fill" class="bg-blue-500 h-4 rounded-full" style="width: 0%;"></div>
-    </div>
-    
-    <!-- Sección 5: Resultados -->
-    <div id="results" class="mt-6"></div>
-    
-    <!-- Botón de Subida -->
-    <div class="mt-6 text-center">
-      <button id="btn-upload" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded transition" disabled>
-        ¡Subir lote! (🚀)
-      </button>
-    </div>
+<body class="bg-gray-100 min-h-screen p-6">
+<div class="max-w-2xl mx-auto">
+
+  <!-- Header -->
+  <div class="flex items-center justify-between mb-6">
+    <h1 class="text-3xl font-bold text-gray-800">📦 Carga Masiva</h1>
+    <a href="{{ url_for('supabase_products.index') }}" class="text-sm text-blue-600 hover:underline">
+      ← Volver al listado
+    </a>
   </div>
 
-  <!-- Bloque de JavaScript: Flujo unificado para la carga masiva -->
-  <script type="module">
-    import { supabase } from "/static/js/supabase-client.js";
+  <!-- Flash messages -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="mb-6 space-y-2">
+        {% for category, message in messages %}
+          <div class="p-4 rounded-lg text-sm
+            {% if category == 'error' %}bg-red-100 text-red-800 border border-red-300
+            {% elif category == 'success' %}bg-green-100 text-green-800 border border-green-300
+            {% elif category == 'warning' %}bg-yellow-100 text-yellow-800 border border-yellow-300
+            {% else %}bg-gray-100 text-gray-800 border border-gray-300{% endif %}">
+            {{ message }}
+          </div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
 
-    const dropZone = document.getElementById('drop-zone');
-    const csvInput = document.getElementById('csv-input');
-    const btnUpload = document.getElementById('btn-upload');
-    const previewDiv = document.getElementById('preview');
-    const progressFill = document.getElementById('progress-fill');
-    const resultsDiv = document.getElementById('results');
-    let csvFile = null;
-    let previewData = [];
+  <div class="bg-white rounded-xl shadow-lg p-8">
+    <form method="POST"
+          action="{{ url_for('bulk_upload.index') }}"
+          enctype="multipart/form-data"
+          id="upload-form">
 
-    dropZone.addEventListener('click', () => csvInput.click());
-    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
-    dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('drag-over'); });
-    dropZone.addEventListener('drop', (e) => {
-      e.preventDefault();
-      dropZone.classList.remove('drag-over');
-      if (e.dataTransfer.files.length) {
-        csvInput.files = e.dataTransfer.files;
-        handleCSV(e.dataTransfer.files[0]);
-      }
-    });
-    csvInput.addEventListener('change', (e) => {
-      if (e.target.files.length) {
-        handleCSV(e.target.files[0]);
-      }
-    });
+      <!-- Dropzone -->
+      <div id="drop-zone"
+           class="border-2 border-dashed border-gray-300 rounded-xl p-10 text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50"
+           onclick="document.getElementById('csv_file').click()">
+        <i class="fas fa-file-csv text-5xl text-gray-300 mb-4 block"></i>
+        <p class="text-gray-500 font-medium">
+          Arrastra tu CSV aquí o <span class="text-blue-500 underline">haz clic para seleccionar</span>
+        </p>
+        <p class="text-xs text-gray-400 mt-2">Formatos: CSV o Excel (.xlsx) · Máx. 200 productos · Lee la primera hoja</p>
+        <input type="file" id="csv_file" name="csv_file" accept=".csv,.xlsx,.xls" class="hidden" required onchange="showFile(this)">
+      </div>
 
-    function handleCSV(file) {
-      csvFile = file;
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const content = e.target.result;
-        const rows = content.split("\n").filter(r => r.trim() !== "");
-        if (rows.length < 2) return;
-        const headers = rows[0].split(",").map(h => h.trim());
-        previewData = rows.slice(1).map(row => {
-          const cols = row.split(",");
-          let product = {};
-          headers.forEach((header, index) => {
-            product[header] = cols[index] ? cols[index].trim() : "";
-          });
-          return product;
-        });
-        renderPreview();
-        btnUpload.disabled = false;
-      };
-      reader.readAsText(file);
+      <!-- nombre del archivo -->
+      <div id="file-info" class="hidden mt-3 flex items-center gap-2 text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg px-4 py-2">
+        <i class="fas fa-check-circle"></i>
+        <span id="file-name"></span>
+      </div>
+
+      <!-- Referencia de columnas -->
+      <div class="mt-6 bg-gray-50 rounded-lg p-4 text-sm text-gray-600">
+        <p class="font-semibold mb-2 text-gray-700">📋 Columnas reconocidas de tu Excel:</p>
+        <div class="grid grid-cols-2 gap-1">
+          <span>• <code class="bg-white px-1 rounded border">Nombre de Pieza</code></span>
+          <span>• <code class="bg-white px-1 rounded border">Linea</code> (F10 / F14 / F925)</span>
+          <span>• <code class="bg-white px-1 rounded border">Arete/Brazalete/...</code></span>
+          <span>• <code class="bg-white px-1 rounded border">Peso (gramos)</code></span>
+          <span>• <code class="bg-white px-1 rounded border">Precio por Gramo</code></span>
+          <span>• <code class="bg-white px-1 rounded border">P</code> → costo</span>
+          <span>• <code class="bg-white px-1 rounded border">PF</code> → precio de venta</span>
+          <span>• <code class="bg-white px-1 rounded border">Estado</code></span>
+          <span>• <code class="bg-white px-1 rounded border">Devolucion a</code></span>
+          <span>• <code class="bg-white px-1 rounded border">ID</code> → external_id</span>
+        </div>
+        <p class="mt-3 text-xs text-gray-500">
+          ✅ PF vacío → se calcula como <strong>Costo × 2</strong><br>
+          ✅ P vacío → <strong>(peso × ppg) + $150</strong><br>
+          ✅ Entran como <strong>borradores</strong> (no visibles en tienda)<br>
+          ✅ Peso y costo son <strong>privados</strong>, nunca salen en la tienda
+        </p>
+      </div>
+
+      <button type="submit" id="btn-submit"
+              class="mt-6 w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-xl transition flex items-center justify-center gap-2">
+        <i class="fas fa-rocket"></i> Importar como borradores
+      </button>
+    </form>
+  </div>
+</div>
+
+<script>
+  const zone = document.getElementById('drop-zone');
+
+  zone.addEventListener('dragover', e => {
+    e.preventDefault();
+    zone.classList.add('drag-over');
+  });
+  zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+  zone.addEventListener('drop', e => {
+    e.preventDefault();
+    zone.classList.remove('drag-over');
+    const input = document.getElementById('csv_file');
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      input.files = dt.files;
+      showFile(input);
     }
+  });
 
-    function renderPreview() {
-      previewDiv.innerHTML = "";
-      previewData.forEach((product, index) => {
-        const card = document.createElement("div");
-        card.className = "bg-white p-4 rounded shadow hover:shadow-lg transition transform hover:scale-105 product-card";
-        let imgHTML = "";
-        if (product.imagen && product.imagen.startsWith("http")) {
-          imgHTML = `<img src="${product.imagen}" alt="Imagen de ${product.nombre}" class="w-full h-auto mb-2">`;
-          product.image_url = product.imagen;
-        } else {
-          imgHTML = `
-            <div>
-              <p class="text-red-600 mb-2">Imagen no cargada automáticamente.</p>
-              <label for="file-upload-${index}" class="custom-file-upload">
-                <i class="fa fa-cloud-upload"></i> Seleccionar imagen
-              </label>
-              <input id="file-upload-${index}" type="file" accept="image/*" style="display: none;" onchange="handleManualImageUpload(this, ${index})">
-            </div>
-            <div id="preview-img-${index}"></div>
-          `;
-        }
-        card.innerHTML = `
-          <h2 class="text-xl font-bold mb-2">${product.nombre || 'Sin nombre'}</h2>
-          ${imgHTML}
-          <p class="text-gray-700 mb-2">${product.descripcion || 'Sin descripción'}</p>
-          <p class="text-green-600 font-bold">Precio: ${product.precio}</p>
-        `;
-        previewDiv.appendChild(card);
-      });
-    }
+  function showFile(input) {
+    if (!input.files.length) return;
+    document.getElementById('file-name').textContent = input.files[0].name;
+    document.getElementById('file-info').classList.remove('hidden');
+  }
 
-    async function uploadImage(file) {
-      const fileName = `product_${Date.now()}_${file.name}`;
-      const { data, error } = await supabase.storage
-        .from('CatalogoJoyasValacJoyas/products')
-        .upload(fileName, file);
-      if (error) {
-        throw error;
-      }
-      const { data: { publicUrl } } = supabase.storage
-  .from('CatalogoJoyasValacJoyas/products')
-  .getPublicUrl(data.path);
-      let url = publicUrl || "";
-      if (!url || url === "undefined") {
-        throw new Error("La URL pública es undefined");
-      }
-      url += "?t=" + new Date().getTime();
-      return url;
-    }
-
-    async function handleManualImageUpload(fileInput, index) {
-      const file = fileInput.files[0];
-      if (!file) return;
-      try {
-        const imageUrl = await uploadImage(file);
-        previewData[index].image_url = imageUrl;
-        document.getElementById(`preview-img-${index}`).innerHTML = `<img src="${imageUrl}" alt="Imagen subida" class="w-full h-auto mb-2">`;
-        alert("Imagen subida exitosamente para " + previewData[index].nombre);
-      } catch (error) {
-        console.error("Error al subir la imagen:", error);
-        alert("Error al subir la imagen para " + previewData[index].nombre);
-      }
-    }
-
-    async function processBulkUpload() {
-      let successCount = 0;
-      let warnings = [];
-      let errors = [];
-      for (let product of previewData) {
-        if (!product.nombre || !product.precio || !product.imagen) {
-          warnings.push(`Producto incompleto: ${product.nombre || "Sin nombre"}`);
-          continue;
-        }
-        if (!product.image_url) {
-          warnings.push(`Falta imagen para: ${product.nombre}`);
-          continue;
-        }
-        const productData = {
-          nombre: product.nombre,
-          descripcion: product.descripcion || "",
-          precio: parseFloat(product.precio),
-          tipo_producto: product.tipo_producto || "",
-          genero: product.genero || "",
-          tipo_oro: product.tipo_oro || "",
-          image_url: product.image_url
-        };
-        try {
-          const response = await fetch('/api/products/new', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(productData)
-          });
-          const result = await response.json();
-          if (result.success) {
-            successCount++;
-          } else {
-            warnings.push(`Producto "${product.nombre}": ${result.message}`);
-          }
-        } catch (err) {
-          errors.push(`Producto "${product.nombre}": ${err.message}`);
-        }
-      }
-      return { successCount, warnings, errors };
-    }
-
-    btnUpload.addEventListener('click', async () => {
-      if (!csvFile) return;
-      btnUpload.disabled = true;
-      updateProgress(0);
-      resultsDiv.innerHTML = "";
-      try {
-        const report = await processBulkUpload();
-        updateProgress(100);
-        showResults(report);
-      } catch (error) {
-        console.error("Error en la carga masiva:", error);
-        resultsDiv.innerHTML = `<p class="text-red-600 font-bold">❌ Error en la carga masiva</p>`;
-      } finally {
-        btnUpload.disabled = false;
-      }
-    });
-
-    function updateProgress(percent) {
-      progressFill.style.width = percent + "%";
-    }
-
-    function showResults(report) {
-      resultsDiv.innerHTML = "";
-      if (report.successCount) {
-        const successDiv = document.createElement("div");
-        successDiv.innerHTML = `<p class="text-green-600 font-bold">✅ Éxito: ${report.successCount} productos creados</p>`;
-        resultsDiv.appendChild(successDiv);
-      }
-      if (report.warnings.length) {
-        const warnDiv = document.createElement("div");
-        warnDiv.innerHTML = `<p class="text-yellow-600 font-bold">⚠️ Advertencias: ${report.warnings.length}</p>`;
-        const ul = document.createElement("ul");
-        ul.className = "list-disc ml-6";
-        report.warnings.forEach(msg => {
-          const li = document.createElement("li");
-          li.textContent = msg;
-          ul.appendChild(li);
-        });
-        warnDiv.appendChild(ul);
-        resultsDiv.appendChild(warnDiv);
-      }
-      if (report.errors.length) {
-        const errorDiv = document.createElement("div");
-        errorDiv.innerHTML = `<p class="text-red-600 font-bold">❌ Errores: ${report.errors.length}</p>`;
-        const ul = document.createElement("ul");
-        ul.className = "list-disc ml-6";
-        report.errors.forEach(msg => {
-          const li = document.createElement("li");
-          li.textContent = msg;
-          ul.appendChild(li);
-        });
-        errorDiv.appendChild(ul);
-        resultsDiv.appendChild(errorDiv);
-      }
-    }
-
-    // Expone la función handleManualImageUpload en el ámbito global para que el atributo inline onchange la encuentre.
-    window.handleManualImageUpload = handleManualImageUpload;
-  </script>
+  document.getElementById('upload-form').addEventListener('submit', () => {
+    const btn = document.getElementById('btn-submit');
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Importando...';
+    btn.disabled = true;
+  });
+</script>
 </body>
 </html>

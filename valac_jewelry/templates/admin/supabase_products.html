@@ -97,6 +97,7 @@
             <tr>
               <th class="border p-3"><input type="checkbox" id="select_all" /></th>
               <th class="border p-3 text-center text-gray-700" title="Destacado">⭐</th>
+              <th class="border p-3 text-center text-gray-700">Estado</th>
               <th class="border p-3 text-left text-gray-700">Acciones</th>
               <th class="border p-3 text-left text-gray-700 cursor-pointer" data-sort="id">ID</th>
               <th class="border p-3 text-left text-gray-700 cursor-pointer" data-sort="created_at">Fecha Alta</th>
@@ -124,6 +125,17 @@
                    title="{{ 'Quitar destacado' if prod.destacado else 'Marcar como destacado' }}">
                     {{ '⭐' if prod.destacado else '☆' }}
                 </a>
+              </td>
+              <td class="border p-3 text-center">
+                {% set estado = prod.estado or 'activo' %}
+                {% set badge_color = {'activo': 'bg-green-100 text-green-800', 'borrador': 'bg-yellow-100 text-yellow-800', 'archivado': 'bg-gray-200 text-gray-600'} %}
+                <form method="POST" action="{{ url_for('supabase_products.toggle_estado', product_id=prod.id) }}" style="display:inline;">
+                  <button type="submit"
+                    class="text-xs font-semibold px-2 py-1 rounded-full {{ badge_color.get(estado, 'bg-gray-100 text-gray-700') }} hover:opacity-75 transition"
+                    title="Ciclar estado: borrador → activo → archivado">
+                    {{ estado }}
+                  </button>
+                </form>
               </td>
               <td class="border p-3">
                 <a href="{{ url_for('.edit_product', id=prod.id) }}" class="text-blue-500 hover:text-blue-600 mr-2" title="Editar">

@@ -12,8 +12,10 @@ def product_detail(product_id):
     
     if not response.data:
         abort(404, description="Producto no encontrado")
-    
+
     product = response.data
+    if product.get("estado") not in (None, "activo"):
+        abort(404, description="Producto no encontrado")
 
     # 🔄 MVP 1: Cargar imágenes múltiples del producto desde product_images
     images_resp = supabase.table('product_images')\

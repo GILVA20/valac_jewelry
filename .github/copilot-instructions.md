@@ -133,6 +133,12 @@ Antes de responder, clasifica la petición del usuario en una de estas categorí
 - `/execute-task` (Sonnet) → ejecutar un task del plan
 - `/sonnet-build` (Sonnet) → fix/cambio directo sin plan
 - `/quick-ask` (Haiku) → pregunta rápida
+- `/run-phase` (Sonnet) → ejecutar fase completa del plan de migración
+- `/run-task` (Sonnet) → ejecutar task individual del plan
+
+### Agentes disponibles:
+- `@valac-executor` → ejecutor autónomo de tasks (lee plan de /memories/session/)
+- `@valac-architect` → planificador de features (produce tasks)
 
 ### Reglas anti-desperdicio (OBLIGATORIAS):
 - NUNCA repetir el contexto de este archivo en las respuestas

@@ -170,17 +170,34 @@ class BulkUploadAdminView(BaseView):
             if errors_list:
                 flash("Advertencias/Errores: " + "; ".join(errors_list), "warning")
             
-            # Integración con Supabase:
-            # Aquí podrías iterar sobre valid_rows e insertar cada producto.
-            # Ejemplo:
-            # supabase = current_app.supabase
-            # for product in valid_rows:
-            #     response = supabase.table("products").insert(product).execute()
-            #     if not response.data:
-            #         current_app.logger.error(f"Error al insertar producto: {product['nombre']} - {response}")
-            
-            # También se puede registrar el intento en un sistema de logs personalizado (e.g., inventory_logs)
-            
+            supabase = current_app.supabase
+            inserted = 0
+            insert_errors = []
+            for product in valid_rows:
+                row = {
+                    "nombre": product["nombre"],
+                    "descripcion": product["descripcion"],
+                    "precio": product["precio"],
+                    "tipo_producto": product["tipo_producto"],
+                    "genero": product["genero"],
+                    "tipo_oro": product["tipo_oro"],
+                    "imagen": product.get("imagen") or None,
+                    "stock_total": product.get("stock_inicial", 0),
+                    "estado": "borrador",
+                }
+                resp = supabase.table("products").insert(row).execute()
+                if resp.data:
+                    inserted += 1
+                else:
+                    insert_errors.append(f"❌ No se insertó: {product['nombre']}")
+                    current_app.logger.error(
+                        "Error al insertar producto '%s': %s", product["nombre"], resp
+                    )
+
+            flash(f"Productos insertados en borrador: {inserted}", "success")
+            for err in insert_errors:
+                flash(err, "error")
+
             return redirect(url_for('.index'))
         
         return self.render("admin/bulk_upload.html")

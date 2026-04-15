@@ -318,7 +318,7 @@ class SupabaseProductAdmin(BaseView):
     @expose("/", methods=["GET"])
     def index(self):
         sb = self.app_sb
-        response = sb.table("products").select("*").execute()
+        response = sb.table("products").select("*").order("created_at", desc=True).execute()
         if not response.data:
             logging.error("Error al obtener productos: %s", response)
             products: List[Dict[str, Any]] = []

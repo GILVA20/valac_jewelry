@@ -360,6 +360,7 @@ class BulkUploadAdminView(BaseView):
             
             supabase = current_app.supabase
             inserted = 0
+            updated = 0
             insert_errors = []
 
             # Detectar columnas disponibles en la tabla
@@ -401,16 +402,42 @@ class BulkUploadAdminView(BaseView):
                     })
                 # Quitar Nones para no pisar defaults de BD
                 row = {k: v for k, v in row.items() if v is not None}
-                resp = supabase.table("products").insert(row).execute()
-                if resp.data:
-                    inserted += 1
-                else:
-                    insert_errors.append(f"❌ No se insertó: {product['nombre']}")
-                    current_app.logger.error(
-                        "Error al insertar producto '%s': %s", product["nombre"], resp
-                    )
 
-            flash(f"Productos insertados en borrador: {inserted}", "success")
+                # ── Detección de duplicados ──
+                existing = None
+                ext_id = product.get("external_id")
+                if ext_id:
+                    dup_q = supabase.table("products").select("id").eq("external_id", ext_id).limit(1).execute()
+                    if dup_q.data:
+                        existing = dup_q.data[0]
+                if not existing:
+                    dup_q = supabase.table("products").select("id").eq("nombre", product["nombre"]).limit(1).execute()
+                    if dup_q.data:
+                        existing = dup_q.data[0]
+
+                if existing:
+                    upd = supabase.table("products").update(row).eq("id", existing["id"]).execute()
+                    if upd.data:
+                        updated += 1
+                    else:
+                        insert_errors.append(f"❌ No se actualizó: {product['nombre']}")
+                        current_app.logger.error(
+                            "Error al actualizar producto '%s': %s", product["nombre"], upd
+                        )
+                else:
+                    resp = supabase.table("products").insert(row).execute()
+                    if resp.data:
+                        inserted += 1
+                    else:
+                        insert_errors.append(f"❌ No se insertó: {product['nombre']}")
+                        current_app.logger.error(
+                            "Error al insertar producto '%s': %s", product["nombre"], resp
+                        )
+
+            msg = f"Productos insertados en borrador: {inserted}"
+            if updated:
+                msg += f" | Actualizados: {updated}"
+            flash(msg, "success")
             for err in insert_errors:
                 flash(err, "error")
 

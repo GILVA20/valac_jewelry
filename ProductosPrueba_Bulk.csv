@@ -1,0 +1,16 @@
+Fecha Ingreso,ID,Nombre de Pieza,Linea,T,Arete/Brazalete/Cadenas/Pulsos,Peso (gramos),Precio por Gramo,P,PF,Estado,Devolucion a,Genero
+14/11/2024,101,Aretes Circulo,F10,,Aretes,1.4,977,,,$2678.43,disponible,,Mujer
+14/11/2024,102,Aretes Ellipse,F10,,Aretes,2.2,977,,,disponible,,Mujer
+14/11/2024,103,Cruz Tronco,F10,,Dije,3,977,,,disponible,,Unisex
+14/11/2024,104,Cadena Troquelada,F10,,Cadena,4.5,977,,,disponible,,Unisex
+14/11/2024,105,Pulsera Infinito,F10,,Pulsera,4.9,977,,,disponible,,Mujer
+14/11/2024,106,Pulsera Bolitas,F10,,Pulsera,2.9,977,,,vendido,,Mujer
+14/11/2024,107,Anillo Leon Negro,F10,,Anillo,7.8,950,,,disponible,,Hombre
+14/11/2024,108,Anillo Triangulo,F10,,Anillo,1.3,970,,,disponible,,Hombre
+14/11/2024,109,Anillo Flor y Piedra,F10,,Anillo,1.1,970,,,devolucion,Proveedor Hernandez,Mujer
+14/11/2024,110,Cadena 3-1 65cm,F10,,Cadena,6.6,970,,,disponible,,Unisex
+09/12/2024,201,Anillo Circonia Plata,F925,,Anillo,3.2,85,,,disponible,,Mujer
+09/12/2024,202,Pulsera Eslabones Plata,F925,,Pulsera,5.1,85,,,disponible,,Mujer
+09/12/2024,203,Aros Gargantilla 14k,F14,,Gargantilla,4.3,1250,,,disponible,,Mujer
+09/12/2024,204,Serpiente Gargantilla 14k,F14,,Gargantilla,3.17,1250,,,vendido,,Mujer
+09/12/2024,205,Pulso Monaco,F10,,Pulso,8.2,950,,,devolucion,Mama,Hombre

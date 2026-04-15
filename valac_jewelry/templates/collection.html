@@ -354,6 +354,7 @@
             genero, tipo_oro, imagen, stock_total, created_at,
             product_images ( imagen, orden )
           `)
+          .eq('activo', true)
           .gte('precio', parseInt(price_min))
           .lte('precio', parseInt(price_max));
 

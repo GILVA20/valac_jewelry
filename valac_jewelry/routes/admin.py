@@ -919,10 +919,10 @@ class SupabaseProductAdmin(BaseView):
                     "status": "ok",
                     "updated": True,
                     "added_images": len(nuevas_imagenes or []),
-                    "redirect": url_for(".edit_product", id=id)
+                    "redirect": url_for(".index")
                 }), 200
 
-            return redirect(url_for(".edit_product", id=id))
+            return redirect(url_for(".index"))
 
         # --------- GET: traer datos actuales ----------
         resp = sb.table("products").select("*").eq("id", id).execute()
@@ -972,7 +972,10 @@ class SupabaseProductAdmin(BaseView):
             current_app.logger.info("[update_gallery_order] Reordenando %d imágenes", len(data))
 
             for item in data:
-                sb.table("product_images").update({"orden": int(item["orden"])}).eq("id", item["id"]).execute()
+                update_payload = {"orden": int(item["orden"])}
+                if "object_position" in item and item["object_position"]:
+                    update_payload["object_position"] = item["object_position"]
+                sb.table("product_images").update(update_payload).eq("id", item["id"]).execute()
 
             return jsonify({"status": "success"}), 200
         except Exception as e:  # pragma: no cover

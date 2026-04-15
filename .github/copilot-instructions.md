@@ -146,3 +146,125 @@ Antes de responder, clasifica la petición del usuario en una de estas categorí
 - Respuestas ≤ 30 líneas por defecto. Expandir solo si se pide explícitamente
 - Usar `#file:` references para adjuntar archivos en vez de pedir lectura
 - Guardar planes en memoria de sesión para no re-enviarlos
+
+### Agentes adicionales:
+- `@valac-security-reviewer` → auditoría de seguridad OWASP para Flask/MercadoPago/Supabase
+- `@valac-tdd-guide` → guía TDD con pytest para VALAC
+
+### Prompts adicionales:
+- `/security-audit` → checklist de seguridad express
+- `/tdd` → workflow RED → GREEN → REFACTOR con pytest
+- `/coupon-system` → referencia del sistema de cupones completo
+- `/payment-flow` → referencia del flujo MercadoPago completo
+- `/admin-workflow` → referencia de operaciones admin
+
+## SEGURIDAD (OBLIGATORIO)
+
+### Checklist antes de cada commit
+- [ ] Sin secrets hardcodeados (API keys, passwords, tokens en código)
+- [ ] Inputs del usuario validados (formularios, query params, JSON body)
+- [ ] Queries Supabase parametrizadas (nunca concatenar strings en `.or_()` / `.filter()`)
+- [ ] Templates Jinja2 con autoescaping (nunca `|safe` con input de usuario)
+- [ ] Rutas admin con `@login_required` + verificar `current_user.is_admin`
+- [ ] Errores no exponen datos internos al usuario (tracebacks, tokens, rutas de servidor)
+- [ ] `logging.debug/info` NUNCA loguean tokens, passwords, o SUPABASE_KEY
+
+### Patrones PROHIBIDOS (flaggear inmediatamente)
+
+| Patrón | Severidad | Fix |
+|--------|-----------|-----|
+| `logging.debug(".*TOKEN.*%s", token)` | CRÍTICO | Eliminar log o redactar token |
+| `logging.debug(".*KEY.*%s", key)` | CRÍTICO | Eliminar log o redactar key |
+| `float(precio)` en lógica de dinero | CRÍTICO | Usar `Decimal(str(precio))` |
+| `supabase: Client = create_client(...)` fuera de app factory | ALTO | Usar `current_app.supabase` |
+| `.or_()` / `.filter()` con f-strings o concatenación | ALTO | Usar parámetros Supabase |
+| `|safe` en template con variable de usuario | ALTO | Quitar `|safe` o sanitizar |
+| `request.args["param"]` sin validar tipo/rango | MEDIO | Validar y castear con default |
+| Ruta sin `@login_required` en `/admin/*` | CRÍTICO | Agregar decorador |
+| `except Exception: pass` (silenciar errores) | MEDIO | Loguear y re-raise o manejar |
+
+### Secrets management
+- SIEMPRE desde `os.environ` o `app.config` — ya está en regla 7, pero además:
+- Validar en startup que secrets requeridos existan (fail fast, no en runtime)
+- Si se expone un secret: rotar inmediatamente, notificar, revisar git history
+
+### Rate limiting (endpoints públicos sensibles)
+- `/api/coupons/validate` — limitar intentos (prevenir brute-force de códigos)
+- `/create_preference` — limitar para evitar creación masiva de preferencias MP
+- `/webhook/mercadopago` — no limitar (MP necesita entregar notificaciones)
+
+## CALIDAD DE CÓDIGO PYTHON
+
+### Estilo obligatorio
+- **PEP 8** — seguir convenciones de naming (`snake_case` funciones/variables, `PascalCase` clases)
+- **Type annotations** en firmas de funciones nuevas o modificadas
+- **`logging`** en vez de `print()` — nunca `print()` en código de producción
+- **`Decimal`** para todo cálculo monetario — nunca `float`
+- **Ruff** para linting (`ruff check .`) si disponible
+
+### Patrones preferidos
+
+```python
+# ✅ Type annotations en funciones
+def compute_discount(base: Decimal, coupon: dict, msi: bool = False) -> Decimal:
+    ...
+
+# ✅ Frozen dataclass para DTOs inmutables
+from dataclasses import dataclass
+
+@dataclass(frozen=True)
+class OrderSummary:
+    subtotal: Decimal
+    shipping: Decimal
+    discount: Decimal
+    total: Decimal
+
+# ✅ Context manager para recursos
+with open(filepath, "r") as f:
+    data = json.load(f)
+
+# ✅ Guard clause en vez de nesting profundo
+def process_payment(data: dict) -> dict:
+    if not data.get("payment_id"):
+        return {"status": "ignored"}
+    if not data.get("type") == "payment":
+        return {"status": "ignored"}
+    # lógica principal aquí...
+```
+
+### Anti-patrones
+
+```python
+# ❌ print en producción
+print(f"Processing order {order_id}")  # → logging.info(...)
+
+# ❌ float en dinero
+total = float(subtotal) + float(shipping)  # → Decimal
+
+# ❌ bare except
+try:
+    ...
+except:  # → except Exception as e: logging.exception(...)
+    pass
+
+# ❌ nesting > 3 niveles
+if a:
+    if b:
+        if c:
+            if d:  # → usar guard clauses
+```
+
+## GIT WORKFLOW
+
+### Formato de commits
+```
+<type>: <descripción>
+```
+
+Tipos: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`, `perf`, `style`
+
+Ejemplos:
+- `feat: agregar filtro de precio en collection`
+- `fix: corregir cálculo de MSI en apply_coupon`
+- `refactor: consolidar is_coupon_active en pricing.py`
+- `test: agregar tests para compute_totals`

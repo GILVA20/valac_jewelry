@@ -30,10 +30,10 @@
     text-align: center;
     margin: 20px;
   }
-  /* Grid: 2 columnas en móvil, luego más columnas en pantallas mayores */
+  /* Grid: 1 columna en móvil, luego más columnas en pantallas mayores */
   #product-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr;
     gap: 1rem;
   }
   @media (min-width: 640px) {
@@ -273,9 +273,9 @@
           <label for="sort" class="mr-2 font-semibold text-gray-700">Ordenar por:</label>
           <select id="sort" name="sort"
             class="border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-[#d5a300]">
-            <option value="precio_desc" {% if request.args.get('sort') == 'precio_desc' or not request.args.get('sort') %}selected{% endif %}>Precio: Mayor a Menor</option>
+            <option value="precio_desc" {% if request.args.get('sort') == 'precio_desc' %}selected{% endif %}>Precio: Mayor a Menor</option>
             <option value="precio_asc" {% if request.args.get('sort') == 'precio_asc' %}selected{% endif %}>Precio: Menor a Mayor</option>
-            <option value="novedades" {% if request.args.get('sort') == 'novedades' %}selected{% endif %}>Más recientes</option>
+            <option value="novedades" {% if request.args.get('sort') == 'novedades' or not request.args.get('sort') %}selected{% endif %}>Más recientes</option>
             <option value="nombre_asc" {% if request.args.get('sort') == 'nombre_asc' %}selected{% endif %}>Nombre: A-Z</option>
             <option value="nombre_desc" {% if request.args.get('sort') == 'nombre_desc' %}selected{% endif %}>Nombre: Z-A</option>
           </select>
@@ -333,7 +333,7 @@
       const price_min = urlParams.get('price_min')  || 0;
       const price_max = urlParams.get('price_max')  || 250000;
       const search    = urlParams.get('search')     || '';
-      const sort      = urlParams.get('sort')       || 'precio_desc'; // visible, pero el orden efectivo es ofertas→resto
+      const sort      = urlParams.get('sort')       || 'novedades';
 
       // Helpers
       const hasOffer = (p) =>
@@ -352,7 +352,7 @@
           .select(`
             id, nombre, descripcion, precio, descuento_pct, precio_descuento, tipo_producto,
             genero, tipo_oro, imagen, stock_total, created_at,
-            product_images ( imagen, orden )
+            product_images ( imagen, orden, object_position )
           `)
           .eq('activo', true)
           .gte('precio', parseInt(price_min))
@@ -439,12 +439,14 @@
 
         ordered.forEach((product, index) => {
           const placeholder = '/static/images/placeholder.jpg';
-          let mainImage = placeholder, hoverImage = null;
+          let mainImage = placeholder, hoverImage = null, mainPosition = 'center', hoverPosition = 'center';
 
           if (product.product_images && product.product_images.length > 0) {
             const sorted = [...product.product_images].sort((a, b) => a.orden - b.orden);
             mainImage = sorted[0]?.imagen || placeholder;
             hoverImage = sorted.length > 1 ? sorted[1].imagen : null;
+            mainPosition = sorted[0]?.object_position || 'center';
+            hoverPosition = sorted.length > 1 ? (sorted[1].object_position || 'center') : 'center';
           } else if (product.imagen && product.imagen !== 'undefined') {
             mainImage = product.imagen;
           }
@@ -473,10 +475,12 @@
               <div class="relative w-full h-64 overflow-hidden">
                 <img src="${mainImage}" alt="${product.nombre}"
                      loading="lazy"
+                     style="object-position:${mainPosition}"
                      class="w-full h-full object-cover transition-opacity duration-300 ${hoverImage ? 'group-hover:opacity-0' : ''}">
                 ${hoverImage ? `
                   <img src="${hoverImage}" alt="${product.nombre} hover"
                        loading="lazy"
+                       style="object-position:${hoverPosition}"
                        class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-300 group-hover:opacity-100">
                 ` : ``}
               </div>

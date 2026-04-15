@@ -6,8 +6,29 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
-<body class="bg-gray-100 p-6">
-  <div class="max-w-xl mx-auto bg-white p-8 rounded-lg shadow-lg">
+<body class="bg-gray-100 p-4">
+  <div class="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-lg">
+
+    <!-- Navegación Admin -->
+    <nav class="flex flex-wrap gap-2 mb-6 pb-4 border-b border-gray-200">
+      <a href="{{ url_for('supabase_products.index') }}"
+         class="inline-flex items-center gap-1 px-3 py-1.5 rounded text-sm font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700">
+        <i class="fas fa-arrow-left"></i> Productos
+      </a>
+      <a href="{{ url_for('bulk_upload.index') }}"
+         class="inline-flex items-center gap-1 px-3 py-1.5 rounded text-sm font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700">
+        <i class="fas fa-file-csv"></i> Carga Masiva
+      </a>
+      <a href="{{ url_for('admin_orders.index') }}"
+         class="inline-flex items-center gap-1 px-3 py-1.5 rounded text-sm font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700">
+        <i class="fas fa-shopping-bag"></i> Órdenes
+      </a>
+      <a href="{{ url_for('admin_coupons.index') }}"
+         class="inline-flex items-center gap-1 px-3 py-1.5 rounded text-sm font-semibold bg-gray-100 hover:bg-gray-200 text-gray-700">
+        <i class="fas fa-tag"></i> Cupones
+      </a>
+    </nav>
+
     <h1 class="text-3xl font-bold mb-6 text-center text-gray-800">Editar Producto</h1>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -170,18 +191,43 @@
           class="hidden">
       </div>
 
+      <style>
+        .fp-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:3px; margin-top:6px; }
+        .fp-dot { width:100%; aspect-ratio:1; border-radius:50%; background:#d1d5db; cursor:pointer; border:2px solid transparent; transition:background .15s,border-color .15s; }
+        .fp-dot:hover { background:#9ca3af; }
+        .fp-dot.active { background:#2563eb; border-color:#1d4ed8; }
+      </style>
+
       <div id="gallery-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {% for img in gallery %}
           {% set is_main = (product.imagen and product.imagen == img.imagen) %}
-          <div class="border rounded-lg p-2 bg-gray-50 relative shadow-sm {% if is_main %}ring-2 ring-blue-500{% endif %}">
+          {% set fp = img.object_position if img.object_position else 'center' %}
+          <div class="border rounded-lg p-2 bg-gray-50 relative shadow-sm {% if is_main %}ring-2 ring-blue-500{% endif %}"
+               data-fp="{{ fp }}">
             <img src="{{ img.imagen }}" alt="Imagen {{ loop.index }}"
-                 class="w-full h-32 object-cover rounded mb-2 select-none">
+                 class="w-full h-32 object-cover rounded mb-2 select-none"
+                 style="object-position: {{ fp }}">
             <div class="flex items-center gap-2">
               <input type="number" class="w-full border rounded px-2 py-1 text-center"
                      data-img-id="{{ img.id }}" value="{{ img.orden }}">
               <button type="button" title="Eliminar"
                       class="delete-img bg-red-600 hover:bg-red-700 text-white px-2 rounded"
                       data-id="{{ img.id }}">X</button>
+            </div>
+
+            <!-- Focal point picker 3×3 -->
+            <p class="text-xs text-gray-400 mt-2 mb-1">Encuadre:</p>
+            <div class="fp-grid">
+              {% set positions = [
+                ('top left','arriba izq'),('top','arriba'),('top right','arriba der'),
+                ('left','izq'),('center','centro'),('right','der'),
+                ('bottom left','abajo izq'),('bottom','abajo'),('bottom right','abajo der')
+              ] %}
+              {% for pos, label in positions %}
+                <div class="fp-dot {% if fp == pos %}active{% endif %}"
+                     title="{{ label }}"
+                     data-pos="{{ pos }}"></div>
+              {% endfor %}
             </div>
 
             <!-- Botón (sin form anidado) -->
@@ -368,6 +414,22 @@
       });
     }
 
+    // Focal point picker interactivity
+    document.addEventListener("click", (e) => {
+      const dot = e.target.closest(".fp-dot");
+      if (!dot) return;
+      const card = dot.closest("[data-fp]");
+      if (!card) return;
+      const pos = dot.dataset.pos;
+      // Update card state
+      card.dataset.fp = pos;
+      card.querySelectorAll(".fp-dot").forEach(d => d.classList.toggle("active", d.dataset.pos === pos));
+      // Live preview
+      card.querySelector("img").style.objectPosition = pos;
+      // Auto-save
+      saveOrderNow();
+    });
+
     async function saveOrderNow() {
       const cards = Array.from(document.querySelectorAll("#gallery-grid > div"));
       const orderData = [];
@@ -375,9 +437,8 @@
         const input = card.querySelector('input[type="number"]');
         const id = input?.dataset?.imgId;
         input.value = idx;
-        // aceptar cualquier id real (uuid, numérico, etc.) y omitir los "temp-*"
         if (id && !String(id).startsWith("temp-")) {
-          orderData.push({ id, orden: idx });
+          orderData.push({ id, orden: idx, object_position: card.dataset.fp || "center" });
         }
       });
       if (!orderData.length) return;
@@ -386,7 +447,7 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ order: orderData })
       });
-      showToast("Orden guardado", "success");
+      showToast("Orden y encuadre guardados", "success");
     }
 
     // Eliminar imagen existente

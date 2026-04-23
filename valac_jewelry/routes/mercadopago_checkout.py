@@ -15,14 +15,11 @@ def sanitize_input(input_str):
 # Configuración de MercadoPago según entorno
 MP_ACCESS_TOKEN = os.getenv("MP_ACCESS_TOKEN" if IS_PROD else "MP_ACCESS_TOKEN_TEST")
 MP_PUBLIC_KEY    = os.getenv("MP_PUBLIC_KEY" if IS_PROD else "MP_PUBLIC_KEY_TEST")
-logging.debug("DEBUG: MP_ACCESS_TOKEN utilizado: %s", MP_ACCESS_TOKEN)
 mp = mercadopago.SDK(MP_ACCESS_TOKEN)
 
 # Configuración Supabase
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
-logging.debug("DEBUG: SUPABASE_URL: %s", SUPABASE_URL)
-logging.debug("DEBUG: SUPABASE_KEY: %s", SUPABASE_KEY)
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 mp_checkout_bp = Blueprint('mp_checkout', __name__)
@@ -82,7 +79,6 @@ def create_preference():
 
         # Reinstanciar SDK con token del app.config
         token = current_app.config["MP_ACCESS_TOKEN"]
-        logging.debug("DEBUG: Token seleccionado: %s", token)
         mp = mercadopago.SDK(token)
 
         # Marcar ambiente de prueba

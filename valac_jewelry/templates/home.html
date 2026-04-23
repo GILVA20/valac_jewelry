@@ -123,30 +123,15 @@
     </div>
   </section>
 
-  {# ---------- RESEÑAS (estático, ligero) ---------- #}
-  <section class="bg-white pb-12">
-    <div class="container mx-auto px-4">
-      <h2 class="text-2xl sm:text-3xl font-semibold mb-6 sm:mb-8 text-gray-800 text-center">Reseñas de Clientes</h2>
-      <div class="grid sm:grid-cols-3 gap-4">
-        <div class="bg-white p-5 rounded-lg shadow text-center">
-          <p>"Estoy encantada con mi compra en VALAC Joyas. La calidad es insuperable y el servicio excepcional."</p>
-          <p class="mt-2 font-semibold">- Joss G.</p>
-        </div>
-        <div class="bg-white p-5 rounded-lg shadow text-center">
-          <p>"Piezas hermosas y entrega rápida. Definitivamente volveré a comprar."</p>
-          <p class="mt-2 font-semibold">- Daniel O.</p>
-        </div>
-        <div class="bg-white p-5 rounded-lg shadow text-center">
-          <p>"La elegancia y el detalle en cada pieza son impresionantes. ¡Lo recomiendo!"</p>
-          <p class="mt-2 font-semibold">- Marco M.</p>
-        </div>
-      </div>
-    </div>
-  </section>
+  {# ---------- RESEÑAS DINÁMICAS ---------- #}
+  {% set reviews_mode = "home" %}
+  {% include 'partials/reviews_section.html' %}
+
 </main>
 {% endblock %}
 
 {% block scripts_extra %}
+<script src="{{ url_for('static', filename='js/reviews.js') }}"></script>
 <script type="module">
   import { supabase as supabaseClient } from "/static/js/supabase-client.js";
 

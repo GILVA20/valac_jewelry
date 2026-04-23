@@ -1,0 +1,314 @@
+{#
+  reviews_section.html — Componente reutilizable de reseñas.
+  Usar con:
+    {% include 'partials/reviews_section.html' %}
+
+  Atributos data-* en el contenedor padre controlan el modo:
+    data-mode="home"    → Destacadas (6 max), carrusel horizontal
+    data-mode="page"    → Todas, con filtros y paginación
+    data-mode="product" → Filtradas por product_id
+    data-product-id="N" → Solo para mode=product
+    data-product-name="X" → Pre-fill en formulario
+
+  Requiere: /static/js/reviews.js (cargado al final)
+#}
+
+<section id="reviews-section"
+         class="py-12 sm:py-16 bg-white"
+         data-mode="{{ reviews_mode|default('home') }}"
+         {% if reviews_product_id %}data-product-id="{{ reviews_product_id }}"{% endif %}
+         {% if reviews_product_name %}data-product-name="{{ reviews_product_name }}"{% endif %}>
+  <div class="container mx-auto px-4">
+
+    {# ── ENCABEZADO ── #}
+    <div class="text-center mb-8 sm:mb-10">
+      <h2 class="text-2xl sm:text-3xl font-semibold text-gray-800">
+        Reseñas de Clientes
+      </h2>
+      <p class="text-gray-500 mt-2 text-sm sm:text-base">Experiencias reales de quienes confían en VALAC Joyas</p>
+    </div>
+
+    {# ── RESUMEN COMPACTO (home) / COMPLETO (page/product) ── #}
+    <div id="reviews-summary" class="hidden mb-8">
+      {# En home mode: solo línea compacta. En page/product: distribución completa #}
+      <div id="reviews-summary-compact" class="hidden text-center">
+        <div class="inline-flex items-center gap-3 bg-gray-50 rounded-full py-2 px-6">
+          <span id="reviews-avg-compact" class="text-2xl font-bold text-gray-800">0</span>
+          <span id="reviews-avg-stars-compact" class="text-[#D5A300] text-lg">★★★★★</span>
+          <span class="text-gray-300">|</span>
+          <span id="reviews-total-compact" class="text-sm text-gray-500">0 reseñas</span>
+        </div>
+      </div>
+      <div id="reviews-summary-full" class="hidden">
+        <div class="flex flex-col sm:flex-row items-center justify-center gap-6 sm:gap-10 bg-gray-50 rounded-xl py-6 px-4">
+          <div class="text-center">
+            <div id="reviews-avg" class="text-4xl font-bold text-gray-800">0</div>
+            <div id="reviews-avg-stars" class="text-[#D5A300] text-lg mt-1">★★★★★</div>
+            <div id="reviews-total" class="text-sm text-gray-500 mt-1">0 reseñas</div>
+          </div>
+          <div id="reviews-distribution" class="flex flex-col gap-1 w-full max-w-xs">
+            {# Distribución por estrellas — se llena vía JS #}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {# ── FILTROS (solo en page mode) ── #}
+    <div id="reviews-filters" class="hidden mb-6 flex flex-wrap gap-3 justify-center">
+      <button class="reviews-filter-btn active" data-stars="all">Todas</button>
+      <button class="reviews-filter-btn" data-stars="5">★★★★★</button>
+      <button class="reviews-filter-btn" data-stars="4">★★★★☆</button>
+      <button class="reviews-filter-btn" data-stars="3">★★★☆☆</button>
+      <button class="reviews-filter-btn" data-stars="2">★★☆☆☆</button>
+      <button class="reviews-filter-btn" data-stars="1">★☆☆☆☆</button>
+      <button class="reviews-filter-btn" data-media="true">
+        <i class="fas fa-camera mr-1"></i>Con fotos
+      </button>
+    </div>
+
+    {# ── CARRUSEL (home) / GRID (page/product) de reseñas ── #}
+    <div id="reviews-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      {# Cards inyectadas por JS — en home se convierte a carrusel Slick #}
+    </div>
+
+    {# ── ESTADO VACÍO ── #}
+    <div id="reviews-empty" class="hidden text-center py-12">
+      <div class="text-5xl mb-4">✨</div>
+      <p class="text-gray-500 text-lg">Aún no hay reseñas. ¡Sé el primero en compartir tu experiencia!</p>
+    </div>
+
+    {# ── CARGAR MÁS ── #}
+    <div id="reviews-load-more" class="hidden text-center mt-8">
+      <button onclick="window.ValacReviews.loadMore()" class="bg-gray-100 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-200 transition-colors font-medium">
+        Cargar más reseñas
+      </button>
+    </div>
+
+    {# ── LINK A PÁGINA COMPLETA (solo home) ── #}
+    <div id="reviews-see-all" class="hidden text-center mt-6">
+      <a href="/resenas" class="text-[#D5A300] hover:text-[#B38F00] font-semibold transition-colors">
+        Ver todas las reseñas →
+      </a>
+    </div>
+
+    {# ── CTA ESCRIBIR RESEÑA ── #}
+    <div class="text-center mt-8">
+      <button onclick="window.ValacReviews.openForm()"
+              class="inline-flex items-center gap-2 text-white px-6 py-3 rounded-lg font-semibold transition-all hover:shadow-lg"
+              style="background:linear-gradient(90deg, #D5A300 0%, #FACC15 100%); color:#111;">
+        <i class="fas fa-pen"></i> Escribir Reseña
+      </button>
+    </div>
+  </div>
+</section>
+
+{# ── MODAL: FORMULARIO DE RESEÑA ── #}
+<div id="review-modal" class="fixed inset-0 z-[9999] hidden">
+  {# Backdrop #}
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="window.ValacReviews.closeForm()"></div>
+
+  {# Panel — compacto, centrado #}
+  <div class="absolute inset-x-4 top-1/2 -translate-y-1/2 mx-auto
+              bg-white rounded-2xl max-h-[88vh] overflow-y-auto w-full max-w-md shadow-2xl
+              sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2">
+    <div class="p-5 sm:p-6">
+      {# Header #}
+      <div class="flex justify-between items-center mb-4">
+        <div>
+          <h3 class="text-lg font-semibold text-gray-800">Escribe tu Reseña</h3>
+          <p class="text-xs text-gray-400 mt-0.5">Los campos con * son obligatorios</p>
+        </div>
+        <button onclick="window.ValacReviews.closeForm()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+      </div>
+
+      <form id="review-form" enctype="multipart/form-data" class="space-y-3">
+        {# Estrellas — protagonistas #}
+        <div class="text-center py-2 bg-gray-50 rounded-lg">
+          <label class="block text-xs font-medium text-gray-500 mb-1">¿Cómo calificarías tu experiencia? *</label>
+          <div id="star-picker" class="flex gap-1 justify-center">
+            {% for i in range(1, 6) %}
+            <button type="button" data-star="{{ i }}" class="star-pick text-3xl text-gray-300 hover:text-[#D5A300] transition-colors">★</button>
+            {% endfor %}
+          </div>
+          <input type="hidden" name="estrellas" id="estrellas-input" value="0">
+        </div>
+
+        {# Fila: Nombre + Email #}
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Nombre *</label>
+            <input type="text" name="nombre" required maxlength="100"
+                   class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#D5A300] focus:border-[#D5A300] outline-none"
+                   placeholder="Ana García">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Email * <span class="text-gray-400 font-normal">(no se publica)</span></label>
+            <input type="email" name="email" required maxlength="255"
+                   class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#D5A300] focus:border-[#D5A300] outline-none"
+                   placeholder="tu@email.com">
+          </div>
+        </div>
+
+        {# Fila: Pedido + Producto #}
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">No. de pedido *</label>
+            <input type="text" name="numero_pedido" required maxlength="50"
+                   class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#D5A300] focus:border-[#D5A300] outline-none"
+                   placeholder="Ej: 1234">
+          </div>
+          <div>
+            <label class="block text-xs font-medium text-gray-600 mb-1">Producto *</label>
+            <input type="text" name="producto" id="review-producto" required maxlength="200"
+                   class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#D5A300] focus:border-[#D5A300] outline-none"
+                   placeholder="Cadena Torzal 55cm">
+            <input type="hidden" name="product_id" id="review-product-id" value="">
+          </div>
+        </div>
+
+        {# Texto #}
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Tu experiencia * <span id="char-count" class="text-gray-400 font-normal">(mín. 50 caracteres)</span></label>
+          <textarea name="texto" id="review-texto" required minlength="50" rows="3"
+                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#D5A300] focus:border-[#D5A300] outline-none resize-none"
+                    placeholder="Cuéntanos: calidad, empaque, tiempo de entrega..."></textarea>
+        </div>
+
+        {# Media upload — compacto #}
+        <div>
+          <label class="block text-xs font-medium text-gray-600 mb-1">Fotos o videos <span class="text-gray-400 font-normal">(opcional, máx. 6)</span></label>
+          <div id="media-dropzone" class="border-2 border-dashed border-gray-300 rounded-lg p-3 text-center hover:border-[#D5A300] transition-colors cursor-pointer">
+            <div class="flex items-center justify-center gap-2 text-sm text-gray-500">
+              <i class="fas fa-cloud-upload-alt text-gray-400"></i>
+              <span>Arrastra o <span class="text-[#D5A300] font-medium">selecciona archivos</span></span>
+            </div>
+            <p class="text-[10px] text-gray-400 mt-1">JPG, PNG, WEBP, MP4, MOV · Fotos 10MB · Videos 50MB</p>
+            <input type="file" name="media" id="media-input" multiple accept=".jpg,.jpeg,.png,.webp,.mp4,.mov" class="hidden">
+          </div>
+          <div id="media-preview" class="flex flex-wrap gap-2 mt-2"></div>
+        </div>
+
+        {# Error #}
+        <div id="review-error" class="hidden text-red-600 text-sm bg-red-50 p-2.5 rounded-lg"></div>
+
+        {# Submit #}
+        <button type="submit" id="review-submit"
+                class="w-full py-2.5 rounded-lg font-semibold transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                style="background:linear-gradient(90deg, #D5A300 0%, #FACC15 100%); color:#111;">
+          <i class="fas fa-paper-plane text-sm"></i> Enviar Reseña
+        </button>
+      </form>
+
+      {# Success state #}
+      <div id="review-success" class="hidden text-center py-8">
+        <div class="text-5xl mb-4">🎉</div>
+        <h4 class="text-xl font-semibold text-gray-800 mb-2">¡Gracias por tu reseña!</h4>
+        <p class="text-gray-500 text-sm">Tu reseña está pendiente de aprobación.<br>La publicaremos lo antes posible.</p>
+        <button onclick="window.ValacReviews.closeForm()" class="mt-4 text-[#D5A300] font-semibold hover:text-[#B38F00] text-sm">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+{# ── LIGHTBOX PARA MEDIA ── #}
+<div id="review-lightbox" class="fixed inset-0 z-[10000] hidden bg-black/90 backdrop-blur-sm flex items-center justify-center"
+     onclick="window.ValacReviews.closeLightbox(event)">
+  <button class="absolute top-4 right-4 text-white text-3xl hover:text-gray-300 z-10" onclick="window.ValacReviews.closeLightbox()">&times;</button>
+  <button id="lb-prev" class="absolute left-4 top-1/2 -translate-y-1/2 text-white text-4xl hover:text-gray-300 z-10" onclick="event.stopPropagation();window.ValacReviews.lbNav(-1)">‹</button>
+  <button id="lb-next" class="absolute right-4 top-1/2 -translate-y-1/2 text-white text-4xl hover:text-gray-300 z-10" onclick="event.stopPropagation();window.ValacReviews.lbNav(1)">›</button>
+  <div id="lb-content" class="max-w-4xl max-h-[85vh]" onclick="event.stopPropagation()">
+    {# Image or video injected by JS #}
+  </div>
+</div>
+
+{# ── ESTILOS DEL COMPONENTE ── #}
+<style>
+  /* Filtros */
+  .reviews-filter-btn {
+    padding: .375rem .875rem; border-radius: 9999px; font-size: .85rem; font-weight: 500;
+    border: 1px solid #e5e7eb; background: #fff; color: #6b7280; cursor: pointer;
+    transition: all .2s;
+  }
+  .reviews-filter-btn:hover, .reviews-filter-btn.active {
+    background: #111; color: #D5A300; border-color: #111;
+  }
+
+  /* Card */
+  .review-card {
+    background: #fff; border-radius: .75rem; padding: 1.25rem;
+    box-shadow: 0 1px 4px rgba(0,0,0,.06); border: 1px solid #f3f4f6;
+    transition: box-shadow .2s, transform .2s;
+  }
+  .review-card:hover { box-shadow: 0 8px 24px rgba(0,0,0,.08); transform: translateY(-2px); }
+
+  /* Stars */
+  .review-stars { color: #D5A300; letter-spacing: 1px; }
+
+  /* Verified badge */
+  .verified-badge {
+    display: inline-flex; align-items: center; gap: .25rem;
+    font-size: .7rem; color: #059669; font-weight: 600;
+  }
+
+  /* Media grid in card */
+  .review-media-grid { display: flex; gap: .375rem; flex-wrap: wrap; margin-top: .75rem; }
+  .review-media-thumb {
+    width: 72px; height: 72px; object-fit: cover; border-radius: .5rem;
+    cursor: pointer; transition: opacity .2s;
+  }
+  .review-media-thumb:hover { opacity: .8; }
+  .review-video-thumb {
+    width: 72px; height: 72px; border-radius: .5rem; background: #111;
+    display: flex; align-items: center; justify-content: center; cursor: pointer;
+    transition: opacity .2s;
+  }
+  .review-video-thumb:hover { opacity: .8; }
+  .review-video-thumb i { color: #fff; font-size: 1.25rem; }
+
+  /* Util button */
+  .review-util-btn {
+    display: inline-flex; align-items: center; gap: .375rem;
+    padding: .25rem .625rem; border-radius: 9999px; font-size: .75rem;
+    border: 1px solid #e5e7eb; background: #fff; color: #6b7280; cursor: pointer;
+    transition: all .2s;
+  }
+  .review-util-btn:hover { border-color: #D5A300; color: #D5A300; }
+  .review-util-btn.voted { border-color: #D5A300; color: #D5A300; background: #FFFBF2; cursor: default; }
+
+  /* Distribution bars */
+  .dist-row { display: flex; align-items: center; gap: .5rem; font-size: .8rem; }
+  .dist-bar { flex: 1; height: 6px; background: #f3f4f6; border-radius: 3px; overflow: hidden; }
+  .dist-fill { height: 100%; background: #D5A300; border-radius: 3px; transition: width .5s; }
+
+  /* Lightbox media */
+  #lb-content img { max-width: 100%; max-height: 85vh; border-radius: .5rem; }
+  #lb-content video { max-width: 100%; max-height: 85vh; border-radius: .5rem; }
+
+  /* Star picker */
+  .star-pick { cursor: pointer; background: none; border: none; padding: 0; line-height: 1; }
+  .star-pick.active { color: #D5A300; }
+
+  /* Reviews Slick Carousel (home mode) */
+  #reviews-grid.slick-initialized { margin: 0 -8px; }
+  #reviews-grid.slick-initialized .review-card { margin: 0 8px; }
+  #reviews-grid .slick-prev,
+  #reviews-grid .slick-next {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,.12);
+    display: flex !important; align-items: center; justify-content: center;
+    z-index: 10; transition: all .2s;
+  }
+  #reviews-grid .slick-prev { left: -18px; }
+  #reviews-grid .slick-next { right: -18px; }
+  #reviews-grid .slick-prev:hover,
+  #reviews-grid .slick-next:hover { background: #111; color: #D5A300; }
+  #reviews-grid .slick-prev::before,
+  #reviews-grid .slick-next::before { display: none; }
+  #reviews-grid .slick-prev i,
+  #reviews-grid .slick-next i { color: #333; font-size: .85rem; }
+  #reviews-grid .slick-prev:hover i,
+  #reviews-grid .slick-next:hover i { color: #D5A300; }
+  #reviews-grid .slick-dots { bottom: -30px; }
+  #reviews-grid .slick-dots li button::before { color: #d1d5db; font-size: 8px; }
+  #reviews-grid .slick-dots li.slick-active button::before { color: #D5A300; }
+</style>

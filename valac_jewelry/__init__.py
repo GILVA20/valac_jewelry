@@ -9,7 +9,6 @@ from flask_login import LoginManager
 
 # Cargar variables de entorno desde el archivo .env
 load_dotenv(override=True)
-print(f"                DEBUG:valac_jewelry:FLASK_ENV: {os.getenv('FLASK_ENV')}                                           ")
 logging.basicConfig(level=logging.DEBUG)
 
 def create_app():
@@ -38,13 +37,9 @@ def create_app():
         app.config.from_object(DevelopmentConfig)
         logging.debug("Cargando configuración de desarrollo")
     
-    for key, value in os.environ.items():
-        app.logger.debug(f"{key} = {value}")
-    
+    # Solo loguear config no-sensible para diagnóstico
     app.logger.debug("FLASK_ENV: %s", os.getenv("FLASK_ENV"))
     app.logger.debug("SIMULAR_PAGO: %s", app.config.get("SIMULAR_PAGO"))
-    app.logger.debug("MP_ACCESS_TOKEN: %s", app.config.get("MP_ACCESS_TOKEN"))
-    app.logger.debug("MP_PUBLIC_KEY: %s", app.config.get("MP_PUBLIC_KEY"))
     
     supabase_url = app.config.get("SUPABASE_URL")
     supabase_key = app.config.get("SUPABASE_KEY")
@@ -119,6 +114,7 @@ def create_app():
     from .routes.admin import SupabaseProductAdmin, BulkUploadAdminView, SalesAdmin, PaymentsAdmin, ReportsAdmin
     from .routes.admin_coupons import CouponsAdminView
     from .routes.admin_orders import OrderAdminView
+    from .routes.admin_reviews import ReviewsAdminView
     from .routes.analytics import AnalyticsAdmin
     admin.add_view(SupabaseProductAdmin(name='Productos Supabase', endpoint='supabase_products'))
     admin.add_view(BulkUploadAdminView(name='Carga Masiva', endpoint='bulk_upload'))
@@ -129,6 +125,11 @@ def create_app():
     admin.add_view(ReportsAdmin(name='Reportes', endpoint='reports'))
     admin.add_view(AnalyticsAdmin(name='Analytics', endpoint='analytics'))
     admin.add_view(CouponsAdminView(name='Cupones', endpoint='admin_coupons'))
+    admin.add_view(ReviewsAdminView(name='Reseñas', endpoint='admin_reviews'))
+
+    # Reseñas de clientes (API + página /reseñas)
+    from .routes.reviews import reviews_bp
+    app.register_blueprint(reviews_bp)
 
     # VALAC Studio – AI photography
     from .routes.studio import studio_bp

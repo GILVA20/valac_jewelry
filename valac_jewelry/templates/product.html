@@ -231,9 +231,17 @@
         {% endfor %}
       </div>
     </div>
+
+    {# ---------- RESEÑAS DE ESTE PRODUCTO ---------- #}
+    {% set reviews_mode = "product" %}
+    {% set reviews_product_id = product.id %}
+    {% set reviews_product_name = product.nombre %}
+    {% include 'partials/reviews_section.html' %}
+
 {% endblock %}
 
 {% block scripts_extra %}
+<script src="{{ url_for('static', filename='js/reviews.js') }}"></script>
 <script>
   // Inicializar Slick Slider para el slider de producto
   $(document).ready(function(){

@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}Reseñas de Clientes - VALAC Joyas{% endblock %}
+
+{% block head_extra %}
+<meta name="description" content="Reseñas reales de clientes de VALAC Joyas. Fotos, videos y experiencias de compra verificadas.">
+<style>
+  :root{
+    --lux-gold:#D5A300; --lux-gold-600:#B38F00;
+    --lux-oxblood:#7A0019;
+    --lux-text:#1F2937; --lux-muted:#6B7280; --lux-ivory:#FFFBF2;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<main class="pt-24 md:pt-28 lg:pt-32 pb-16">
+
+  {# ── Hero ── #}
+  <div class="container mx-auto px-4 mb-10 text-center">
+    <h1 class="text-3xl sm:text-4xl font-semibold text-gray-800 mb-3">Reseñas de Nuestros Clientes</h1>
+    <p class="text-gray-500 max-w-xl mx-auto">Experiencias reales de quienes eligen VALAC Joyas. Cada reseña es verificada por nuestro equipo.</p>
+  </div>
+
+  {# ── Componente de reseñas en modo "page" ── #}
+  {% set reviews_mode = "page" %}
+  {% include 'partials/reviews_section.html' %}
+
+</main>
+{% endblock %}
+
+{% block scripts_extra %}
+<script src="{{ url_for('static', filename='js/reviews.js') }}"></script>
+{% endblock %}

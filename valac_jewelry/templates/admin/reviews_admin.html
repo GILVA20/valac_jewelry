@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Reseñas - VALAC Joyas Admin</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+  <style>
+    body { background: #f8f9fa; }
+    .stars { color: #D5A300; letter-spacing: 1px; }
+    .badge-pending { background: #ffc107; color: #111; }
+    .badge-approved { background: #198754; }
+    .badge-rejected { background: #dc3545; }
+    .media-thumb {
+      width: 56px; height: 56px; object-fit: cover;
+      border-radius: 6px; cursor: pointer; border: 1px solid #dee2e6;
+    }
+    .media-thumb:hover { opacity: .8; }
+    .review-text { max-width: 320px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .filter-bar { background: #fff; border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,.08); }
+    .stat-card { border-radius: 8px; padding: 1rem; text-align: center; }
+    tr:hover { background-color: #f1f3f5 !important; }
+  </style>
+</head>
+<body>
+  <div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h3 class="mb-0"><i class="fas fa-star me-2" style="color:#D5A300"></i>Reseñas de Clientes</h3>
+      <a href="/admin/" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i>Volver al Admin</a>
+    </div>
+
+    {# ── ESTADÍSTICAS ── #}
+    <div class="row g-3 mb-4">
+      <div class="col-md-4">
+        <div class="stat-card bg-white border">
+          <div class="fs-2 fw-bold">{{ stats.total }}</div>
+          <div class="text-muted">Total</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="stat-card bg-warning bg-opacity-10 border border-warning">
+          <div class="fs-2 fw-bold text-warning">{{ stats.pending }}</div>
+          <div class="text-muted">Pendientes</div>
+        </div>
+      </div>
+      <div class="col-md-4">
+        <div class="stat-card bg-success bg-opacity-10 border border-success">
+          <div class="fs-2 fw-bold text-success">{{ stats.approved }}</div>
+          <div class="text-muted">Aprobadas</div>
+        </div>
+      </div>
+    </div>
+
+    {# ── FILTROS ── #}
+    <div class="filter-bar">
+      <form method="get" class="row g-2 align-items-end">
+        <div class="col-auto">
+          <label class="form-label small mb-1">Estado</label>
+          <select name="status" class="form-select form-select-sm">
+            <option value="all" {{ 'selected' if status_filter == 'all' }}>Todas</option>
+            <option value="pending" {{ 'selected' if status_filter == 'pending' }}>Pendientes</option>
+            <option value="approved" {{ 'selected' if status_filter == 'approved' }}>Aprobadas</option>
+          </select>
+        </div>
+        <div class="col-auto">
+          <label class="form-label small mb-1">Estrellas</label>
+          <select name="estrellas" class="form-select form-select-sm">
+            <option value="">Todas</option>
+            {% for s in range(5, 0, -1) %}
+              <option value="{{ s }}" {{ 'selected' if stars_filter == s }}>{{ '★' * s }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="col-auto">
+          <button class="btn btn-sm btn-dark">Filtrar</button>
+        </div>
+      </form>
+    </div>
+
+    {# ── TABLA DE RESEÑAS ── #}
+    {% if reviews %}
+    <div class="table-responsive">
+      <table class="table table-sm align-middle bg-white rounded" style="border-collapse: separate; border-spacing: 0;">
+        <thead class="table-light">
+          <tr>
+            <th>Estado</th>
+            <th>Cliente</th>
+            <th>Producto</th>
+            <th>Estrellas</th>
+            <th>Reseña</th>
+            <th>Media</th>
+            <th>Fecha</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for r in reviews %}
+          <tr>
+            <td>
+              {% if r.verificado %}
+                <span class="badge badge-approved">Aprobada</span>
+              {% elif r.admin_notes %}
+                <span class="badge badge-rejected">Rechazada</span>
+              {% else %}
+                <span class="badge badge-pending">Pendiente</span>
+              {% endif %}
+            </td>
+            <td>
+              <strong>{{ r.nombre }}</strong><br>
+              <small class="text-muted">{{ r.email }}</small><br>
+              <small class="text-muted">Pedido: {{ r.numero_pedido }}</small>
+            </td>
+            <td>{{ r.producto }}</td>
+            <td class="stars">{{ '★' * r.estrellas }}{{ '☆' * (5 - r.estrellas) }}</td>
+            <td>
+              <div class="review-text" title="{{ r.texto }}">{{ r.texto }}</div>
+            </td>
+            <td>
+              {% for url in (r.media_urls or []) %}
+                {% set full = cdn + url if not url.startswith('http') else url %}
+                {% set is_video = url.lower().endswith('.mp4') or url.lower().endswith('.mov') %}
+                {% if is_video %}
+                  <a href="{{ full }}" target="_blank" title="Ver video">
+                    <div class="media-thumb d-flex align-items-center justify-content-center bg-dark text-white">
+                      <i class="fas fa-play"></i>
+                    </div>
+                  </a>
+                {% else %}
+                  <a href="{{ full }}" target="_blank">
+                    <img src="{{ full }}" class="media-thumb" alt="Media">
+                  </a>
+                {% endif %}
+              {% endfor %}
+            </td>
+            <td>
+              <small>{{ r.created_at[:10] if r.created_at else '' }}</small>
+            </td>
+            <td>
+              <div class="d-flex gap-1 flex-wrap">
+                {% if not r.verificado %}
+                <form method="post" action="{{ url_for('.approve', review_id=r.id) }}" class="d-inline">
+                  <button class="btn btn-success btn-sm" title="Aprobar"><i class="fas fa-check"></i></button>
+                </form>
+                {% endif %}
+
+                {% if r.verificado or not r.admin_notes %}
+                <form method="post" action="{{ url_for('.reject', review_id=r.id) }}" class="d-inline">
+                  <input type="hidden" name="admin_notes" value="Rechazada por admin">
+                  <button class="btn btn-warning btn-sm" title="Rechazar"><i class="fas fa-ban"></i></button>
+                </form>
+                {% endif %}
+
+                <form method="post" action="{{ url_for('.delete', review_id=r.id) }}" class="d-inline"
+                      onsubmit="return confirm('¿Eliminar esta reseña y sus archivos? Esta acción no se puede deshacer.')">
+                  <button class="btn btn-danger btn-sm" title="Eliminar"><i class="fas fa-trash"></i></button>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5 bg-white rounded">
+      <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+      <p class="text-muted">No hay reseñas {{ 'pendientes' if status_filter == 'pending' else '' }}.</p>
+    </div>
+    {% endif %}
+  </div>
+
+  {# ── Flash messages ── #}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div style="position:fixed;top:1rem;right:1rem;z-index:9999;max-width:350px">
+      {% for cat, msg in messages %}
+      <div class="alert alert-{{ 'success' if cat=='success' else ('warning' if cat=='warning' else 'danger') }} alert-dismissible fade show" role="alert">
+        {{ msg }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  {% endwith %}
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

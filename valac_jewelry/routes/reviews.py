@@ -249,7 +249,7 @@ def create_review():
     if not email or not EMAIL_RE.match(email):
         errors.append("Ingresa un email válido.")
     if not numero_pedido:
-        errors.append("El número de pedido es requerido.")
+        numero_pedido = ""  # Optional field
     if not producto:
         errors.append("El nombre del producto es requerido.")
     if not (1 <= estrellas <= 5):

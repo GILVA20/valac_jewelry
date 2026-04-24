@@ -445,7 +445,9 @@
     var modal = document.getElementById("review-modal");
     if (modal) {
       modal.classList.remove("hidden");
-      document.body.style.overflow = "hidden";
+      var scrollY = window.scrollY;
+      document.body.classList.add('review-modal-open');
+      document.body.dataset.scrollY = scrollY;
       // Reset form state
       var form = document.getElementById("review-form");
       var success = document.getElementById("review-success");
@@ -472,7 +474,8 @@
     var modal = document.getElementById("review-modal");
     if (modal) {
       modal.classList.add("hidden");
-      document.body.style.overflow = "";
+      document.body.classList.remove('review-modal-open');
+      window.scrollTo(0, parseInt(document.body.dataset.scrollY || '0'));
     }
   }
 

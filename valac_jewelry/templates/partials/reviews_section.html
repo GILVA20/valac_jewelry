@@ -102,31 +102,38 @@
 </section>
 
 {# ── MODAL: FORMULARIO DE RESEÑA ── #}
-<div id="review-modal" class="fixed inset-0 z-[9999] hidden">
-  {# Backdrop #}
-  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="window.ValacReviews.closeForm()"></div>
+<div id="review-modal" class="fixed inset-0 z-[9999] hidden" style="overscroll-behavior:contain;">
+  {# Backdrop — fixed full cover #}
+  <div class="fixed inset-0 bg-black/60 backdrop-blur-sm" onclick="window.ValacReviews.closeForm()"></div>
 
-  {# Panel — compacto, centrado #}
-  <div class="absolute inset-x-4 top-1/2 -translate-y-1/2 mx-auto
-              bg-white rounded-2xl max-h-[88vh] overflow-y-auto w-full max-w-md shadow-2xl
-              sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2">
-    <div class="p-5 sm:p-6">
-      {# Header #}
-      <div class="flex justify-between items-center mb-4">
-        <div>
-          <h3 class="text-lg font-semibold text-gray-800">Escribe tu Reseña</h3>
-          <p class="text-xs text-gray-400 mt-0.5">Los campos con * son obligatorios</p>
+  {# Panel — fullscreen en mobile, card centrada en desktop #}
+  <div class="fixed inset-0 bg-white overflow-y-auto
+              sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-y-1/2 sm:-translate-x-1/2
+              sm:w-full sm:max-w-md sm:max-h-[88vh] sm:rounded-2xl sm:shadow-2xl"
+       style="overscroll-behavior:contain; -webkit-overflow-scrolling:touch;">
+    <div class="p-5 pb-24 sm:p-6 sm:pb-6">
+      {# Header — sticky para que X siempre sea accesible #}
+      <div class="sticky top-0 bg-white z-10 -mx-5 px-5 sm:-mx-6 sm:px-6 pt-2 pb-2">
+        <div class="flex items-center justify-between mb-1 sm:hidden">
+          <span class="text-xs font-semibold tracking-widest text-gray-400 uppercase">VALAC Joyas</span>
+          <button onclick="window.ValacReviews.closeForm()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
         </div>
-        <button onclick="window.ValacReviews.closeForm()" class="text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+        <div class="flex justify-between items-center">
+          <div>
+            <h3 class="text-lg font-semibold text-gray-800">Escribe tu Reseña</h3>
+            <p class="text-xs text-gray-400 mt-0.5">Los campos con * son obligatorios</p>
+          </div>
+          <button onclick="window.ValacReviews.closeForm()" class="hidden sm:block text-gray-400 hover:text-gray-600 text-2xl leading-none">&times;</button>
+        </div>
       </div>
 
       <form id="review-form" enctype="multipart/form-data" class="space-y-3">
         {# Estrellas — protagonistas #}
-        <div class="text-center py-2 bg-gray-50 rounded-lg">
-          <label class="block text-xs font-medium text-gray-500 mb-1">¿Cómo calificarías tu experiencia? *</label>
-          <div id="star-picker" class="flex gap-1 justify-center">
+        <div class="text-center py-3 bg-gray-50 rounded-lg">
+          <label class="block text-xs font-medium text-gray-500 mb-2">¿Cómo calificarías tu experiencia? *</label>
+          <div id="star-picker" class="flex gap-2 justify-center">
             {% for i in range(1, 6) %}
-            <button type="button" data-star="{{ i }}" class="star-pick text-3xl text-gray-300 hover:text-[#D5A300] transition-colors">★</button>
+            <button type="button" data-star="{{ i }}" class="star-pick text-4xl text-gray-300 hover:text-[#D5A300] hover:scale-110 transition-all duration-150">★</button>
             {% endfor %}
           </div>
           <input type="hidden" name="estrellas" id="estrellas-input" value="0">
@@ -138,7 +145,7 @@
             <label class="block text-xs font-medium text-gray-600 mb-1">Nombre *</label>
             <input type="text" name="nombre" required maxlength="100"
                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#D5A300] focus:border-[#D5A300] outline-none"
-                   placeholder="Ana García">
+                   placeholder="Paula Pérez">
           </div>
           <div>
             <label class="block text-xs font-medium text-gray-600 mb-1">Email * <span class="text-gray-400 font-normal">(no se publica)</span></label>
@@ -151,8 +158,8 @@
         {# Fila: Pedido + Producto #}
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
-            <label class="block text-xs font-medium text-gray-600 mb-1">No. de pedido *</label>
-            <input type="text" name="numero_pedido" required maxlength="50"
+            <label class="block text-xs font-medium text-gray-600 mb-1">No. de pedido <span class="text-gray-400 font-normal">(opcional)</span></label>
+            <input type="text" name="numero_pedido" maxlength="50"
                    class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-[#D5A300] focus:border-[#D5A300] outline-none"
                    placeholder="Ej: 1234">
           </div>
@@ -173,15 +180,12 @@
                     placeholder="Cuéntanos: calidad, empaque, tiempo de entrega..."></textarea>
         </div>
 
-        {# Media upload — compacto #}
+        {# Media upload — botón compacto #}
         <div>
-          <label class="block text-xs font-medium text-gray-600 mb-1">Fotos o videos <span class="text-gray-400 font-normal">(opcional, máx. 6)</span></label>
-          <div id="media-dropzone" class="border-2 border-dashed border-gray-300 rounded-lg p-3 text-center hover:border-[#D5A300] transition-colors cursor-pointer">
-            <div class="flex items-center justify-center gap-2 text-sm text-gray-500">
-              <i class="fas fa-cloud-upload-alt text-gray-400"></i>
-              <span>Arrastra o <span class="text-[#D5A300] font-medium">selecciona archivos</span></span>
-            </div>
-            <p class="text-[10px] text-gray-400 mt-1">JPG, PNG, WEBP, MP4, MOV · Fotos 10MB · Videos 50MB</p>
+          <div id="media-dropzone" class="flex items-center gap-2 border border-dashed border-gray-300 rounded-lg px-3 py-2.5 cursor-pointer hover:border-[#D5A300] hover:bg-amber-50/30 transition-colors">
+            <i class="fas fa-camera text-[#D5A300] text-base"></i>
+            <span class="text-sm text-gray-600"><span class="font-medium text-gray-700">Sube una foto</span> de tu joya</span>
+            <span class="ml-auto text-[10px] text-gray-400">Opcional</span>
             <input type="file" name="media" id="media-input" multiple accept=".jpg,.jpeg,.png,.webp,.mp4,.mov" class="hidden">
           </div>
           <div id="media-preview" class="flex flex-wrap gap-2 mt-2"></div>
@@ -310,4 +314,18 @@
   #reviews-grid .slick-dots { bottom: -30px; }
   #reviews-grid .slick-dots li button::before { color: #d1d5db; font-size: 8px; }
   #reviews-grid .slick-dots li.slick-active button::before { color: #D5A300; }
+
+  /* Lock body when review modal is open — iOS safe */
+  body.review-modal-open {
+    overflow: hidden !important;
+    position: fixed !important;
+    width: 100% !important;
+    height: 100% !important;
+  }
+  /* Hide site chrome so modal is truly fullscreen */
+  body.review-modal-open #top-promo,
+  body.review-modal-open header,
+  body.review-modal-open .whatsapp-float {
+    display: none !important;
+  }
 </style>

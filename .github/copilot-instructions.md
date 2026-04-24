@@ -158,6 +158,9 @@ Antes de responder, clasifica la petición del usuario en una de estas categorí
 - `/payment-flow` → referencia del flujo MercadoPago completo
 - `/admin-workflow` → referencia de operaciones admin
 
+### Skills disponibles:
+- `jewelry-image-prompts` → genera prompts ultra-detallados para AI image generation (Gemini/DALL-E/Midjourney) con la identidad visual VALAC
+
 ## SEGURIDAD (OBLIGATORIO)
 
 ### Checklist antes de cada commit

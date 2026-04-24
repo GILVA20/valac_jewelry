@@ -28,6 +28,9 @@
     const section = document.getElementById("reviews-section");
     if (!section) return;
 
+    // Prevent jQuery from caching AJAX GET responses (fixes stale data on mobile refresh)
+    $.ajaxSetup({ cache: false });
+
     mode = section.dataset.mode || "home";
     productId = section.dataset.productId || null;
     productName = section.dataset.productName || "";
@@ -55,14 +58,15 @@
     setupCharCounter();
     setupKeyboard();
 
-    loadStats();
-    loadReviews(true);
+    loadStats(function () {
+      loadReviews(true);
+    });
   }
 
   /* ──────────────────────────────────────────
      LOAD STATS
   ────────────────────────────────────────── */
-  function loadStats() {
+  function loadStats(callback) {
     let url = API_STATS;
     if (productId) url += "?product_id=" + productId;
 
@@ -107,6 +111,8 @@
         }
         $("#reviews-distribution").html(distHtml);
       }
+    }).always(function () {
+      if (callback) callback();
     });
   }
 
@@ -176,22 +182,28 @@
     var $grid = $("#reviews-grid");
     if ($grid.hasClass("slick-initialized")) return;
 
+    var count = $grid.children().length;
+    if (count === 0) return;
+
     // Remove grid classes for Slick
     $grid.removeClass("grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5");
 
+    // Adapt to the actual number of reviews to prevent Slick from breaking
+    var show = Math.min(count, 3);
+
     $grid.slick({
-      slidesToShow: 3,
+      slidesToShow: show,
       slidesToScroll: 1,
-      autoplay: true,
+      autoplay: count > 1,
       autoplaySpeed: 4000,
-      arrows: true,
-      dots: true,
+      arrows: count > show,
+      dots: count > show,
       pauseOnHover: true,
-      infinite: true,
+      infinite: count > show,
       prevArrow: '<button type="button" class="slick-prev" aria-label="Anterior"><i class="fas fa-chevron-left"></i></button>',
       nextArrow: '<button type="button" class="slick-next" aria-label="Siguiente"><i class="fas fa-chevron-right"></i></button>',
       responsive: [
-        { breakpoint: 1024, settings: { slidesToShow: 2 } },
+        { breakpoint: 1024, settings: { slidesToShow: Math.min(count, 2) } },
         { breakpoint: 640, settings: { slidesToShow: 1 } }
       ]
     });
@@ -550,6 +562,21 @@
     voteUtil: voteUtil
   };
 
-  // Auto-init on DOMContentLoaded
-  document.addEventListener("DOMContentLoaded", init);
+  // Auto-init: covers first load + bfcache restoration (Safari iOS)
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+  window.addEventListener("pageshow", function (e) {
+    if (e.persisted) {
+      // Page restored from bfcache — re-init to load fresh data
+      var $grid = $("#reviews-grid");
+      if ($grid.hasClass("slick-initialized")) {
+        $grid.slick("unslick");
+        $grid.addClass("grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5");
+      }
+      init();
+    }
+  });
 })();

@@ -134,7 +134,28 @@ def list_reviews():
     offset = (page - 1) * per_page
 
     try:
-        # Conteo total
+        # Datos
+        q = sb.table("reviews").select("*").eq("verificado", "true")
+        if product_id:
+            q = q.eq("product_id", product_id)
+        if estrellas and 1 <= estrellas <= 5:
+            q = q.eq("estrellas", estrellas)
+        if con_media:
+            q = q.neq("media_urls", "{}")
+
+        if featured:
+            # Home mode: solo top 6, sin paginación ni count extra
+            q = q.order("estrellas", desc=True).order("created_at", desc=True).limit(6)
+            resp = q.execute()
+            reviews = [_serialize_review(r) for r in (resp.data or [])]
+            return jsonify({
+                "reviews": reviews,
+                "total": len(reviews),
+                "page": 1,
+                "has_more": False,
+            })
+
+        # Conteo total (solo para paginación, no featured)
         count_q = sb.table("reviews").select("id", count="exact").eq("verificado", "true")
         if product_id:
             count_q = count_q.eq("product_id", product_id)
@@ -143,21 +164,7 @@ def list_reviews():
         count_resp = count_q.execute()
         total = count_resp.count or 0
 
-        # Datos
-        q = sb.table("reviews").select("*").eq("verificado", "true")
-        if product_id:
-            q = q.eq("product_id", product_id)
-        if estrellas and 1 <= estrellas <= 5:
-            q = q.eq("estrellas", estrellas)
-        if con_media:
-            # Filtrar las que tienen al menos un media_url
-            q = q.neq("media_urls", "{}")
-
-        if featured:
-            q = q.order("estrellas", desc=True).order("created_at", desc=True).limit(6)
-        else:
-            q = q.order("created_at", desc=True).range(offset, offset + per_page - 1)
-
+        q = q.order("created_at", desc=True).range(offset, offset + per_page - 1)
         resp = q.execute()
         reviews = [_serialize_review(r) for r in (resp.data or [])]
 
@@ -295,6 +302,14 @@ def create_review():
             logger.exception("Error subiendo archivo %s: %s", safe_name, upload_err)
             return jsonify({"error": "Error al subir archivos. Intenta de nuevo."}), 500
 
+    # ── Check auto-approve setting ──────────────────
+    auto_approve = False
+    try:
+        setting_resp = sb.table("site_settings").select("value").eq("key", "reviews_auto_approve").single().execute()
+        auto_approve = (setting_resp.data or {}).get("value", "false") == "true"
+    except Exception:
+        auto_approve = False
+
     # ── Insertar reseña en DB ────────────────────────
     review_data = {
         "nombre": nombre,
@@ -305,16 +320,18 @@ def create_review():
         "estrellas": estrellas,
         "texto": texto,
         "media_urls": media_paths,
-        "verificado": False,
+        "verificado": auto_approve,
         "ip_address": ip,
     }
 
+    status_msg = "publicada" if auto_approve else "pendiente de aprobación"
+
     try:
         sb.table("reviews").insert(review_data).execute()
-        logger.info("Reseña creada exitosamente para producto=%s, ip=%s", producto, ip)
+        logger.info("Reseña creada (auto_approve=%s) para producto=%s, ip=%s", auto_approve, producto, ip)
         return jsonify({
             "success": True,
-            "message": "¡Gracias! Tu reseña ha sido enviada y está pendiente de aprobación.",
+            "message": f"¡Gracias! Tu reseña ha sido enviada y está {status_msg}.",
         }), 201
     except Exception as e:
         logger.exception("Error al insertar reseña: %s", e)

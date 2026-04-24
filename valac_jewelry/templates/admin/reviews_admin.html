@@ -29,6 +29,30 @@
       <a href="/admin/" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left me-1"></i>Volver al Admin</a>
     </div>
 
+    {# ── TOGGLE AUTO-APROBACIÓN ── #}
+    <div class="d-flex align-items-center gap-3 mb-4 p-3 bg-white rounded border">
+      <form method="post" action="{{ url_for('.toggle_auto_approve') }}" class="d-flex align-items-center gap-3 mb-0">
+        <div class="form-check form-switch mb-0">
+          <input class="form-check-input" type="checkbox" role="switch" id="autoApproveSwitch"
+                 {{ 'checked' if auto_approve }} onchange="this.form.submit()"
+                 style="width: 2.5rem; height: 1.25rem; cursor: pointer;">
+          <label class="form-check-label fw-semibold" for="autoApproveSwitch" style="cursor: pointer;">
+            Aprobación automática
+          </label>
+        </div>
+      </form>
+      <span class="badge {{ 'bg-success' if auto_approve else 'bg-secondary' }}">
+        {{ 'Activa' if auto_approve else 'Inactiva' }}
+      </span>
+      <small class="text-muted">
+        {% if auto_approve %}
+          Las reseñas nuevas se publican automáticamente sin revisión.
+        {% else %}
+          Las reseñas nuevas requieren aprobación manual antes de publicarse.
+        {% endif %}
+      </small>
+    </div>
+
     {# ── ESTADÍSTICAS ── #}
     <div class="row g-3 mb-4">
       <div class="col-md-4">

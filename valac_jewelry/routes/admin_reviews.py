@@ -73,7 +73,35 @@ class ReviewsAdminView(BaseView):
             cdn=cdn,
             status_filter=status_filter,
             stars_filter=stars_filter,
+            auto_approve=self._get_auto_approve(),
         )
+
+    # ── HELPERS ───────────────────────────────────────
+
+    def _get_auto_approve(self) -> bool:
+        """Lee el setting reviews_auto_approve de site_settings."""
+        try:
+            resp = self.app_sb.table("site_settings").select("value").eq("key", "reviews_auto_approve").single().execute()
+            return (resp.data or {}).get("value", "false") == "true"
+        except Exception:
+            return False
+
+    # ── TOGGLE AUTO-APPROVE ──────────────────────────
+
+    @expose("/toggle-auto-approve", methods=["POST"])
+    def toggle_auto_approve(self):
+        sb = self.app_sb
+        current = self._get_auto_approve()
+        new_value = "false" if current else "true"
+        try:
+            sb.table("site_settings").upsert({"key": "reviews_auto_approve", "value": new_value}).execute()
+            estado = "activada" if new_value == "true" else "desactivada"
+            flash(f"Aprobación automática {estado}.", "success")
+            logger.info("Auto-approve reseñas cambiado a %s por admin", new_value)
+        except Exception as e:
+            logger.exception("Error al cambiar auto-approve: %s", e)
+            flash("Error al cambiar configuración.", "error")
+        return redirect(url_for(".index"))
 
     # ── APROBAR ──────────────────────────────────────
 

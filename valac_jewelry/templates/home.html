@@ -107,6 +107,51 @@
     </div>
   </section>
 
+  {# ---------- RESEÑAS DINÁMICAS ---------- #}
+  {% set reviews_mode = "home" %}
+  {% include 'partials/reviews_section.html' %}
+
+  {# ---------- CTAs: CONTACTO + RESEÑAS ---------- #}
+  <section class="py-10 sm:py-14 bg-gray-50">
+    <div class="container mx-auto px-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-4xl mx-auto">
+
+        {# CTA Contacto #}
+        <a href="/contact" class="group block bg-white rounded-xl p-6 sm:p-8 border border-gray-200 shadow-sm hover:shadow-lg hover:border-[#D5A300] transition-all duration-300" data-aos="fade-up" data-aos-delay="0">
+          <div class="flex items-center gap-4 mb-3">
+            <div class="w-12 h-12 rounded-full bg-[#D5A300]/10 flex items-center justify-center flex-shrink-0">
+              <i class="fas fa-envelope text-[#D5A300] text-xl"></i>
+            </div>
+            <h3 class="text-lg sm:text-xl font-semibold text-gray-800 group-hover:text-[#D5A300] transition-colors">¿Tienes dudas?</h3>
+          </div>
+          <p class="text-gray-500 text-sm sm:text-base leading-relaxed mb-4">
+            Escríbenos y te ayudamos a encontrar la pieza perfecta para ti o para ese alguien especial.
+          </p>
+          <span class="inline-flex items-center gap-2 text-[#D5A300] font-semibold text-sm group-hover:gap-3 transition-all">
+            Contáctanos <i class="fas fa-arrow-right text-xs"></i>
+          </span>
+        </a>
+
+        {# CTA Reseñas #}
+        <a href="/resenas" class="group block bg-white rounded-xl p-6 sm:p-8 border border-gray-200 shadow-sm hover:shadow-lg hover:border-[#D5A300] transition-all duration-300" data-aos="fade-up" data-aos-delay="100">
+          <div class="flex items-center gap-4 mb-3">
+            <div class="w-12 h-12 rounded-full bg-[#D5A300]/10 flex items-center justify-center flex-shrink-0">
+              <i class="fas fa-star text-[#D5A300] text-xl"></i>
+            </div>
+            <h3 class="text-lg sm:text-xl font-semibold text-gray-800 group-hover:text-[#D5A300] transition-colors">Experiencias reales</h3>
+          </div>
+          <p class="text-gray-500 text-sm sm:text-base leading-relaxed mb-4">
+            Lee lo que dicen nuestros clientes o comparte tu propia experiencia con VALAC Joyas.
+          </p>
+          <span class="inline-flex items-center gap-2 text-[#D5A300] font-semibold text-sm group-hover:gap-3 transition-all">
+            Ver todas las reseñas <i class="fas fa-arrow-right text-xs"></i>
+          </span>
+        </a>
+
+      </div>
+    </div>
+  </section>
+
   {# ---------- NUESTRA HISTORIA (ligero) ---------- #}
   <section class="py-10 sm:py-12 bg-white text-gray-800">
     <div class="container mx-auto px-4 flex flex-col md:flex-row items-center gap-6 md:gap-8">
@@ -122,10 +167,6 @@
       </div>
     </div>
   </section>
-
-  {# ---------- RESEÑAS DINÁMICAS ---------- #}
-  {% set reviews_mode = "home" %}
-  {% include 'partials/reviews_section.html' %}
 
 </main>
 {% endblock %}

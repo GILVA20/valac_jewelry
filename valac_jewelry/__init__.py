@@ -135,6 +135,10 @@ def create_app():
     from .routes.studio import studio_bp
     app.register_blueprint(studio_bp)
 
+    # Anillos de Compromiso – SPA
+    from .routes.anillos_compromiso import anillos_bp
+    app.register_blueprint(anillos_bp)
+
     return app
 
 if __name__ == '__main__':

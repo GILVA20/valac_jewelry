@@ -7,7 +7,7 @@ export default defineConfig(({ mode }) => ({
   base: mode === "production" ? "/static/anillos-compromiso/" : "/",
   build: {
     outDir: "../static/anillos-compromiso",
-    emptyOutDir: true,
+    emptyOutDir: false,
     rollupOptions: {
       output: {
         entryFileNames: "assets/configurador.js",

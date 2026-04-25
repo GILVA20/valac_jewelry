@@ -6,13 +6,13 @@ import ringPave from "@/assets/ring-pave.jpg";
 import ringTres from "@/assets/ring-tres.jpg";
 import { Configurator, type Selections } from "@/components/valac/Configurator";
 
-const WHATSAPP_NUMBER = "5213320471076";
+const WHATSAPP_NUMBER = "527718574647";
 
 const PRODUCTS = [
-  { name: "Solitario Clásico 14k", price: 8500, img: ringSolitario },
-  { name: "Halo Brillante 14k", price: 12900, img: ringHalo },
-  { name: "Pavé Rosé 14k", price: 9800, img: ringPave },
-  { name: "Tres Piedras Oval", price: 14500, img: ringTres },
+  { name: "Solitario 14k · Diamante Natural", price: 18500, img: ringSolitario },
+  { name: "Halo Brillante 14k · Oro Amarillo", price: 24900, img: ringHalo },
+  { name: "Solitario Redondo 14k · Lab-Grown", price: 14800, img: ringPave },
+  { name: "Tres Piedras Oval 14k", price: 28500, img: ringTres },
 ];
 
 export default function App() {

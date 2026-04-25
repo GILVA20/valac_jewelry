@@ -3,7 +3,7 @@ import { Configurator } from "@/components/valac/Configurator";
 import type { Selections } from "@/components/valac/Configurator";
 import "./styles.css";
 
-const WHATSAPP_NUMBER = "5213320471076";
+const WHATSAPP_NUMBER = "527718574647";
 
 function buildWaUrl(sel: Selections | null): string {
   const parts = sel

@@ -330,6 +330,7 @@ export function DiamondStep({
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             {CLARITY_TIERS.map((tier: ClarityTier) => {
               const active = diamondClarity === tier.technicalName;
+              const isLabBest = diamondType === "Lab-Grown" && tier.technicalName === "VVS1 – IF";
               return (
                 <button
                   key={tier.technicalName}
@@ -338,9 +339,9 @@ export function DiamondStep({
                   onClick={() => advanceAfter("diamondClarity", tier.technicalName)}
                   className={`card-soft ${active ? "is-active" : ""} flex flex-col items-center py-6 px-4 relative`}
                 >
-                  {tier.badge && (
+                  {(tier.badge || isLabBest) && (
                     <div className="absolute top-2 right-2">
-                      <Badge text={tier.badge} color={tier.badgeColor ?? "gold"} />
+                      <Badge text={isLabBest ? "Recomendado" : tier.badge!} color="gold" />
                     </div>
                   )}
                   <ClarityViz level={tier.inclusionLevel} />
@@ -351,7 +352,7 @@ export function DiamondStep({
                     {tier.technicalName}
                   </div>
                   <div className="font-accent italic text-sm text-[var(--mute)] mt-2 text-center leading-snug">
-                    {tier.description}
+                    {isLabBest ? "Con lab-grown, alcanza la máxima pureza al mismo precio" : tier.description}
                   </div>
                 </button>
               );
@@ -364,6 +365,7 @@ export function DiamondStep({
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
             {COLOR_TIERS.map((tier: ColorTier) => {
               const active = diamondColor === tier.technicalName;
+              const isLabBest = diamondType === "Lab-Grown" && tier.technicalName === "D – F";
               return (
                 <button
                   key={tier.technicalName}
@@ -372,9 +374,9 @@ export function DiamondStep({
                   onClick={() => onUpdate("diamondColor", tier.technicalName)}
                   className={`card-soft ${active ? "is-active" : ""} flex flex-col items-center py-6 px-4 relative`}
                 >
-                  {tier.badge && (
+                  {(tier.badge || isLabBest) && (
                     <div className="absolute top-2 right-2">
-                      <Badge text={tier.badge} color={tier.badgeColor ?? "gold"} />
+                      <Badge text={isLabBest ? "Recomendado" : tier.badge!} color="gold" />
                     </div>
                   )}
                   {/* Color gradient circle */}
@@ -396,7 +398,7 @@ export function DiamondStep({
                     {tier.technicalName}
                   </div>
                   <div className="font-accent italic text-sm text-[var(--mute)] mt-2 text-center leading-snug">
-                    {tier.description}
+                    {isLabBest ? "Incoloro absoluto — el privilegio de la perfección al alcance" : tier.description}
                   </div>
                 </button>
               );

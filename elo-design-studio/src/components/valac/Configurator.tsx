@@ -59,14 +59,14 @@ const DIAMONDS = [
   {
     id: "Natural",
     title: "Diamante Natural",
-    sub: "Formado en la tierra durante millones de años",
-    detail: "Certificado GIA · Máxima exclusividad",
+    sub: "Formado en las entrañas de la tierra durante millones de años",
+    detail: "Certificado GIA · Único e irrepetible en el universo",
   },
   {
     id: "Lab-Grown",
     title: "Diamante Lab-Grown",
-    sub: "Idéntico en brillo y dureza, creado con tecnología",
-    detail: "Certificado IGI · Hasta 60% más accesible",
+    sub: "El mismo diamante. Misma dureza. Mismo brillo. El doble de tamaño.",
+    detail: "Certificado IGI · Más quilates, la misma emoción",
   },
 ];
 
@@ -78,7 +78,6 @@ const METALS = [
   { name: "Amarillo 18k", color: "#D4A530" },
   { name: "Blanco 14k", color: "#E8E8E8" },
   { name: "Blanco 18k", color: "#E8E8E0" },
-  { name: "Rosé 14k", color: "#E8B4B8" },
 ];
 
 const STYLES = ["Solitario", "Halo", "Pavé", "Tres Piedras"];
@@ -90,6 +89,22 @@ const SETTINGS = [
   { name: "Bisel", desc: "Moderno, protegido" },
   { name: "Especial", desc: "Cuéntanos tu visión" },
 ];
+
+// Settings compatibles por estilo (gemología real)
+const SETTINGS_BY_STYLE: Record<string, string[]> = {
+  "Solitario":    ["4 Dientes", "6 Dientes", "3 Dientes", "Bisel", "Especial"],
+  "Halo":         ["4 Dientes", "6 Dientes", "Especial"],
+  "Pavé":         ["4 Dientes", "6 Dientes", "Bisel", "Especial"],
+  "Tres Piedras": ["4 Dientes", "6 Dientes", "Bisel", "Especial"],
+};
+
+// Fotos reales de anillos — servidas desde static (no re-bundleadas por Vite)
+const STYLE_IMAGES: Record<string, string> = {
+  "Solitario":    "/static/anillos-compromiso/assets/ring-solitario.png",
+  "Halo":         "/static/anillos-compromiso/assets/ring-halo.png",
+  "Pavé":         "/static/anillos-compromiso/assets/ring-pave.png",
+  "Tres Piedras": "/static/anillos-compromiso/assets/ring-tres.png",
+};
 
 const SIZE_MM: Record<string, string> = {
   "4": "14.94", "4.5": "15.34", "5": "15.75", "5.5": "16.15",
@@ -106,7 +121,6 @@ const METAL_BASE: Record<string, [number, number]> = {
   "Amarillo 18k": [11200, 32500],
   "Blanco 14k": [9500, 28000],
   "Blanco 18k": [11800, 35000],
-  "Rosé 14k": [9500, 27000],
 };
 const STYLE_MULT_LEGACY: Record<string, number> = {
   "Solitario": 1.0, "Halo": 1.35, "Pavé": 1.5, "Tres Piedras": 1.6,
@@ -366,10 +380,10 @@ export function Configurator({ onSelectionsChange, onRequestQuote }: Props) {
                         </tr>
                       </thead>
                       <tbody className="text-[var(--ink)]">
-                        <tr className="border-t border-[var(--hairline)]"><td className="py-2">Origen</td><td>Tierra</td><td>Laboratorio</td></tr>
-                        <tr className="border-t border-[var(--hairline)]"><td className="py-2">Brillo</td><td>Idéntico</td><td>Idéntico</td></tr>
-                        <tr className="border-t border-[var(--hairline)]"><td className="py-2">Dureza</td><td>10/10</td><td>10/10</td></tr>
-                        <tr className="border-t border-[var(--hairline)]"><td className="py-2">Precio</td><td>Mayor</td><td>Hasta 60% menos</td></tr>
+                        <tr className="border-t border-[var(--hairline)]"><td className="py-2">Origen</td><td>Tierra · millones de años</td><td>Tecnología de punta</td></tr>
+                        <tr className="border-t border-[var(--hairline)]"><td className="py-2">Brillo y dureza</td><td>Idéntico</td><td>Idéntico</td></tr>
+                        <tr className="border-t border-[var(--hairline)]"><td className="py-2">Certificación</td><td>GIA</td><td>IGI</td></tr>
+                        <tr className="border-t border-[var(--hairline)]"><td className="py-2">Tamaño al mismo presupuesto</td><td>0.35ct</td><td className="font-bold text-[var(--gold)]">0.70ct ✦ doble</td></tr>
                       </tbody>
                     </table>
                   </div>
@@ -454,11 +468,29 @@ export function Configurator({ onSelectionsChange, onRequestQuote }: Props) {
                       key={s}
                       type="button"
                       aria-pressed={active}
-                      onClick={() => update("style", s)}
-                      className={`card-soft ${active ? "is-active" : ""} flex flex-col items-center py-5 px-2`}
+                      onClick={() => {
+                        // Limpiar setting si no es compatible con el nuevo estilo
+                        const compatible = SETTINGS_BY_STYLE[s] ?? [];
+                        if (sel.setting && !compatible.includes(sel.setting)) {
+                          setSel((prev) => ({ ...prev, style: s, setting: "" }));
+                          if (step < TOTAL_STEPS) {
+                            setTimeout(() => setStep((cur) => Math.min(TOTAL_STEPS, cur + 1)), 320);
+                          }
+                        } else {
+                          update("style", s);
+                        }
+                      }}
+                      className={`card-soft ${active ? "is-active" : ""} flex flex-col items-center overflow-hidden p-0`}
                     >
-                      <StyleIllu name={s} />
-                      <span className="mt-2 font-display text-base text-[var(--ink)]">{s}</span>
+                      <div className="w-full aspect-square overflow-hidden rounded-t-xl">
+                        <img
+                          src={STYLE_IMAGES[s]}
+                          alt={`Anillo ${s} VALAC`}
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                          loading="lazy"
+                        />
+                      </div>
+                      <span className="py-3 px-2 font-display text-base text-[var(--ink)]">{s}</span>
                     </button>
                   );
                 })}
@@ -469,7 +501,10 @@ export function Configurator({ onSelectionsChange, onRequestQuote }: Props) {
           {step === 7 && (
             <StepShell title="¿Cómo engarzar la piedra?" sub="El abrazo de oro que la sostiene">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                {SETTINGS.map((s) => {
+                {(SETTINGS_BY_STYLE[sel.style] ?? SETTINGS.map((s) => s.name))
+                  .map((name) => SETTINGS.find((s) => s.name === name)!)
+                  .filter(Boolean)
+                  .map((s) => {
                   const active = sel.setting === s.name;
                   return (
                     <button
@@ -515,7 +550,7 @@ export function Configurator({ onSelectionsChange, onRequestQuote }: Props) {
                   <span>4</span><span>8</span><span>12</span>
                 </div>
                 <a
-                  href="https://wa.me/5213320471076?text=Hola,%20necesito%20ayuda%20para%20saber%20mi%20talla%20de%20anillo"
+                  href="https://wa.me/527718574647?text=Hola,%20necesito%20ayuda%20para%20saber%20mi%20talla%20de%20anillo"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-block mt-6 text-sm text-[var(--gold)] font-semibold hover:text-[var(--gold-hover)] underline underline-offset-4"
@@ -614,12 +649,12 @@ export function Configurator({ onSelectionsChange, onRequestQuote }: Props) {
         >
           Solicitar Mi Cotización
         </button>
-        <div className="mt-3 flex items-center justify-center gap-4 text-[10px] text-[var(--mute)] uppercase tracking-wider">
-          <span>📅 4-6 semanas</span>
-          <span>·</span>
-          <span>🚚 Envío gratis</span>
-          <span>·</span>
-          <span>📜 Certificado {sel.diamond === "Natural" ? "GIA" : sel.diamond === "Lab-Grown" ? "IGI" : "GIA/IGI"}</span>
+        <div className="mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 text-[10px] text-[var(--mute)] uppercase tracking-wider">
+          <span className="flex items-center gap-1"><i className="fas fa-calendar-alt" /> 4-6 semanas</span>
+          <span className="opacity-30 hidden sm:inline">·</span>
+          <span className="flex items-center gap-1"><i className="fas fa-truck" /> Envío gratis</span>
+          <span className="opacity-30 hidden sm:inline">·</span>
+          <span className="flex items-center gap-1"><i className="fas fa-certificate" /> Cert. {sel.diamond === "Natural" ? "GIA" : sel.diamond === "Lab-Grown" ? "IGI" : "GIA/IGI"}</span>
         </div>
       </div>
     </div>

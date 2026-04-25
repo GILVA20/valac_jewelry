@@ -17,13 +17,13 @@ export const DIAMOND_SIZE_TIERS: Record<string, SizeTier[]> = {
       label: "Sutil",
       emotionalName: "Sutil",
       caratRange: "0.25 – 0.35 ct",
-      priceRange: [22_000, 35_000],
+      priceRange: [14_000, 24_000],
     },
     {
       label: "Clásica",
       emotionalName: "Clásica",
       caratRange: "0.40 – 0.55 ct",
-      priceRange: [38_000, 60_000],
+      priceRange: [24_000, 42_000],
       badge: "La más elegida",
       badgeColor: "oxblood",
     },
@@ -31,13 +31,13 @@ export const DIAMOND_SIZE_TIERS: Record<string, SizeTier[]> = {
       label: "Imponente",
       emotionalName: "Imponente",
       caratRange: "0.70 – 0.90 ct",
-      priceRange: [65_000, 110_000],
+      priceRange: [45_000, 78_000],
     },
     {
       label: "Extraordinaria",
       emotionalName: "Extraordinaria",
       caratRange: "1.00 – 1.50 ct",
-      priceRange: [120_000, 220_000],
+      priceRange: [80_000, 140_000],
     },
   ],
   "Lab-Grown": [
@@ -45,13 +45,13 @@ export const DIAMOND_SIZE_TIERS: Record<string, SizeTier[]> = {
       label: "Brillante",
       emotionalName: "Brillante",
       caratRange: "0.50 – 0.70 ct",
-      priceRange: [10_000, 18_000],
+      priceRange: [8_000, 15_000],
     },
     {
       label: "Espectacular",
       emotionalName: "Espectacular",
       caratRange: "0.80 – 1.00 ct",
-      priceRange: [18_000, 32_000],
+      priceRange: [15_000, 26_000],
       badge: "La más elegida",
       badgeColor: "oxblood",
     },
@@ -59,13 +59,13 @@ export const DIAMOND_SIZE_TIERS: Record<string, SizeTier[]> = {
       label: "Icónica",
       emotionalName: "Icónica",
       caratRange: "1.20 – 1.50 ct",
-      priceRange: [32_000, 55_000],
+      priceRange: [26_000, 45_000],
     },
     {
       label: "Legendaria",
       emotionalName: "Legendaria",
       caratRange: "2.00 – 3.00 ct",
-      priceRange: [55_000, 95_000],
+      priceRange: [45_000, 80_000],
     },
   ],
 };
@@ -165,20 +165,20 @@ export const COLOR_TIERS: ColorTier[] = [
 // Multipliers applied to diamond base price
 export const CUT_MULT: Record<string, number> = {
   "Very Good": 1.0,
-  Excellent: 1.12,
-  Ideal: 1.28,
+  Excellent: 1.10,
+  Ideal: 1.18,
 };
 
 export const CLARITY_MULT: Record<string, number> = {
   "SI1 – SI2": 1.0,
-  "VS2 – VS1": 1.18,
-  "VVS1 – IF": 1.45,
+  "VS2 – VS1": 1.12,
+  "VVS1 – IF": 1.28,
 };
 
 export const COLOR_MULT: Record<string, number> = {
   "H – I": 1.0,
-  G: 1.1,
-  "D – F": 1.25,
+  G: 1.08,
+  "D – F": 1.15,
 };
 
 // Mounting base price by metal (includes craftsmanship)
@@ -188,14 +188,14 @@ export const MOUNTING_BASE: Record<string, [number, number]> = {
   "Amarillo 18k": [8_500, 12_000],
   "Blanco 14k": [7_000, 9_500],
   "Blanco 18k": [9_000, 12_500],
-  "Rosé 14k": [7_000, 9_500],
 };
+// Rosé 14k eliminado — catálogo VALAC solo ofrece amarillo y blanco
 
 export const STYLE_MULT: Record<string, number> = {
   Solitario: 1.0,
-  Halo: 1.25,
-  Pavé: 1.35,
-  "Tres Piedras": 1.5,
+  Halo: 1.18,
+  Pavé: 1.25,
+  "Tres Piedras": 1.38,
 };
 
 // Utility: is metal yellow gold?

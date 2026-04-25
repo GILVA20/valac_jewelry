@@ -5,7 +5,7 @@
 
 @custom-variant dark (&:is(.dark *));
 
-/* VALAC Joyas — Engagement Rings (light e-commerce theme) */
+/* VALAC Joyas — Engagement Rings — Dark Vault Theme */
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
@@ -53,38 +53,43 @@
 :root {
   --radius: 0.75rem;
 
-  /* VALAC palette — luxury wizard */
-  --bg-page: #f8f7f5;
-  --gold: #d5a300;
-  --gold-hover: #b38f00;
-  --gold-light: #facc15;
-  --gold-soft: #e5d6a3;
-  --ink: #1f2937;
-  --mute: #6b7280;
-  --ivory: #fffbf2;
-  --oxblood: #7a0019;
-  --whatsapp: #25d366;
-  --hairline: #e5e5e5;
-  --disabled: #b0b0b0;
-  --success: #1daf5a;
+  /* VALAC palette — Dark Vault */
+  --bg-page: #0A0A0A;
+  --bg-elevated: #141414;
+  --bg-card: #1A1A1A;
+  --gold: #D5A300;
+  --gold-hover: #E8B800;
+  --gold-light: #FACC15;
+  --gold-soft: rgba(213, 163, 0, 0.15);
+  --ink: #F5F0E8;
+  --ink-secondary: #D4CFC5;
+  --mute: #8A8580;
+  --ivory: #1A1918;
+  --oxblood: #7A0019;
+  --whatsapp: #25D366;
+  --hairline: #2A2A2A;
+  --disabled: #4A4A4A;
+  --success: #1DAF5A;
+  --glass: rgba(255, 255, 255, 0.04);
+  --glass-border: rgba(255, 255, 255, 0.08);
 
   /* Map shadcn semantics */
   --background: var(--bg-page);
   --foreground: var(--ink);
-  --card: #ffffff;
+  --card: var(--bg-card);
   --card-foreground: var(--ink);
-  --popover: #ffffff;
+  --popover: var(--bg-elevated);
   --popover-foreground: var(--ink);
   --primary: var(--gold);
-  --primary-foreground: #1f2937;
-  --secondary: #ffffff;
+  --primary-foreground: #0A0A0A;
+  --secondary: var(--bg-elevated);
   --secondary-foreground: var(--ink);
-  --muted: #f0f0f0;
+  --muted: var(--bg-elevated);
   --muted-foreground: var(--mute);
   --accent: var(--ivory);
   --accent-foreground: var(--ink);
   --destructive: var(--oxblood);
-  --destructive-foreground: #ffffff;
+  --destructive-foreground: #F5F0E8;
   --border: var(--hairline);
   --input: var(--hairline);
   --ring: var(--gold);
@@ -105,6 +110,7 @@
     font-family: "Inter", system-ui, sans-serif;
     font-weight: 400;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   h1, h2, h3, h4, .font-display {
@@ -152,19 +158,22 @@
   }
 
   .card-soft {
-    background: #ffffff;
-    border: 1px solid var(--hairline);
+    background: var(--bg-card);
+    border: 1px solid var(--glass-border);
     border-radius: 16px;
     transition: all 220ms ease;
+    backdrop-filter: blur(8px);
   }
   .card-soft.is-active {
     border-color: var(--gold);
-    box-shadow: 0 8px 24px rgba(213, 163, 0, 0.15), 0 0 0 1px var(--gold) inset;
+    background: rgba(213, 163, 0, 0.06);
+    box-shadow: 0 8px 32px rgba(213, 163, 0, 0.12), 0 0 0 1px var(--gold) inset;
     transform: scale(1.02);
   }
   .card-soft:hover:not(.is-active) {
-    border-color: var(--gold-soft);
-    box-shadow: 0 8px 24px rgba(213, 163, 0, 0.12);
+    border-color: rgba(213, 163, 0, 0.25);
+    background: rgba(255, 255, 255, 0.03);
+    box-shadow: 0 8px 24px rgba(213, 163, 0, 0.08);
   }
 
   .chip {
@@ -174,8 +183,8 @@
     gap: 0.4rem;
     padding: 0.55rem 1rem;
     border-radius: 999px;
-    background: #ffffff;
-    border: 1px solid var(--hairline);
+    background: var(--bg-card);
+    border: 1px solid var(--glass-border);
     font-size: 0.85rem;
     font-weight: 500;
     color: var(--ink);
@@ -183,12 +192,12 @@
     transition: all 200ms ease;
   }
   .chip:hover {
-    border-color: rgba(213, 163, 0, 0.5);
+    border-color: rgba(213, 163, 0, 0.4);
   }
   .chip.is-active {
     border-color: var(--gold);
-    background: var(--ivory);
-    box-shadow: 0 2px 10px -2px rgba(213, 163, 0, 0.3);
+    background: rgba(213, 163, 0, 0.08);
+    box-shadow: 0 2px 10px -2px rgba(213, 163, 0, 0.25);
   }
 
   /* Premium CTA — gold gradient */
@@ -254,19 +263,19 @@
     html { scroll-behavior: auto; }
   }
 
-  /* Custom range slider — gold */
+  /* Custom range slider — gold on dark */
   .valac-slider {
     -webkit-appearance: none;
     appearance: none;
     width: 100%;
     height: 6px;
-    background: #e5e5e5;
+    background: var(--hairline);
     border-radius: 999px;
     outline: none;
   }
   .valac-slider::-webkit-slider-runnable-track {
     height: 6px;
-    background: linear-gradient(to right, var(--gold) 0%, var(--gold-light) var(--val, 25%), #e5e5e5 var(--val, 25%));
+    background: linear-gradient(to right, var(--gold) 0%, var(--gold-light) var(--val, 25%), var(--hairline) var(--val, 25%));
     border-radius: 999px;
   }
   .valac-slider::-webkit-slider-thumb {
@@ -298,4 +307,36 @@
   /* Hide scrollbar utility for carousel */
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+  /* Diamond sparkle animations */
+  .sparkle-dot {
+    animation: sparkle-pulse 1.8s ease-in-out infinite;
+  }
+  @keyframes sparkle-pulse {
+    0%, 100% { opacity: 0.3; transform: scale(0.8); }
+    50% { opacity: 1; transform: scale(1.2); }
+  }
+
+  .sparkle-rainbow {
+    animation: rainbow-pulse 2.2s ease-in-out infinite;
+  }
+  @keyframes rainbow-pulse {
+    0%, 100% { opacity: 0; transform: scale(0.5); }
+    30%, 70% { opacity: 0.8; transform: scale(1); }
+  }
+
+  /* Price counter animation */
+  .price-animate {
+    animation: price-count 200ms ease-out;
+  }
+  @keyframes price-count {
+    from { opacity: 0.5; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sparkle-dot,
+    .sparkle-rainbow { animation: none; opacity: 0.6; }
+    .price-animate { animation: none; }
+  }
 }

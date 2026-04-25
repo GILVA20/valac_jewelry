@@ -1,9 +1,16 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, useCallback } from "react";
+import { DiamondStep } from "./DiamondStep";
+import { computePriceRange } from "./diamondData";
+import { Heart, Diamond, Gem, Hexagon, Palette, Sparkles, Settings2, Ruler } from "lucide-react";
 
 type Selections = {
   forWhom: string;
   diamond: string;
-  cut: string;
+  diamondSize: string;
+  diamondCut: string;
+  diamondClarity: string;
+  diamondColor: string;
+  shape: string;
   metal: string;
   style: string;
   setting: string;
@@ -68,7 +75,9 @@ const CUTS = ["Redondo", "Princesa", "Ovalado", "Esmeralda", "Pera", "Cushion"];
 const METALS = [
   { name: "Amarillo 10k", color: "#FFD700" },
   { name: "Amarillo 14k", color: "#DAA520" },
+  { name: "Amarillo 18k", color: "#D4A530" },
   { name: "Blanco 14k", color: "#E8E8E8" },
+  { name: "Blanco 18k", color: "#E8E8E0" },
   { name: "Rosé 14k", color: "#E8B4B8" },
 ];
 
@@ -90,14 +99,16 @@ const SIZE_MM: Record<string, string> = {
   "12": "21.44",
 };
 
-// Price ranges per metal (rough MXN)
+// Price ranges per metal (rough MXN) — used as fallback only
 const METAL_BASE: Record<string, [number, number]> = {
   "Amarillo 10k": [6500, 18000],
   "Amarillo 14k": [9000, 26000],
+  "Amarillo 18k": [11200, 32500],
   "Blanco 14k": [9500, 28000],
+  "Blanco 18k": [11800, 35000],
   "Rosé 14k": [9500, 27000],
 };
-const STYLE_MULT: Record<string, number> = {
+const STYLE_MULT_LEGACY: Record<string, number> = {
   "Solitario": 1.0, "Halo": 1.35, "Pavé": 1.5, "Tres Piedras": 1.6,
 };
 const DIAMOND_MULT: Record<string, number> = { "Natural": 1.4, "Lab-Grown": 1.0 };
@@ -142,13 +153,14 @@ function StyleIllu({ name }: { name: string }) {
 }
 
 const STEP_ICONS: Record<number, React.ReactElement> = {
-  1: <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M12 2 L13.5 10 L22 12 L13.5 14 L12 22 L10.5 14 L2 12 L10.5 10 Z"/></svg>,
-  2: <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.8"><rect x="6" y="6" width="12" height="12" transform="rotate(45 12 12)"/></svg>,
-  3: <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="8"/></svg>,
-  4: <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="9"/></svg>,
-  5: <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="10" r="3"/><path d="M6 18 Q12 14 18 18"/></svg>,
-  6: <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.8"><path d="M4 12 L20 12 M9 8 L9 16 M15 8 L15 16"/></svg>,
-  7: <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.8"><circle cx="12" cy="12" r="6"/><path d="M12 4v3M12 17v3M4 12h3M17 12h3"/></svg>,
+  1: <Heart className="w-4 h-4" />,
+  2: <Diamond className="w-4 h-4" />,
+  3: <Gem className="w-4 h-4" />,
+  4: <Hexagon className="w-4 h-4" />,
+  5: <Palette className="w-4 h-4" />,
+  6: <Sparkles className="w-4 h-4" />,
+  7: <Settings2 className="w-4 h-4" />,
+  8: <Ruler className="w-4 h-4" />,
 };
 
 interface Props {
@@ -156,17 +168,20 @@ interface Props {
   onRequestQuote: () => void;
 }
 
-const TOTAL_STEPS = 7;
+const TOTAL_STEPS = 8;
 
 export function Configurator({ onSelectionsChange, onRequestQuote }: Props) {
   const [step, setStep] = useState(1);
   const [showDiff, setShowDiff] = useState(false);
   const [sel, setSel] = useState<Selections>({
-    forWhom: "", diamond: "", cut: "", metal: "", style: "", setting: "", size: 6,
+    forWhom: "", diamond: "",
+    diamondSize: "", diamondCut: "", diamondClarity: "", diamondColor: "",
+    shape: "", metal: "", style: "", setting: "", size: 6,
   });
 
+  const diamondDetailDone = !!sel.diamondSize && !!sel.diamondCut && !!sel.diamondClarity && !!sel.diamondColor;
   const completedFlags = [
-    !!sel.forWhom, !!sel.diamond, !!sel.cut, !!sel.metal, !!sel.style, !!sel.setting, true,
+    !!sel.forWhom, !!sel.diamond, diamondDetailDone, !!sel.shape, !!sel.metal, !!sel.style, !!sel.setting, true,
   ];
   const completedCount = completedFlags.filter(Boolean).length - 1; // exclude size auto
   const allDone = completedFlags.every(Boolean);
@@ -175,13 +190,27 @@ export function Configurator({ onSelectionsChange, onRequestQuote }: Props) {
     onSelectionsChange(sel, completedCount, allDone);
   }, [sel, completedCount, allDone, onSelectionsChange]);
 
+  // Auto-advance from diamond detail step (3) → shape step (4) when all sub-fields filled
+  useEffect(() => {
+    if (diamondDetailDone && step === 3) {
+      const t = setTimeout(() => setStep(4), 400);
+      return () => clearTimeout(t);
+    }
+  }, [diamondDetailDone, step]);
+
   const update = <K extends keyof Selections>(k: K, v: Selections[K]) => {
     setSel((s) => ({ ...s, [k]: v }));
-    // auto-advance after small delay
-    if (k !== "size" && step < TOTAL_STEPS) {
+    // auto-advance after small delay (skip for diamond sub-fields and size)
+    const diamondFields: string[] = ["diamondSize", "diamondCut", "diamondClarity", "diamondColor"];
+    if (k !== "size" && !diamondFields.includes(k) && step < TOTAL_STEPS) {
       setTimeout(() => setStep((cur) => Math.min(TOTAL_STEPS, cur + 1)), 320);
     }
   };
+
+  // Update for diamond sub-step fields (no auto-advance of main step)
+  const updateDiamond = useCallback((field: string, value: string) => {
+    setSel((s) => ({ ...s, [field]: value }));
+  }, []);
 
   const goTo = (n: number) => {
     if (n < 1 || n > TOTAL_STEPS) return;
@@ -191,19 +220,32 @@ export function Configurator({ onSelectionsChange, onRequestQuote }: Props) {
   };
 
   const priceRange = useMemo<[number, number] | null>(() => {
+    // Use new engine if diamond details are available
+    if (sel.diamond && sel.diamondSize) {
+      return computePriceRange(
+        sel.diamond,
+        sel.diamondSize,
+        sel.diamondCut || "Very Good",
+        sel.diamondClarity || "SI1 – SI2",
+        sel.diamondColor || "H – I",
+        sel.metal || "Amarillo 14k",
+        sel.style || "Solitario",
+      );
+    }
+    // Fallback to legacy calculation
     if (!sel.metal) return null;
     const [lo, hi] = METAL_BASE[sel.metal] ?? [8000, 24000];
-    const sm = STYLE_MULT[sel.style] ?? 1;
+    const sm = STYLE_MULT_LEGACY[sel.style] ?? 1;
     const dm = DIAMOND_MULT[sel.diamond] ?? 1.1;
     return [Math.round(lo * sm * dm / 100) * 100, Math.round(hi * sm * dm / 100) * 100];
-  }, [sel.metal, sel.style, sel.diamond]);
+  }, [sel.metal, sel.style, sel.diamond, sel.diamondSize, sel.diamondCut, sel.diamondClarity, sel.diamondColor]);
 
   const sliderPct = ((sel.size - 4) / 8) * 100;
 
   return (
-    <div className="bg-white rounded-2xl border border-[var(--gold-soft)] shadow-[0_4px_16px_rgba(31,41,55,0.06)] overflow-hidden">
+    <div className="bg-[var(--bg-elevated)] rounded-2xl border border-[var(--glass-border)] shadow-[0_4px_24px_rgba(0,0,0,0.4)] overflow-hidden">
       {/* PROGRESS BAR */}
-      <div className="px-6 sm:px-10 pt-6 pb-4 border-b border-[var(--hairline)]/60 bg-gradient-to-b from-[var(--ivory)]/40 to-white">
+      <div className="px-6 sm:px-10 pt-6 pb-4 border-b border-[var(--hairline)] bg-gradient-to-b from-[var(--bg-card)] to-[var(--bg-elevated)]">
         <div className="flex items-center justify-between gap-1 sm:gap-2">
           {Array.from({ length: TOTAL_STEPS }).map((_, i) => {
             const n = i + 1;
@@ -219,10 +261,10 @@ export function Configurator({ onSelectionsChange, onRequestQuote }: Props) {
                   aria-label={`Ir al paso ${n}`}
                   className={`relative flex items-center justify-center w-8 h-8 sm:w-9 sm:h-9 rounded-full border-2 transition-all ${
                     done
-                      ? "bg-[var(--gold)] border-[var(--gold)] text-white"
+                      ? "bg-[var(--gold)] border-[var(--gold)] text-[#0A0A0A]"
                       : current
-                        ? "bg-white border-[var(--gold)] text-[var(--gold)] ring-4 ring-[var(--gold)]/15"
-                        : "bg-white border-[var(--disabled)] text-[var(--disabled)]"
+                        ? "bg-[var(--bg-card)] border-[var(--gold)] text-[var(--gold)] ring-4 ring-[var(--gold)]/15"
+                        : "bg-[var(--bg-card)] border-[var(--disabled)] text-[var(--disabled)]"
                   } ${reachable ? "cursor-pointer" : "cursor-not-allowed"}`}
                 >
                   <span className="hidden sm:block">{STEP_ICONS[n]}</span>
@@ -314,7 +356,7 @@ export function Configurator({ onSelectionsChange, onRequestQuote }: Props) {
                   ¿Cuál es la diferencia? {showDiff ? "↑" : "↓"}
                 </button>
                 {showDiff && (
-                  <div className="mt-4 bg-[var(--ivory)] border border-[var(--gold-soft)] rounded-xl p-5 text-left">
+                  <div className="mt-4 bg-[var(--bg-card)] border border-[var(--glass-border)] rounded-xl p-5 text-left">
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="text-[var(--mute)] text-xs uppercase tracking-wider">
@@ -324,10 +366,10 @@ export function Configurator({ onSelectionsChange, onRequestQuote }: Props) {
                         </tr>
                       </thead>
                       <tbody className="text-[var(--ink)]">
-                        <tr className="border-t border-[var(--gold-soft)]/60"><td className="py-2">Origen</td><td>Tierra</td><td>Laboratorio</td></tr>
-                        <tr className="border-t border-[var(--gold-soft)]/60"><td className="py-2">Brillo</td><td>Idéntico</td><td>Idéntico</td></tr>
-                        <tr className="border-t border-[var(--gold-soft)]/60"><td className="py-2">Dureza</td><td>10/10</td><td>10/10</td></tr>
-                        <tr className="border-t border-[var(--gold-soft)]/60"><td className="py-2">Precio</td><td>Mayor</td><td>Hasta 60% menos</td></tr>
+                        <tr className="border-t border-[var(--hairline)]"><td className="py-2">Origen</td><td>Tierra</td><td>Laboratorio</td></tr>
+                        <tr className="border-t border-[var(--hairline)]"><td className="py-2">Brillo</td><td>Idéntico</td><td>Idéntico</td></tr>
+                        <tr className="border-t border-[var(--hairline)]"><td className="py-2">Dureza</td><td>10/10</td><td>10/10</td></tr>
+                        <tr className="border-t border-[var(--hairline)]"><td className="py-2">Precio</td><td>Mayor</td><td>Hasta 60% menos</td></tr>
                       </tbody>
                     </table>
                   </div>
@@ -336,17 +378,29 @@ export function Configurator({ onSelectionsChange, onRequestQuote }: Props) {
             </StepShell>
           )}
 
-          {step === 3 && (
+          {step === 3 && sel.diamond && (
+            <DiamondStep
+              diamondType={sel.diamond}
+              metal={sel.metal}
+              diamondSize={sel.diamondSize}
+              diamondCut={sel.diamondCut}
+              diamondClarity={sel.diamondClarity}
+              diamondColor={sel.diamondColor}
+              onUpdate={updateDiamond}
+            />
+          )}
+
+          {step === 4 && (
             <StepShell title="¿Qué forma de piedra te inspira?" sub="Cada corte cuenta una historia distinta">
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
                 {CUTS.map((c) => {
-                  const active = sel.cut === c;
+                  const active = sel.shape === c;
                   return (
                     <button
                       key={c}
                       type="button"
                       aria-pressed={active}
-                      onClick={() => update("cut", c)}
+                      onClick={() => update("shape", c)}
                       className={`card-soft ${active ? "is-active" : ""} flex flex-col items-center justify-center py-5 px-3`}
                     >
                       <CutIcon name={c} active={active} />
@@ -358,9 +412,9 @@ export function Configurator({ onSelectionsChange, onRequestQuote }: Props) {
             </StepShell>
           )}
 
-          {step === 4 && (
+          {step === 5 && (
             <StepShell title="¿Qué tipo de oro prefieres?" sub="El metal que abrazará la piedra elegida">
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
                 {METALS.map((m) => {
                   const active = sel.metal === m.name;
                   return (
@@ -390,7 +444,7 @@ export function Configurator({ onSelectionsChange, onRequestQuote }: Props) {
             </StepShell>
           )}
 
-          {step === 5 && (
+          {step === 6 && (
             <StepShell title="¿Qué estilo de anillo?" sub="La silueta que la acompañará para siempre">
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
                 {STYLES.map((s) => {
@@ -412,7 +466,7 @@ export function Configurator({ onSelectionsChange, onRequestQuote }: Props) {
             </StepShell>
           )}
 
-          {step === 6 && (
+          {step === 7 && (
             <StepShell title="¿Cómo engarzar la piedra?" sub="El abrazo de oro que la sostiene">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                 {SETTINGS.map((s) => {
@@ -437,7 +491,7 @@ export function Configurator({ onSelectionsChange, onRequestQuote }: Props) {
             </StepShell>
           )}
 
-          {step === 7 && (
+          {step === 8 && (
             <StepShell title="¿Cuál es tu talla?" sub="El último detalle, el más íntimo">
               <div className="text-center">
                 <div className="font-display text-5xl sm:text-6xl text-[var(--gold)] font-semibold mb-2">
@@ -501,18 +555,22 @@ export function Configurator({ onSelectionsChange, onRequestQuote }: Props) {
       {/* SUMMARY (after step 7) */}
       {step === TOTAL_STEPS && (
         <div className="px-6 sm:px-10 pb-2">
-          <div className="bg-[var(--bg-page)] border border-[var(--gold-soft)] rounded-2xl p-5">
+          <div className="bg-[var(--bg-card)] border border-[var(--glass-border)] rounded-2xl p-5">
             <div className="text-xs uppercase tracking-widest text-[var(--gold)] font-semibold mb-3">
               Tu diseño VALAC
             </div>
             <ul className="grid grid-cols-1 sm:grid-cols-2 gap-y-2 gap-x-4 text-sm">
               <SummaryRow label="Para" value={sel.forWhom} onEdit={() => goTo(1)} />
               <SummaryRow label="Diamante" value={sel.diamond} onEdit={() => goTo(2)} />
-              <SummaryRow label="Corte" value={sel.cut} onEdit={() => goTo(3)} />
-              <SummaryRow label="Metal" value={sel.metal} onEdit={() => goTo(4)} />
-              <SummaryRow label="Estilo" value={sel.style} onEdit={() => goTo(5)} />
-              <SummaryRow label="Montura" value={sel.setting} onEdit={() => goTo(6)} />
-              <SummaryRow label="Talla" value={String(sel.size)} onEdit={() => goTo(7)} />
+              <SummaryRow label="Presencia" value={sel.diamondSize} onEdit={() => goTo(3)} />
+              <SummaryRow label="Corte" value={sel.diamondCut} onEdit={() => goTo(3)} />
+              <SummaryRow label="Pureza" value={sel.diamondClarity} onEdit={() => goTo(3)} />
+              <SummaryRow label="Color" value={sel.diamondColor} onEdit={() => goTo(3)} />
+              <SummaryRow label="Forma" value={sel.shape} onEdit={() => goTo(4)} />
+              <SummaryRow label="Metal" value={sel.metal} onEdit={() => goTo(5)} />
+              <SummaryRow label="Estilo" value={sel.style} onEdit={() => goTo(6)} />
+              <SummaryRow label="Montura" value={sel.setting} onEdit={() => goTo(7)} />
+              <SummaryRow label="Talla" value={String(sel.size)} onEdit={() => goTo(8)} />
             </ul>
           </div>
         </div>
@@ -521,7 +579,7 @@ export function Configurator({ onSelectionsChange, onRequestQuote }: Props) {
       {/* PRICE RANGE FOOTER */}
       <div
         className="px-6 sm:px-10 py-5 mt-2 border-t"
-        style={{ background: "var(--ivory)", borderTopColor: "var(--gold-soft)" }}
+        style={{ background: "var(--bg-card)", borderTopColor: "var(--hairline)" }}
       >
         {priceRange ? (
           <div className="flex items-center justify-between flex-wrap gap-3">
@@ -529,13 +587,18 @@ export function Configurator({ onSelectionsChange, onRequestQuote }: Props) {
               <div className="text-[10px] uppercase tracking-widest text-[var(--mute)] font-semibold">
                 Rango estimado
               </div>
-              <div className="font-semibold text-lg text-[var(--ink)]">
+              <div className="font-semibold text-lg text-[var(--ink)] price-animate" key={`${priceRange[0]}-${priceRange[1]}`}>
                 ${priceRange[0].toLocaleString("es-MX")} — ${priceRange[1].toLocaleString("es-MX")} <span className="text-sm text-[var(--mute)] font-normal">MXN</span>
               </div>
             </div>
-            <span className="text-xs text-[var(--mute)] italic font-accent">
-              Precio final personalizado en cotización
-            </span>
+            <div className="text-right">
+              <span className="text-xs text-[var(--mute)] italic font-accent block">
+                Precio final personalizado en cotización
+              </span>
+              <span className="text-[10px] text-[var(--mute)] block mt-0.5">
+                12 meses sin intereses disponibles
+              </span>
+            </div>
           </div>
         ) : (
           <div className="text-sm text-[var(--mute)] text-center">
@@ -551,9 +614,13 @@ export function Configurator({ onSelectionsChange, onRequestQuote }: Props) {
         >
           Solicitar Mi Cotización
         </button>
-        <p className="mt-2 text-center text-xs text-[var(--mute)]">
-          Respondemos en menos de 24 horas
-        </p>
+        <div className="mt-3 flex items-center justify-center gap-4 text-[10px] text-[var(--mute)] uppercase tracking-wider">
+          <span>📅 4-6 semanas</span>
+          <span>·</span>
+          <span>🚚 Envío gratis</span>
+          <span>·</span>
+          <span>📜 Certificado {sel.diamond === "Natural" ? "GIA" : sel.diamond === "Lab-Grown" ? "IGI" : "GIA/IGI"}</span>
+        </div>
       </div>
     </div>
   );
@@ -577,7 +644,7 @@ function StepShell({ title, sub, children }: { title: string; sub: string; child
 
 function SummaryRow({ label, value, onEdit }: { label: string; value: string; onEdit: () => void }) {
   return (
-    <li className="flex items-center justify-between gap-2 border-b border-[var(--gold-soft)]/40 pb-1.5">
+    <li className="flex items-center justify-between gap-2 border-b border-[var(--hairline)] pb-1.5">
       <span>
         <span className="text-[var(--mute)]">{label}:</span>{" "}
         <span className="font-semibold text-[var(--ink)]">{value || "—"}</span>

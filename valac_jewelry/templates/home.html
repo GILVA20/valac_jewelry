@@ -60,6 +60,35 @@
   #product-grid .text-gray-600{ color:var(--lux-muted) !important; }
   #product-grid .line-through{ color:#8B9097 !important; }
 
+  /* ---------- COMPROMISO VAULT SECTION ---------- */
+  .compromiso-vault{
+    background:#0A0A0A; color:#F5F0E8; position:relative; overflow:hidden;
+  }
+  .compromiso-vault-hero{
+    position:relative; width:100%; aspect-ratio:21/9; overflow:hidden;
+  }
+  @media(max-width:767px){ .compromiso-vault-hero{ aspect-ratio:16/9; } }
+  .compromiso-vault-hero img{
+    width:100%; height:100%; object-fit:cover; object-position:center;
+  }
+  .compromiso-vault-hero .overlay{
+    position:absolute; inset:0;
+    background:linear-gradient(to top, #0A0A0A 0%, rgba(10,10,10,0.4) 50%, rgba(10,10,10,0.15) 100%);
+  }
+  .compromiso-ring-card{
+    border-radius:.75rem; overflow:hidden; border:1px solid rgba(255,255,255,0.08);
+    background:#141414; transition:box-shadow .3s, border-color .3s;
+  }
+  .compromiso-ring-card:hover{
+    box-shadow:0 8px 32px rgba(213,163,0,0.12); border-color:rgba(213,163,0,0.25);
+  }
+  .chip-compromiso{
+    display:inline-flex; align-items:center; gap:.4rem;
+    font-size:.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.15em;
+    padding:.35rem .85rem; border-radius:9999px;
+    background:rgba(213,163,0,0.1); color:#D5A300; border:1px solid rgba(213,163,0,0.25);
+  }
+
   /* ---------- COLECCIÓN GRID ---------- */
   #home-collection .group:hover{ box-shadow:0 8px 24px rgba(31,41,55,0.08); }
   #home-collection h3{ color:var(--lux-text); }
@@ -71,8 +100,56 @@
 {% block content %}
 <main class="pt-24 md:pt-28 lg:pt-32">
 
-  {# ---------- GATEWAY POR GÉNERO (sin slider) ---------- #}
-  <section class="container mx-auto px-4">
+  {# ---------- SECCIÓN COMPROMISO (VAULT DARK) — HERO ---------- #}
+  <section class="compromiso-vault py-0">
+    {# Hero banner #}
+    <div class="compromiso-vault-hero">
+      <img src="/static/anillos-compromiso/assets/hero-compromiso.jpg"
+           alt="Anillo de compromiso VALAC — Oro real y diamantes certificados"
+           width="1600" height="686" loading="lazy">
+      <div class="overlay"></div>
+      <div class="absolute inset-0 z-10 flex flex-col items-center justify-end text-center px-4 pb-8 md:pb-12">
+        <span class="chip-compromiso mb-3">
+          <i class="fas fa-gem text-[10px]"></i> Nuevo · Diseña tu anillo
+        </span>
+        <h2 class="text-2xl sm:text-3xl md:text-4xl font-semibold leading-tight"
+            style="font-family:'Playfair Display',serif; color:#F5F0E8">
+          Anillos de <em class="italic font-normal" style="font-family:'Cormorant Garamond',serif; color:#D5A300">Compromiso</em>
+        </h2>
+        <p class="mt-2 text-sm sm:text-base max-w-lg" style="font-family:'Cormorant Garamond',serif; color:rgba(245,240,232,0.7)">
+          Diamantes certificados GIA e IGI. Oro 10k, 14k y 18k. Diseño paso a paso.
+        </p>
+        <a href="/anillos-compromiso#configurador"
+           class="mt-5 inline-flex items-center gap-2 px-7 py-3 rounded-lg text-sm font-bold uppercase tracking-wider transition-colors"
+           style="background:#D5A300; color:#0A0A0A;"
+           onmouseover="this.style.background='#E8B800'" onmouseout="this.style.background='#D5A300'">
+          Crear mi diseño <i class="fas fa-arrow-right text-xs"></i>
+        </a>
+      </div>
+    </div>
+
+    {# Anillos en inventario #}
+    <div class="max-w-6xl mx-auto px-4 py-10">
+      <div class="flex items-center justify-between mb-6">
+        <h3 class="text-lg sm:text-xl font-semibold" style="font-family:'Playfair Display',serif; color:#F5F0E8">
+          Piezas listas para entregar
+        </h3>
+        <a href="/anillos-compromiso" class="text-sm font-semibold text-[#D5A300] hover:text-[#E8B800] transition-colors">
+          Ver todas →
+        </a>
+      </div>
+      <div id="compromiso-home-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+        {# Cargado por JS #}
+      </div>
+      <p id="compromiso-empty" class="hidden text-center text-sm py-8" style="color:#8A8580">
+        Todos nuestros anillos son bajo pedido.
+        <a href="/anillos-compromiso#configurador" class="text-[#D5A300] font-semibold hover:underline">Diseña el tuyo →</a>
+      </p>
+    </div>
+  </section>
+
+  {# ---------- GATEWAY POR GÉNERO ---------- #}
+  <section class="container mx-auto px-4 mt-8">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
       <a href="/collection?genero=Mujer&mix_unisex=1" class="gender-card group" aria-label="Entrar a Colección Mujer">
         <img src="{{ CDN_BASE_URL }}coleccion-mujer.png" alt="Colección Mujer">
@@ -247,6 +324,57 @@
   // --------- Tracking básico de ruta ---------
   const sessionId = localStorage.getItem("valac_session_id") || crypto.randomUUID();
   localStorage.setItem("valac_session_id", sessionId);
+
+  // --------- Cargar anillos de compromiso en home ---------
+  (async function loadCompromisoRings(){
+    try {
+      const { data: rings, error } = await supabaseClient
+        .from('products')
+        .select('id, nombre, precio, descuento_pct, precio_descuento, imagen, stock_total, product_images ( imagen, orden )')
+        .eq('activo', true)
+        .eq('tipo_producto', 'Anillos de Compromiso')
+        .gt('stock_total', 0)
+        .order('created_at', { ascending: false })
+        .limit(4);
+
+      const grid = document.getElementById('compromiso-home-grid');
+      const empty = document.getElementById('compromiso-empty');
+      if (error || !rings?.length) {
+        if (grid) grid.classList.add('hidden');
+        if (empty) empty.classList.remove('hidden');
+        return;
+      }
+
+      const mxn = (n) => Number(n).toLocaleString('es-MX',{style:'currency',currency:'MXN'});
+      const placeholder = "{{ CDN_BASE_URL }}placeholder.jpg";
+
+      grid.innerHTML = rings.map(r => {
+        let img = placeholder;
+        if (r.product_images?.length) {
+          const sorted = [...r.product_images].sort((a,b) => a.orden - b.orden);
+          img = sorted[0]?.imagen || placeholder;
+        } else if (r.imagen && r.imagen !== 'undefined') { img = r.imagen; }
+
+        const hasOffer = Number(r.descuento_pct) > 0 && Number(r.precio_descuento) > 0 && Number(r.precio_descuento) < Number(r.precio);
+
+        return `
+          <a href="/producto/${r.id}" class="compromiso-ring-card group block">
+            <div class="aspect-square overflow-hidden">
+              <img src="${img}" alt="${r.nombre}" loading="lazy"
+                   class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500">
+            </div>
+            <div class="p-3">
+              <h4 class="text-sm font-semibold truncate" style="color:#F5F0E8">${r.nombre}</h4>
+              ${hasOffer
+                ? `<p class="price-tag text-xs line-through mt-1" style="color:#8A8580">${mxn(r.precio)}</p>
+                   <p class="price-tag text-base font-semibold mt-0.5" style="color:#D5A300">${mxn(r.precio_descuento)}</p>`
+                : `<p class="price-tag text-base font-semibold mt-1" style="color:#D5A300">${mxn(r.precio)}</p>`
+              }
+            </div>
+          </a>`;
+      }).join('');
+    } catch(e) { console.error('compromiso-home', e); }
+  })();
 </script>
 
 {% include 'partials/tracking.html' %}

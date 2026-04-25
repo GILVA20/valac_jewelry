@@ -70,7 +70,7 @@ const DIAMONDS = [
   },
 ];
 
-const CUTS = ["Redondo", "Princesa", "Ovalado", "Esmeralda", "Pera", "Cushion"];
+const CUTS = ["Redondo", "Princesa", "Ovalado", "Marquesa", "Pera", "Cushion"];
 
 const METALS = [
   { name: "Amarillo 10k", color: "#FFD700" },
@@ -106,6 +106,14 @@ const STYLE_IMAGES: Record<string, string> = {
   "Tres Piedras": "/static/anillos-compromiso/assets/ring-tres.png",
 };
 
+// Fotos de engarzados — las que ya tenemos generadas
+const SETTING_IMAGES: Record<string, string> = {
+  "4 Dientes": "/static/anillos-compromiso/assets/ring-solitario.png",
+  "6 Dientes": "/static/anillos-compromiso/assets/solitario-6dientes.png",
+  "Bisel":     "/static/anillos-compromiso/assets/ring-bisel.png",
+  "3 Dientes": "/static/anillos-compromiso/assets/ring-solitario-oval.png",
+};
+
 const SIZE_MM: Record<string, string> = {
   "4": "14.94", "4.5": "15.34", "5": "15.75", "5.5": "16.15",
   "6": "16.56", "6.5": "16.97", "7": "17.37", "7.5": "17.78",
@@ -138,8 +146,8 @@ function CutIcon({ name, active }: { name: string; active: boolean }) {
       return <svg viewBox="0 0 40 40" className="w-10 h-10"><rect x="6" y="6" width="28" height="28" stroke={c} strokeWidth={sw} fill={fill}/><path d="M6 6l28 28M34 6L6 34" stroke={c} strokeWidth={sw}/></svg>;
     case "Ovalado":
       return <svg viewBox="0 0 40 40" className="w-10 h-10"><ellipse cx="20" cy="20" rx="10" ry="14" stroke={c} strokeWidth={sw} fill={fill}/></svg>;
-    case "Esmeralda":
-      return <svg viewBox="0 0 40 40" className="w-10 h-10"><path d="M12 6h16l4 4v20l-4 4H12l-4-4V10z" stroke={c} strokeWidth={sw} fill={fill}/></svg>;
+    case "Marquesa":
+      return <svg viewBox="0 0 40 40" className="w-10 h-10"><ellipse cx="20" cy="20" rx="14" ry="8" stroke={c} strokeWidth={sw} fill={fill}/><line x1="6" y1="20" x2="34" y2="20" stroke={c} strokeWidth={sw * 0.6}/></svg>;
     case "Pera":
       return <svg viewBox="0 0 40 40" className="w-10 h-10"><path d="M20 5c-6 6-9 11-9 18s4 11 9 11 9-4 9-11-3-12-9-18z" stroke={c} strokeWidth={sw} fill={fill}/></svg>;
     case "Cushion":
@@ -500,25 +508,50 @@ export function Configurator({ onSelectionsChange, onRequestQuote }: Props) {
 
           {step === 7 && (
             <StepShell title="¿Cómo engarzar la piedra?" sub="El abrazo de oro que la sostiene">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
                 {(SETTINGS_BY_STYLE[sel.style] ?? SETTINGS.map((s) => s.name))
                   .map((name) => SETTINGS.find((s) => s.name === name)!)
                   .filter(Boolean)
                   .map((s) => {
                   const active = sel.setting === s.name;
+                  const img = SETTING_IMAGES[s.name];
                   return (
                     <button
                       key={s.name}
                       type="button"
                       aria-pressed={active}
                       onClick={() => update("setting", s.name)}
-                      className={`card-soft ${active ? "is-active" : ""} text-left p-4`}
+                      className={`card-soft ${active ? "is-active" : ""} flex flex-col items-center overflow-hidden ${
+                        img ? "p-0" : "text-left p-4"
+                      }`}
                     >
-                      <div className="font-display text-base text-[var(--ink)] font-semibold flex items-center gap-2">
-                        {s.name === "Especial" && <span className="text-[var(--gold)]">✦</span>}
-                        {s.name}
-                      </div>
-                      <div className="font-accent italic text-sm text-[var(--mute)] mt-1">{s.desc}</div>
+                      {img ? (
+                        <>
+                          <div className="w-full aspect-square overflow-hidden rounded-t-xl">
+                            <img
+                              src={img}
+                              alt={`Engarzado ${s.name} VALAC`}
+                              className="w-full h-full object-cover"
+                              loading="lazy"
+                            />
+                          </div>
+                          <div className="py-2.5 px-2 text-center">
+                            <div className="font-display text-sm text-[var(--ink)] font-semibold flex items-center justify-center gap-1">
+                              {s.name === "Especial" && <span className="text-[var(--gold)]">✦</span>}
+                              {s.name}
+                            </div>
+                            <div className="font-accent italic text-xs text-[var(--mute)] mt-0.5">{s.desc}</div>
+                          </div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="font-display text-base text-[var(--ink)] font-semibold flex items-center gap-2">
+                            {s.name === "Especial" && <span className="text-[var(--gold)]">✦</span>}
+                            {s.name}
+                          </div>
+                          <div className="font-accent italic text-sm text-[var(--mute)] mt-1">{s.desc}</div>
+                        </>
+                      )}
                     </button>
                   );
                 })}

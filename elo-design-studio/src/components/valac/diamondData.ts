@@ -17,13 +17,13 @@ export const DIAMOND_SIZE_TIERS: Record<string, SizeTier[]> = {
       label: "Sutil",
       emotionalName: "Sutil",
       caratRange: "0.25 – 0.35 ct",
-      priceRange: [14_000, 24_000],
+      priceRange: [17_000, 29_000],
     },
     {
       label: "Clásica",
       emotionalName: "Clásica",
       caratRange: "0.40 – 0.55 ct",
-      priceRange: [24_000, 42_000],
+      priceRange: [29_000, 50_000],
       badge: "La más elegida",
       badgeColor: "oxblood",
     },
@@ -31,13 +31,13 @@ export const DIAMOND_SIZE_TIERS: Record<string, SizeTier[]> = {
       label: "Imponente",
       emotionalName: "Imponente",
       caratRange: "0.70 – 0.90 ct",
-      priceRange: [45_000, 78_000],
+      priceRange: [54_000, 94_000],
     },
     {
       label: "Extraordinaria",
       emotionalName: "Extraordinaria",
       caratRange: "1.00 – 1.50 ct",
-      priceRange: [80_000, 140_000],
+      priceRange: [96_000, 168_000],
     },
   ],
   "Lab-Grown": [
@@ -45,13 +45,13 @@ export const DIAMOND_SIZE_TIERS: Record<string, SizeTier[]> = {
       label: "Brillante",
       emotionalName: "Brillante",
       caratRange: "0.50 – 0.70 ct",
-      priceRange: [8_000, 15_000],
+      priceRange: [10_000, 18_000],
     },
     {
       label: "Espectacular",
       emotionalName: "Espectacular",
       caratRange: "0.80 – 1.00 ct",
-      priceRange: [15_000, 26_000],
+      priceRange: [18_000, 31_000],
       badge: "La más elegida",
       badgeColor: "oxblood",
     },
@@ -59,13 +59,13 @@ export const DIAMOND_SIZE_TIERS: Record<string, SizeTier[]> = {
       label: "Icónica",
       emotionalName: "Icónica",
       caratRange: "1.20 – 1.50 ct",
-      priceRange: [26_000, 45_000],
+      priceRange: [31_000, 54_000],
     },
     {
       label: "Legendaria",
       emotionalName: "Legendaria",
       caratRange: "2.00 – 3.00 ct",
-      priceRange: [45_000, 80_000],
+      priceRange: [54_000, 96_000],
     },
   ],
 };
@@ -183,11 +183,11 @@ export const COLOR_MULT: Record<string, number> = {
 
 // Mounting base price by metal (includes craftsmanship)
 export const MOUNTING_BASE: Record<string, [number, number]> = {
-  "Amarillo 10k": [4_500, 6_500],
-  "Amarillo 14k": [6_500, 9_000],
-  "Amarillo 18k": [8_500, 12_000],
-  "Blanco 14k": [7_000, 9_500],
-  "Blanco 18k": [9_000, 12_500],
+  "Amarillo 10k": [5_500, 8_000],
+  "Amarillo 14k": [8_000, 11_000],
+  "Amarillo 18k": [10_000, 14_000],
+  "Blanco 14k":   [8_500, 11_500],
+  "Blanco 18k":   [11_000, 15_000],
 };
 // Rosé 14k eliminado — catálogo VALAC solo ofrece amarillo y blanco
 

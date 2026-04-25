@@ -381,7 +381,7 @@ export function DiamondStep({
                   )}
                   {/* Color gradient circle */}
                   <div
-                    className="w-14 h-14 rounded-full border border-[var(--glass-border)]"
+                    className="w-9 h-9 rounded-full border border-[var(--glass-border)]"
                     style={{
                       background:
                         tier.technicalName === "D – F"

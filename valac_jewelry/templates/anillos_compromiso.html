@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+
+{% block title %}Anillos de Compromiso · VALAC Joyas{% endblock %}
+
+{% block head_extra %}
+<meta name="description" content="Diseña tu anillo de compromiso único. Oro real 10k, 14k y 18k. Diamantes certificados GIA e IGI. Cotización personalizada.">
+<meta property="og:title" content="Anillos de Compromiso · VALAC Joyas">
+<meta property="og:description" content="El anillo que merece su historia. Diseño personalizado en oro real.">
+<link rel="stylesheet" href="/static/anillos-compromiso/assets/configurador.css">
+<style>
+  /* ── Dark Vault Override ── */
+  body { background-color: #0A0A0A !important; }
+  .vault-page { background: #0A0A0A; color: #F5F0E8; min-height: 100vh; }
+  .vault-page a { color: #F5F0E8; }
+  .vault-page a:hover { color: #D5A300; }
+
+  /* ── Hero ── */
+  .compromiso-hero {
+    position: relative; width: 100%; overflow: hidden;
+    height: min(48vh, 480px);
+    background: #0A0A0A;
+  }
+  .compromiso-hero img {
+    position: absolute; inset: 0; width: 100%; height: 100%;
+    object-fit: cover; object-position: center;
+  }
+  .compromiso-hero .overlay {
+    position: absolute; inset: 0;
+    background: linear-gradient(to top, #0A0A0A 0%, rgba(10,10,10,0.6) 40%, rgba(10,10,10,0.2) 100%);
+  }
+
+  /* ── Product cards (dark) ── */
+  .compromiso-card {
+    position: relative; overflow: hidden;
+    border-radius: 0.75rem;
+    border: 1px solid rgba(255,255,255,0.08);
+    background: #141414;
+    transition: box-shadow 0.3s, border-color 0.3s;
+  }
+  .compromiso-card:hover {
+    box-shadow: 0 8px 32px rgba(213,163,0,0.12);
+    border-color: rgba(213,163,0,0.25);
+  }
+  .compromiso-card--agotado { opacity: 0.45; filter: grayscale(70%); }
+  .compromiso-card--agotado:hover { opacity: 0.65; filter: grayscale(40%); }
+
+  .badge-oferta {
+    position: absolute; top: 0.5rem; right: 0.5rem;
+    background: #D5A300; color: #0A0A0A; font-size: 0.75rem; font-weight: 700;
+    text-transform: uppercase; padding: 0.25rem 0.75rem; border-radius: 9999px;
+    z-index: 10; pointer-events: none;
+  }
+  .badge-envio {
+    position: absolute; top: 0.5rem; left: 0.5rem;
+    font-size: 0.6rem; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 0.05em; background: rgba(255,255,255,0.08); color: #F5F0E8;
+    border: 1px solid rgba(255,255,255,0.12); border-radius: 9999px;
+    padding: 0.15rem 0.5rem; z-index: 10;
+    backdrop-filter: blur(8px);
+  }
+
+  .btn-cart-gold {
+    width: 100%; display: block; text-align: center;
+    background: #D5A300; color: #0A0A0A; font-weight: 700; font-size: 0.85rem;
+    padding: 0.65rem 1rem; border-radius: 0.5rem;
+    transition: background 0.3s, color 0.3s;
+    border: none; cursor: pointer;
+  }
+  .btn-cart-gold:hover { background: #F5F0E8; color: #0A0A0A; }
+
+  .btn-cotizar-wa {
+    width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem;
+    text-align: center; background: #25D366; color: #fff; font-weight: 600; font-size: 0.85rem;
+    padding: 0.65rem 1rem; border-radius: 0.5rem;
+    transition: background 0.3s; text-decoration: none;
+  }
+  .btn-cotizar-wa:hover { background: #1da851; }
+
+  /* ── Trust badges (glass dark) ── */
+  .trust-card {
+    background: rgba(255,255,255,0.04); border-radius: 0.75rem; padding: 1.25rem;
+    display: flex; align-items: flex-start; gap: 0.75rem;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-left: 4px solid #D5A300;
+    backdrop-filter: blur(8px);
+  }
+
+  /* ── CTA final ── */
+  .cta-final {
+    border-radius: 1rem; padding: 3rem 1.5rem; text-align: center;
+    position: relative; overflow: hidden;
+    background: linear-gradient(135deg, #141414 0%, #1A1A18 100%);
+    border: 1px solid rgba(213,163,0,0.15);
+  }
+  }
+  .cta-final .glow {
+    position: absolute; inset: 0; opacity: 0.3; pointer-events: none;
+    background: radial-gradient(circle at 20% 20%, rgba(213,163,0,0.4), transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(250,204,21,0.25), transparent 50%);
+  }
+
+  /* eyebrow */
+  .label-eyebrow {
+    display: inline-block; font-size: 0.7rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.18em;
+    color: #d5a300;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="vault-page">
+<!-- ═══════════ HERO ═══════════ -->
+<section class="compromiso-hero">
+  <img src="/static/anillos-compromiso/assets/propuesta.png"
+       alt="Anillo de compromiso VALAC en oro real" width="1600" height="900">
+  <div class="overlay"></div>
+  <div class="relative z-10 h-full flex flex-col items-center justify-end text-center px-4 pb-10 max-w-3xl mx-auto">
+    <div class="text-xs font-semibold uppercase tracking-[0.22em] text-[#D5A300] mb-3">
+      VALAC · Colección Compromiso
+    </div>
+    <h1 class="text-3xl sm:text-4xl md:text-5xl text-[#F5F0E8] leading-tight font-semibold"
+        style="font-family:'Playfair Display',serif">
+      El anillo que merece <em class="italic font-normal" style="font-family:'Cormorant Garamond',serif">su historia</em>
+    </h1>
+    <p class="mt-3 italic text-base sm:text-lg text-[#F5F0E8]/80 max-w-xl" style="font-family:'Cormorant Garamond',serif">
+      Diseñado contigo, paso a paso. Oro real 10k, 14k y 18k. Diamantes certificados GIA e IGI.
+    </p>
+    <a href="#configurador"
+       class="inline-block mt-6 px-8 py-3.5 bg-[#D5A300] text-[#0A0A0A] font-bold text-sm uppercase tracking-wider rounded-lg hover:bg-[#E8B800] transition-colors">
+      Comenzar mi diseño →
+    </a>
+  </div>
+</section>
+
+<!-- ═══════════ CONFIGURADOR (React widget) ═══════════ -->
+<section id="configurador" class="max-w-3xl mx-auto px-4 sm:px-6 py-12 md:py-16">
+  <div class="text-center mb-8">
+    <span class="label-eyebrow">El configurador VALAC</span>
+    <h2 class="text-3xl sm:text-4xl text-[#F5F0E8] mt-2 font-semibold" style="font-family:'Playfair Display',serif">
+      Crea el anillo que solo existe para
+      <em class="italic font-normal" style="font-family:'Cormorant Garamond',serif">ustedes</em>
+    </h2>
+    <p class="italic text-base sm:text-lg text-[#8A8580] mt-2" style="font-family:'Cormorant Garamond',serif">
+      Ocho pasos. Una pieza única. Cero compromisos.
+    </p>
+  </div>
+  <div id="configurador-root">
+    <div class="text-center py-12 text-[#8A8580]">
+      <i class="fas fa-spinner fa-spin text-3xl mb-3 text-[#D5A300]"></i>
+      <p>Cargando configurador…</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ TRUST BADGES ═══════════ -->
+<section class="max-w-5xl mx-auto px-4 pb-12">
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="trust-card">
+      <i class="fas fa-shield-alt text-[#D5A300] text-xl mt-0.5"></i>
+      <div>
+        <h3 class="text-base font-semibold text-[#F5F0E8]">Diamantes certificados</h3>
+        <p class="text-sm text-[#8A8580] mt-1">GIA para naturales · IGI para lab-grown. Siempre.</p>
+      </div>
+    </div>
+    <div class="trust-card">
+      <i class="fas fa-pencil-ruler text-[#D5A300] text-xl mt-0.5"></i>
+      <div>
+        <h3 class="text-base font-semibold text-[#F5F0E8]">Diseño a tu medida</h3>
+        <p class="text-sm text-[#8A8580] mt-1">Oro real 10k, 14k y 18k. Cada pieza es única e irrepetible.</p>
+      </div>
+    </div>
+    <div class="trust-card">
+      <i class="fas fa-truck text-[#D5A300] text-xl mt-0.5"></i>
+      <div>
+        <h3 class="text-base font-semibold text-[#F5F0E8]">4-6 semanas · Envío gratis</h3>
+        <p class="text-sm text-[#8A8580] mt-1">Cotización en 24h. Hablamos contigo, sin presión.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════ ANILLOS DE COMPROMISO (Productos reales) ═══════════ -->
+<section class="max-w-7xl mx-auto px-4 py-12">
+  <div class="text-center mb-8">
+    <span class="label-eyebrow">Disponibles ahora</span>
+    <h2 class="text-3xl sm:text-4xl text-[#F5F0E8] mt-2 font-semibold" style="font-family:'Playfair Display',serif">
+      ¿Prefieres elegir uno
+      <em class="italic font-normal" style="font-family:'Cormorant Garamond',serif">listo</em>?
+    </h2>
+    <p class="italic text-base sm:text-lg text-[#8A8580] mt-2" style="font-family:'Cormorant Garamond',serif">
+      Anillos listos para envío o cotización personalizada
+    </p>
+  </div>
+
+  {% if products %}
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+    {% for p in products %}
+    {% set has_gallery = p.product_images and p.product_images|length > 0 %}
+    {% set sorted_imgs = p.product_images|sort(attribute='orden') if has_gallery else [] %}
+    {% set main_img = sorted_imgs[0].imagen if sorted_imgs else p.imagen %}
+    {% set hover_img = sorted_imgs[1].imagen if sorted_imgs|length > 1 else None %}
+    {% set main_pos = sorted_imgs[0].object_position if sorted_imgs and sorted_imgs[0].object_position else 'center' %}
+    {% set hover_pos = sorted_imgs[1].object_position if sorted_imgs|length > 1 and sorted_imgs[1].object_position else 'center' %}
+    {% set oferta = p.descuento_pct > 0 and p.precio_descuento > 0 and p.precio_descuento < p.precio %}
+    {% set is_out = (p.stock_total or 0) <= 0 %}
+    {% set effective_price = p.precio_descuento if oferta else p.precio %}
+
+    <div class="compromiso-card {{ 'compromiso-card--agotado' if is_out }}" data-aos="fade-up">
+      {% if oferta %}
+      <span class="badge-oferta">OFERTA {{ p.descuento_pct }}%</span>
+      {% endif %}
+      {% if not is_out %}
+      <span class="badge-envio">Envío gratis</span>
+      {% endif %}
+      {% if is_out %}
+      <div class="absolute top-2 left-2 bg-red-600 text-white px-2 py-1 rounded text-sm z-10">AGOTADO</div>
+      {% endif %}
+
+      <a href="/producto/{{ p.id }}" class="block relative w-full aspect-square bg-[#1A1A1A] overflow-hidden group">
+        <img src="{{ main_img }}" alt="{{ p.nombre }}" loading="lazy"
+             style="object-position:{{ main_pos }}"
+             class="w-full h-full object-cover transition-opacity duration-300 {{ 'group-hover:opacity-0' if hover_img }}">
+        {% if hover_img %}
+        <img src="{{ hover_img }}" alt="{{ p.nombre }}" loading="lazy"
+             style="object-position:{{ hover_pos }}"
+             class="absolute inset-0 w-full h-full object-cover opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+        {% endif %}
+      </a>
+
+      <div class="p-4">
+        <a href="/producto/{{ p.id }}" class="block">
+          <h3 class="text-sm font-semibold text-[#F5F0E8] leading-tight">{{ p.nombre }}</h3>
+        </a>
+        <p class="text-xs text-[#8A8580] mt-1">Oro: {{ p.tipo_oro }} | {{ p.genero }}</p>
+
+        {% if oferta %}
+        <p class="text-[#8A8580] line-through text-sm mt-1.5">${{ "{:,.0f}".format(p.precio) }}</p>
+        <p class="text-xl font-bold text-[#D5A300]">${{ "{:,.0f}".format(p.precio_descuento) }} <span class="text-xs text-[#8A8580] font-normal">MXN</span></p>
+        {% else %}
+        <p class="text-xl font-semibold text-[#F5F0E8] mt-1.5">${{ "{:,.0f}".format(p.precio) }} <span class="text-xs text-[#8A8580] font-normal">MXN</span></p>
+        {% endif %}
+
+        {% if (p.stock_total or 0) > 0 and (p.stock_total or 0) <= 3 %}
+        <p class="mt-1 text-sm font-semibold" style="color:#7A0019">🔥 ¡Últimas {{ p.stock_total }} piezas!</p>
+        {% endif %}
+
+        <div class="mt-3">
+          {% if is_out %}
+            {# No stock → WhatsApp quote #}
+            <a href="https://wa.me/{{ whatsapp_number }}?text={{ ('Hola VALAC, me interesa el anillo: ' ~ p.nombre ~ ' — ¿pueden cotizarme?')|urlencode }}"
+               target="_blank" rel="noopener noreferrer" class="btn-cotizar-wa">
+              <i class="fab fa-whatsapp"></i> Cotizar por WhatsApp
+            </a>
+          {% else %}
+            {# In stock → add to cart #}
+            <form action="{{ url_for('cart.add_to_cart', product_id=p.id) }}" method="POST">
+              <button type="submit" class="btn-cart-gold">
+                <i class="fas fa-shopping-cart mr-1"></i> Agregar al carrito
+              </button>
+            </form>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="text-center py-16">
+    <i class="fas fa-gem text-5xl text-[#D5A300] mb-4"></i>
+    <p class="text-lg text-[#F5F0E8]">Próximamente nuevos anillos de compromiso.</p>
+    <p class="text-sm text-[#8A8580] mt-2">Mientras tanto, diseña el tuyo con nuestro configurador.</p>
+  </div>
+  {% endif %}
+</section>
+
+<!-- ═══════════ CTA FINAL ═══════════ -->
+<section class="max-w-7xl mx-auto px-4 pb-14">
+  <div class="cta-final">
+    <div class="glow"></div>
+    <div class="relative">
+      <span class="text-xs font-semibold uppercase tracking-[0.22em] text-[#D5A300]">
+        El momento más importante
+      </span>
+      <h2 class="text-3xl sm:text-4xl md:text-5xl text-[#F5F0E8] mt-3 font-semibold" style="font-family:'Playfair Display',serif">
+        ¿Listo para el
+        <em class="italic font-normal text-[#D5A300]" style="font-family:'Cormorant Garamond',serif">momento</em>?
+      </h2>
+      <p class="mt-3 italic text-base sm:text-lg text-[#F5F0E8]/70 max-w-md mx-auto" style="font-family:'Cormorant Garamond',serif">
+        Habla con un asesor VALAC. Sin presión, con pasión.
+      </p>
+      <a href="https://wa.me/{{ whatsapp_number }}?text={{ 'Hola, quiero información sobre anillos de compromiso VALAC.'|urlencode }}"
+         target="_blank" rel="noopener noreferrer"
+         class="inline-flex items-center gap-2 mt-7 rounded-lg px-8 py-3.5 text-sm uppercase tracking-wider font-bold text-white transition-all hover:brightness-110"
+         style="background:#25D366">
+        <i class="fab fa-whatsapp"></i> Escríbenos por WhatsApp
+      </a>
+      <p class="mt-4 text-xs text-[#8A8580]">Respondemos en menos de 2 horas · Lun a Sáb 9am–8pm</p>
+    </div>
+  </div>
+</section>
+</div><!-- /.vault-page -->
+{% endblock %}
+
+{% block scripts_extra %}
+<script type="module" src="/static/anillos-compromiso/assets/configurador.js"></script>
+{% endblock %}

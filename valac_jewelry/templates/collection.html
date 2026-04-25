@@ -355,6 +355,7 @@
             product_images ( imagen, orden, object_position )
           `)
           .eq('activo', true)
+          .neq('tipo_producto', 'Anillos de Compromiso')
           .gte('precio', parseInt(price_min))
           .lte('precio', parseInt(price_max));
 

@@ -4,8 +4,6 @@ from flask import Blueprint, render_template, current_app
 anillos_bp = Blueprint("anillos_compromiso", __name__)
 logger = logging.getLogger(__name__)
 
-WHATSAPP_NUMBER = "5213320471076"
-
 
 @anillos_bp.route("/anillos-compromiso")
 def anillos_compromiso():
@@ -31,5 +29,5 @@ def anillos_compromiso():
     return render_template(
         "anillos_compromiso.html",
         products=products,
-        whatsapp_number=WHATSAPP_NUMBER,
+        whatsapp_number=current_app.config["WHATSAPP_NUMBER"],
     )

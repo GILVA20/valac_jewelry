@@ -157,9 +157,11 @@ Antes de responder, clasifica la petición del usuario en una de estas categorí
 - `/coupon-system` → referencia del sistema de cupones completo
 - `/payment-flow` → referencia del flujo MercadoPago completo
 - `/admin-workflow` → referencia de operaciones admin
+- `/valentin` → consultor de joyería: gemología, marketing de lujo, UX, pricing, estrategia
 
 ### Skills disponibles:
 - `jewelry-image-prompts` → genera prompts ultra-detallados para AI image generation (Gemini/DALL-E/Midjourney) con la identidad visual VALAC
+- `valentin` → consultor experto en joyería, marketing de lujo y UX (auto-activa con preguntas de producto/negocio)
 
 ## SEGURIDAD (OBLIGATORIO)
 

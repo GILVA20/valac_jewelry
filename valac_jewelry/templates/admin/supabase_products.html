@@ -31,6 +31,16 @@
       box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.5);
       font-weight: bold;
     }
+    /* Filter panel */
+    .filter-panel { border: 1px solid #e5e7eb; border-radius: .5rem; background: #f9fafb; }
+    .filter-section summary { cursor: pointer; user-select: none; }
+    .filter-section summary::-webkit-details-marker { display: none; }
+    .filter-section summary::before { content: '▸'; display: inline-block; margin-right: .4rem; transition: transform .15s; }
+    .filter-section[open] summary::before { transform: rotate(90deg); }
+    .filter-chip { display: inline-flex; align-items: center; gap: .25rem; padding: .125rem .5rem; border-radius: 9999px; font-size: .75rem; background: #dbeafe; color: #1e40af; cursor: pointer; transition: background .15s; }
+    .filter-chip:hover { background: #bfdbfe; }
+    .filter-chip .chip-x { font-weight: 700; font-size: .65rem; }
+    .filter-count { font-size: .7rem; color: #6b7280; margin-left: .25rem; }
   </style>
 </head>
 <body class="bg-white">
@@ -106,6 +116,127 @@
       </button>
     </div>
 
+    <!-- Panel de Filtros Avanzados -->
+    <div class="filter-panel p-4 mb-4">
+      <!-- Chips activos + contador -->
+      <div class="flex items-center justify-between mb-3">
+        <div id="active-chips" class="flex flex-wrap gap-1"></div>
+        <div class="flex items-center gap-3">
+          <span id="product-counter" class="text-sm text-gray-500"></span>
+          <button type="button" id="clear-all-filters" class="text-xs text-red-500 hover:text-red-700 font-semibold hidden">Limpiar todo</button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8 gap-3">
+        <!-- Género -->
+        <details class="filter-section" open>
+          <summary class="text-sm font-semibold text-gray-700 mb-1">Género</summary>
+          <div class="flex flex-col gap-0.5 mt-1" data-filter-group="genero">
+            {% set generos = products|map(attribute='genero')|select|unique|sort %}
+            {% for g in generos %}
+            <label class="flex items-center gap-1 text-xs text-gray-600 cursor-pointer hover:text-gray-900">
+              <input type="checkbox" value="{{ g }}" class="filter-cb rounded" data-group="genero"> {{ g }} <span class="filter-count" data-count-for="genero:{{ g }}"></span>
+            </label>
+            {% endfor %}
+          </div>
+        </details>
+
+        <!-- Tipo Producto -->
+        <details class="filter-section" open>
+          <summary class="text-sm font-semibold text-gray-700 mb-1">Tipo</summary>
+          <div class="flex flex-col gap-0.5 mt-1" data-filter-group="tipo">
+            {% set tipos = products|map(attribute='tipo_producto')|select|unique|sort %}
+            {% for t in tipos %}
+            <label class="flex items-center gap-1 text-xs text-gray-600 cursor-pointer hover:text-gray-900">
+              <input type="checkbox" value="{{ t }}" class="filter-cb rounded" data-group="tipo"> {{ t }} <span class="filter-count" data-count-for="tipo:{{ t }}"></span>
+            </label>
+            {% endfor %}
+          </div>
+        </details>
+
+        <!-- Tipo de Oro -->
+        <details class="filter-section" open>
+          <summary class="text-sm font-semibold text-gray-700 mb-1">Oro</summary>
+          <div class="flex flex-col gap-0.5 mt-1" data-filter-group="oro">
+            {% set oros = products|map(attribute='tipo_oro')|select|unique|sort %}
+            {% for o in oros %}
+            <label class="flex items-center gap-1 text-xs text-gray-600 cursor-pointer hover:text-gray-900">
+              <input type="checkbox" value="{{ o }}" class="filter-cb rounded" data-group="oro"> {{ o }} <span class="filter-count" data-count-for="oro:{{ o }}"></span>
+            </label>
+            {% endfor %}
+          </div>
+        </details>
+
+        <!-- Estado -->
+        <details class="filter-section" open>
+          <summary class="text-sm font-semibold text-gray-700 mb-1">Estado</summary>
+          <div class="flex flex-col gap-0.5 mt-1" data-filter-group="estado">
+            <label class="flex items-center gap-1 text-xs text-gray-600 cursor-pointer hover:text-gray-900">
+              <input type="checkbox" value="activo" class="filter-cb rounded" data-group="estado"> Activo <span class="filter-count" data-count-for="estado:activo"></span>
+            </label>
+            <label class="flex items-center gap-1 text-xs text-gray-600 cursor-pointer hover:text-gray-900">
+              <input type="checkbox" value="borrador" class="filter-cb rounded" data-group="estado"> Borrador <span class="filter-count" data-count-for="estado:borrador"></span>
+            </label>
+          </div>
+        </details>
+
+        <!-- Inventario -->
+        <details class="filter-section" open>
+          <summary class="text-sm font-semibold text-gray-700 mb-1">Inventario</summary>
+          <div class="flex flex-col gap-0.5 mt-1" data-filter-group="inv">
+            <label class="flex items-center gap-1 text-xs text-gray-600 cursor-pointer hover:text-gray-900">
+              <input type="checkbox" value="disponible" class="filter-cb rounded" data-group="inv"> 🟢 Disponible <span class="filter-count" data-count-for="inv:disponible"></span>
+            </label>
+            <label class="flex items-center gap-1 text-xs text-gray-600 cursor-pointer hover:text-gray-900">
+              <input type="checkbox" value="vendido" class="filter-cb rounded" data-group="inv"> 🔴 Vendido <span class="filter-count" data-count-for="inv:vendido"></span>
+            </label>
+            <label class="flex items-center gap-1 text-xs text-gray-600 cursor-pointer hover:text-gray-900">
+              <input type="checkbox" value="devolucion" class="filter-cb rounded" data-group="inv"> 🟡 Devolución <span class="filter-count" data-count-for="inv:devolucion"></span>
+            </label>
+          </div>
+        </details>
+
+        <!-- Foto -->
+        <details class="filter-section" open>
+          <summary class="text-sm font-semibold text-gray-700 mb-1">Foto</summary>
+          <div class="flex flex-col gap-0.5 mt-1" data-filter-group="foto">
+            <label class="flex items-center gap-1 text-xs text-gray-600 cursor-pointer hover:text-gray-900">
+              <input type="checkbox" value="con" class="filter-cb rounded" data-group="foto"> Con foto <span class="filter-count" data-count-for="foto:con"></span>
+            </label>
+            <label class="flex items-center gap-1 text-xs text-gray-600 cursor-pointer hover:text-gray-900">
+              <input type="checkbox" value="sin" class="filter-cb rounded" data-group="foto"> Sin foto <span class="filter-count" data-count-for="foto:sin"></span>
+            </label>
+          </div>
+        </details>
+
+        <!-- Descuento -->
+        <details class="filter-section" open>
+          <summary class="text-sm font-semibold text-gray-700 mb-1">Descuento</summary>
+          <div class="flex flex-col gap-0.5 mt-1" data-filter-group="descuento">
+            <label class="flex items-center gap-1 text-xs text-gray-600 cursor-pointer hover:text-gray-900">
+              <input type="checkbox" value="con" class="filter-cb rounded" data-group="descuento"> Con descuento <span class="filter-count" data-count-for="descuento:con"></span>
+            </label>
+            <label class="flex items-center gap-1 text-xs text-gray-600 cursor-pointer hover:text-gray-900">
+              <input type="checkbox" value="sin" class="filter-cb rounded" data-group="descuento"> Sin descuento <span class="filter-count" data-count-for="descuento:sin"></span>
+            </label>
+          </div>
+        </details>
+
+        <!-- Destacado -->
+        <details class="filter-section" open>
+          <summary class="text-sm font-semibold text-gray-700 mb-1">Destacado</summary>
+          <div class="flex flex-col gap-0.5 mt-1" data-filter-group="destacado">
+            <label class="flex items-center gap-1 text-xs text-gray-600 cursor-pointer hover:text-gray-900">
+              <input type="checkbox" value="si" class="filter-cb rounded" data-group="destacado"> ⭐ Sí <span class="filter-count" data-count-for="destacado:si"></span>
+            </label>
+            <label class="flex items-center gap-1 text-xs text-gray-600 cursor-pointer hover:text-gray-900">
+              <input type="checkbox" value="no" class="filter-cb rounded" data-group="destacado"> No <span class="filter-count" data-count-for="destacado:no"></span>
+            </label>
+          </div>
+        </details>
+      </div>
+    </div>
+
     <!-- Formulario de descuento en lote -->
     <form id="batch_form" method="post" class="mb-6">
       <div class="flex items-center space-x-2">
@@ -172,7 +303,16 @@
           </thead>
           <tbody>
             {% for prod in products %}
-            <tr class="hover:bg-gray-50 transition duration-200" data-created-at="{{ prod.created_at }}">
+            <tr class="hover:bg-gray-50 transition duration-200"
+                data-created-at="{{ prod.created_at }}"
+                data-genero="{{ prod.genero|default('',true) }}"
+                data-tipo="{{ prod.tipo_producto|default('',true) }}"
+                data-oro="{{ prod.tipo_oro|default('',true) }}"
+                data-foto="{{ 'con' if (prod.gallery and prod.gallery|length > 0) else 'sin' }}"
+                data-estado="{{ 'activo' if prod.activo else 'borrador' }}"
+                data-inv="{{ prod.estado_inventario|default('disponible',true) }}"
+                data-descuento="{{ 'con' if (prod.descuento_pct and prod.descuento_pct > 0) else 'sin' }}"
+                data-destacado="{{ 'si' if prod.destacado else 'no' }}">
               <td class="border p-3 text-center">
                 <input type="checkbox" name="product_ids" value="{{ prod.id }}" class="select_row" />
               </td>
@@ -296,172 +436,202 @@
     </div>
   </div>
 
-  <!-- Script para búsqueda, selección, modal, ordenamiento y filtrado -->
+  <!-- Script para búsqueda, selección, modal, ordenamiento y filtrado unificado -->
   <script>
-    // Utility para formatear fechas
-    function parseDate(dateStr) {
-      const d = new Date(dateStr);
-      return isNaN(d.getTime()) ? null : d;
-    }
+    (function() {
+      const allRows = Array.from(document.querySelectorAll('tbody tr'));
+      const totalProducts = allRows.length;
+      const searchInput = document.getElementById('search');
+      const chipsContainer = document.getElementById('active-chips');
+      const counterEl = document.getElementById('product-counter');
+      const clearAllBtn = document.getElementById('clear-all-filters');
 
-    function getDaysDifference(date) {
-      if (!date) return Infinity;
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      date.setHours(0, 0, 0, 0);
-      const diff = Math.floor((today - date) / (1000 * 60 * 60 * 24));
-      return diff;
-    }
+      // --- State ---
+      let currentDateFilter = 'todos';
+      let currentInvQuickFilter = 'todos'; // legacy quick buttons
 
-    // Búsqueda interactiva
-    document.getElementById('search').addEventListener('input', function () {
-      const term = this.value.toLowerCase();
-      document.querySelectorAll('tbody tr').forEach(row => {
-        const name = row.querySelector('td:nth-child(5)')?.textContent.toLowerCase() || '';
-        const matchesSearch = name.includes(term);
-        const isHidden = row.classList.contains('hidden');
-        row.style.display = (matchesSearch && !isHidden) ? '' : 'none';
-      });
-    });
-
-    // Filtrado por fecha
-    const filterBtns = {
-      todos: document.getElementById('filter-todos'),
-      nuevos: document.getElementById('filter-nuevos'),
-      antiguos: document.getElementById('filter-antiguos')
-    };
-
-    function applyDateFilter(filterType) {
-      document.querySelectorAll('tbody tr').forEach(row => {
-        const createdAtStr = row.getAttribute('data-created-at');
-        const createdAt = parseDate(createdAtStr);
-        const daysDiff = getDaysDifference(createdAt);
-        
-        let shouldShow = false;
-        
-        if (filterType === 'todos') {
-          shouldShow = true;
-        } else if (filterType === 'nuevos') {
-          shouldShow = daysDiff >= 0 && daysDiff <= 7;
-        } else if (filterType === 'antiguos') {
-          shouldShow = daysDiff > 30;
-        }
-
-        row.classList.toggle('hidden', !shouldShow);
-        if (!shouldShow) {
-          row.style.display = 'none';
-        } else {
-          row.style.display = '';
-        }
-      });
-    }
-
-    // Event listeners para filtros
-    filterBtns.todos.addEventListener('click', () => {
-      Object.values(filterBtns).forEach(btn => btn.classList.remove('active'));
-      filterBtns.todos.classList.add('active');
-      applyDateFilter('todos');
-    });
-
-    filterBtns.nuevos.addEventListener('click', () => {
-      Object.values(filterBtns).forEach(btn => btn.classList.remove('active'));
-      filterBtns.nuevos.classList.add('active');
-      applyDateFilter('nuevos');
-    });
-
-    filterBtns.antiguos.addEventListener('click', () => {
-      Object.values(filterBtns).forEach(btn => btn.classList.remove('active'));
-      filterBtns.antiguos.classList.add('active');
-      applyDateFilter('antiguos');
-    });
-
-    // Select all
-    document.getElementById('select_all').addEventListener('change', function () {
-      document.querySelectorAll('.select_row').forEach(cb => cb.checked = this.checked);
-    });
-
-    // Modal de imagen
-    function openModal(url) {
-      const modal = document.getElementById('image-modal');
-      document.getElementById('modal-image').src = url + "?t=" + Date.now();
-      modal.style.display = 'flex';
-    }
-    document.getElementById('close-modal').onclick = () => {
-      document.getElementById('image-modal').style.display = 'none';
-    };
-    window.onclick = e => {
-      if (e.target.id === 'image-modal') {
-        e.target.style.display = 'none';
+      // --- Helpers ---
+      function parseDate(s) { const d = new Date(s); return isNaN(d) ? null : d; }
+      function daysDiff(date) {
+        if (!date) return Infinity;
+        const t = new Date(); t.setHours(0,0,0,0); date.setHours(0,0,0,0);
+        return Math.floor((t - date) / 864e5);
       }
-    };
 
-    // Ordenamiento por columnas
-    const headers = document.querySelectorAll('th[data-sort]');
-    let currentSort = { column: null, asc: true };
+      // --- Gather active checkbox filters ---
+      function getActiveFilters() {
+        const filters = {};
+        document.querySelectorAll('.filter-cb:checked').forEach(cb => {
+          const g = cb.dataset.group;
+          if (!filters[g]) filters[g] = [];
+          filters[g].push(cb.value);
+        });
+        return filters;
+      }
 
-    headers.forEach(header => {
-      header.addEventListener('click', () => {
-        const key = header.getAttribute('data-sort');
-        const rows = Array.from(document.querySelectorAll('tbody tr')).filter(row => row.style.display !== 'none');
-        const colIndex = Array.from(header.parentElement.children).indexOf(header);
+      // --- Core: apply ALL filters ---
+      function applyAllFilters() {
+        const term = searchInput.value.toLowerCase().trim();
+        const cbFilters = getActiveFilters();
+        let visible = 0;
 
-        const getValue = (row) => {
-          const cell = row.children[colIndex];
-          const raw = cell.textContent.trim();
-          
-          // Parsing especial para fechas en formato DD/MM/YYYY
-          if (key === 'created_at') {
-            const parts = raw.split('/');
-            if (parts.length === 3) {
-              // Convertir DD/MM/YYYY a YYYYMMDD para ordenamiento
-              return parts[2] + parts[1] + parts[0];
-            }
-            return raw;
+        allRows.forEach(row => {
+          // 1) Text search (match on nombre column — 8th td)
+          const name = (row.children[7]?.textContent || '').toLowerCase();
+          if (term && !name.includes(term)) { row.style.display = 'none'; return; }
+
+          // 2) Date quick filter
+          if (currentDateFilter !== 'todos') {
+            const dd = daysDiff(parseDate(row.dataset.createdAt));
+            if (currentDateFilter === 'nuevos' && !(dd >= 0 && dd <= 7)) { row.style.display = 'none'; return; }
+            if (currentDateFilter === 'antiguos' && dd <= 30) { row.style.display = 'none'; return; }
           }
-          
-          const number = parseFloat(raw.replace(/[^0-9.\-]+/g, ''));
-          return isNaN(number) ? raw.toLowerCase() : number;
-        };
 
-        const asc = currentSort.column === key ? !currentSort.asc : true;
-        currentSort = { column: key, asc };
+          // 3) Inventory quick-button filter
+          if (currentInvQuickFilter !== 'todos') {
+            if (row.dataset.inv !== currentInvQuickFilter) { row.style.display = 'none'; return; }
+          }
 
-        rows.sort((a, b) => {
-          const valA = getValue(a);
-          const valB = getValue(b);
-          if (valA < valB) return asc ? -1 : 1;
-          if (valA > valB) return asc ? 1 : -1;
-          return 0;
+          // 4) Checkbox filters — OR within group, AND between groups
+          for (const [group, values] of Object.entries(cbFilters)) {
+            const rowVal = row.dataset[group] || '';
+            if (!values.includes(rowVal)) { row.style.display = 'none'; return; }
+          }
+
+          row.style.display = '';
+          visible++;
         });
 
-        const tbody = document.querySelector('tbody');
-        rows.forEach(row => tbody.appendChild(row)); // reordenar
-      });
-    });
+        counterEl.textContent = `Mostrando ${visible} de ${totalProducts}`;
+        updateCounts();
+        renderChips(cbFilters);
+        clearAllBtn.classList.toggle('hidden', Object.keys(cbFilters).length === 0 && currentDateFilter === 'todos' && currentInvQuickFilter === 'todos');
+      }
 
-    // Filtros de estado de inventario
-    let currentInvFilter = 'todos';
-    document.querySelectorAll('.inv-filter').forEach(btn => {
-      btn.addEventListener('click', () => {
-        currentInvFilter = btn.dataset.inv;
-        document.querySelectorAll('.inv-filter').forEach(b => b.classList.remove('active', 'ring-2', 'ring-white'));
-        btn.classList.add('active', 'ring-2', 'ring-white');
-        applyInvFilter();
-      });
-    });
+      // --- Dynamic counts ---
+      function updateCounts() {
+        // Count visible rows per filter value
+        const counts = {};
+        allRows.forEach(row => {
+          if (row.style.display === 'none') return;
+          ['genero','tipo','oro','estado','inv','foto','descuento','destacado'].forEach(g => {
+            const v = row.dataset[g] || '';
+            const key = g + ':' + v;
+            counts[key] = (counts[key] || 0) + 1;
+          });
+        });
+        document.querySelectorAll('.filter-count').forEach(el => {
+          const key = el.dataset.countFor;
+          el.textContent = counts[key] ? `(${counts[key]})` : '(0)';
+        });
+      }
 
-    function applyInvFilter() {
-      document.querySelectorAll('tbody tr').forEach(row => {
-        const invCell = row.querySelector('td[data-inv]');
-        if (!invCell) return;
-        const inv = invCell.dataset.inv;
-        if (currentInvFilter === 'todos' || inv === currentInvFilter) {
-          row.style.display = '';
-        } else {
-          row.style.display = 'none';
+      // --- Chips ---
+      const groupLabels = { genero:'Género', tipo:'Tipo', oro:'Oro', estado:'Estado', inv:'Inventario', foto:'Foto', descuento:'Descuento', destacado:'Destacado' };
+      function renderChips(cbFilters) {
+        chipsContainer.innerHTML = '';
+        for (const [group, values] of Object.entries(cbFilters)) {
+          values.forEach(val => {
+            const chip = document.createElement('span');
+            chip.className = 'filter-chip';
+            chip.innerHTML = `${groupLabels[group]}: ${val} <span class="chip-x">✕</span>`;
+            chip.addEventListener('click', () => {
+              // Uncheck matching checkbox
+              const cb = document.querySelector(`.filter-cb[data-group="${group}"][value="${val}"]`);
+              if (cb) cb.checked = false;
+              applyAllFilters();
+            });
+            chipsContainer.appendChild(chip);
+          });
         }
+      }
+
+      // --- Event wiring ---
+
+      // Search
+      searchInput.addEventListener('input', applyAllFilters);
+
+      // Date quick filters
+      const dateBtns = { todos: document.getElementById('filter-todos'), nuevos: document.getElementById('filter-nuevos'), antiguos: document.getElementById('filter-antiguos') };
+      Object.entries(dateBtns).forEach(([key, btn]) => {
+        btn.addEventListener('click', () => {
+          Object.values(dateBtns).forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          currentDateFilter = key;
+          applyAllFilters();
+        });
       });
-    }
+
+      // Inventory quick buttons
+      document.querySelectorAll('.inv-filter').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.inv-filter').forEach(b => b.classList.remove('active', 'ring-2', 'ring-white'));
+          btn.classList.add('active', 'ring-2', 'ring-white');
+          currentInvQuickFilter = btn.dataset.inv;
+          applyAllFilters();
+        });
+      });
+
+      // Checkbox filters
+      document.querySelectorAll('.filter-cb').forEach(cb => {
+        cb.addEventListener('change', applyAllFilters);
+      });
+
+      // Clear all
+      clearAllBtn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-cb:checked').forEach(cb => cb.checked = false);
+        currentDateFilter = 'todos';
+        currentInvQuickFilter = 'todos';
+        searchInput.value = '';
+        Object.values(dateBtns).forEach(b => b.classList.remove('active'));
+        dateBtns.todos.classList.add('active');
+        document.querySelectorAll('.inv-filter').forEach(b => b.classList.remove('active', 'ring-2', 'ring-white'));
+        document.querySelector('.inv-filter[data-inv="todos"]').classList.add('active');
+        applyAllFilters();
+      });
+
+      // Select all checkbox
+      document.getElementById('select_all').addEventListener('change', function() {
+        document.querySelectorAll('.select_row').forEach(cb => cb.checked = this.checked);
+      });
+
+      // Image modal
+      window.openModal = function(url) {
+        const modal = document.getElementById('image-modal');
+        document.getElementById('modal-image').src = url + '?t=' + Date.now();
+        modal.style.display = 'flex';
+      };
+      document.getElementById('close-modal').onclick = () => document.getElementById('image-modal').style.display = 'none';
+      window.addEventListener('click', e => { if (e.target.id === 'image-modal') e.target.style.display = 'none'; });
+
+      // Column sorting
+      const headers = document.querySelectorAll('th[data-sort]');
+      let currentSort = { column: null, asc: true };
+      headers.forEach(header => {
+        header.addEventListener('click', () => {
+          const key = header.dataset.sort;
+          const visibleRows = allRows.filter(r => r.style.display !== 'none');
+          const colIdx = Array.from(header.parentElement.children).indexOf(header);
+          const getValue = row => {
+            const raw = row.children[colIdx].textContent.trim();
+            if (key === 'created_at') { const p = raw.split('/'); return p.length === 3 ? p[2]+p[1]+p[0] : raw; }
+            const n = parseFloat(raw.replace(/[^0-9.\-]+/g, ''));
+            return isNaN(n) ? raw.toLowerCase() : n;
+          };
+          const asc = currentSort.column === key ? !currentSort.asc : true;
+          currentSort = { column: key, asc };
+          visibleRows.sort((a, b) => {
+            const va = getValue(a), vb = getValue(b);
+            return va < vb ? (asc ? -1 : 1) : va > vb ? (asc ? 1 : -1) : 0;
+          });
+          const tbody = document.querySelector('tbody');
+          visibleRows.forEach(r => tbody.appendChild(r));
+        });
+      });
+
+      // Initial count
+      applyAllFilters();
+    })();
   </script>
 
 <!-- Script para Edición Inline -->

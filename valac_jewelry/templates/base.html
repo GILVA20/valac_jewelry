@@ -56,8 +56,50 @@
   </style>
 
   {% block head_extra %}{% endblock %}
+
+  {% if META_PIXEL_ID %}
+  <!-- META PIXEL — Base code (se inicializa condicionado a consentimiento de cookies) -->
+  <script>
+    !function(f,b,e,v,n,t,s)
+    {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+    n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+    if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+    n.queue=[];t=b.createElement(e);t.async=!0;
+    t.src=v;s=b.getElementsByTagName(e)[0];
+    s.parentNode.insertBefore(t,s)}(window,document,'script',
+    'https://connect.facebook.net/en_US/fbevents.js');
+
+    // META PIXEL — Función segura: solo dispara si el Pixel está inicializado
+    // Definida aquí para que esté disponible en TODOS los scripts de la página
+    window.fbqSafe = function() {
+      if (window._pixelInitialized && typeof fbq === 'function') {
+        fbq.apply(null, arguments);
+      }
+    };
+
+    // META PIXEL — Solo inicializar si el usuario dio consentimiento
+    (function initPixelIfConsented() {
+      var consent = localStorage.getItem('valac_cookie_consent');
+      if (consent === 'accepted') {
+        fbq('init', '{{ META_PIXEL_ID }}');
+        fbq('track', 'PageView'); // META PIXEL — PageView automático en cada página
+        window._pixelInitialized = true;
+      } else {
+        window._pixelInitialized = false;
+      }
+    })();
+  </script>
+  {% endif %}
 </head>
 <body>
+
+  {% if META_PIXEL_ID %}
+  <!-- META PIXEL — noscript fallback (accesibilidad sin JS) -->
+  <noscript>
+    <img height="1" width="1" style="display:none"
+      src="https://www.facebook.com/tr?id={{ META_PIXEL_ID }}&ev=PageView&noscript=1"/>
+  </noscript>
+  {% endif %}
 
   <!-- Header común -->
   {% include 'partials/header.html' %}
@@ -188,6 +230,58 @@
       }).catch(() => {});
     }
   </script>
+
+  {% if META_PIXEL_ID %}
+  <!-- META PIXEL — Banner de consentimiento de cookies (LFPDPPP) -->
+  <div id="valac-cookie-banner"
+    class="fixed bottom-0 inset-x-0 z-[9999] bg-[#1a1a1a] text-white px-4 py-4 shadow-2xl"
+    style="display:none;">
+    <div class="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+      <p class="text-sm text-gray-300 leading-snug">
+        Usamos cookies de análisis (Meta Pixel) para mejorar tu experiencia y mostrarte publicidad relevante.
+        Consulta nuestro
+        <a href="/aviso-privacidad" class="underline text-[#d5a300] hover:text-[#b38f00]">Aviso de Privacidad</a>.
+      </p>
+      <div class="flex gap-2 flex-shrink-0">
+        <button id="valac-cookie-reject"
+          class="px-4 py-2 text-sm border border-gray-600 rounded hover:bg-gray-700 transition-colors">
+          Rechazar
+        </button>
+        <button id="valac-cookie-accept"
+          class="px-4 py-2 text-sm bg-[#d5a300] text-black font-semibold rounded hover:bg-[#b38f00] transition-colors">
+          Aceptar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- META PIXEL — Lógica del banner de cookies -->
+  <script>
+    // META PIXEL — Mostrar banner si aún no hay decisión (espera a que el DOM esté listo)
+    document.addEventListener('DOMContentLoaded', function() {
+      var consent = localStorage.getItem('valac_cookie_consent');
+      if (!consent) {
+        document.getElementById('valac-cookie-banner').style.display = 'block';
+      }
+
+      document.getElementById('valac-cookie-accept').addEventListener('click', function() {
+        localStorage.setItem('valac_cookie_consent', 'accepted');
+        document.getElementById('valac-cookie-banner').style.display = 'none';
+        // META PIXEL — Inicializar Pixel inmediatamente tras aceptar
+        if (typeof fbq === 'function' && !window._pixelInitialized) {
+          fbq('init', '{{ META_PIXEL_ID }}');
+          fbq('track', 'PageView');
+          window._pixelInitialized = true;
+        }
+      });
+
+      document.getElementById('valac-cookie-reject').addEventListener('click', function() {
+        localStorage.setItem('valac_cookie_consent', 'rejected');
+        document.getElementById('valac-cookie-banner').style.display = 'none';
+      });
+    });
+  </script>
+  {% endif %}
 
   {% block scripts_extra %}{% endblock %}
 </body>

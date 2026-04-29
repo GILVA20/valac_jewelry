@@ -305,6 +305,14 @@
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ session_id: sessionId })
     });
+    // META PIXEL — AddToCart event al agregar producto al carrito
+    fbqSafe('track', 'AddToCart', {
+      content_name: {{ product.nombre | tojson }},
+      content_ids:  ['{{ product.id }}'],
+      content_type: 'product',
+      value:        {{ product.precio_descuento if product.precio_descuento else product.precio }},
+      currency:     'MXN'
+    });
   }
 </script>
 <script>
@@ -340,4 +348,19 @@
 </script>
 
 {% include 'partials/tracking.html' %}
+
+{% if META_PIXEL_ID %}
+<!-- META PIXEL — ViewContent event al cargar la página de detalle de producto -->
+<script>
+  (function() {
+    fbqSafe('track', 'ViewContent', {
+      content_name: {{ product.nombre | tojson }},
+      content_ids:  ['{{ product.id }}'],
+      content_type: 'product',
+      value:        {{ product.precio_descuento if product.precio_descuento else product.precio }},
+      currency:     'MXN'
+    });
+  })();
+</script>
+{% endif %}
 {% endblock %}

@@ -424,6 +424,18 @@
 {% block scripts_extra %}
 <script src="https://sdk.mercadopago.com/js/v2"></script>
 
+{% if META_PIXEL_ID %}
+<!-- META PIXEL — InitiateCheckout event al entrar al checkout -->
+<script>
+  (function() {
+    fbqSafe('track', 'InitiateCheckout', {
+      value:    {{ total | float }},
+      currency: 'MXN'
+    });
+  })();
+</script>
+{% endif %}
+
 <script>
 (function() {
   'use strict';

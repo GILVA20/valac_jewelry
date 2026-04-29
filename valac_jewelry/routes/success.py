@@ -228,6 +228,9 @@ def success():
     # 4) Enviar correo (mismos datos)
     send_order_confirmation_email(order, items, cart_snapshot)
 
+    # META PIXEL — consumir flag de deduplicación (True solo en la primera visita)
+    fire_purchase_pixel = session.pop("_pixel_purchase_pending", False)
+
     current_app.logger.debug(
         "SUCCESS Render: id=%s subtotal=%.2f discount=%.2f shipping=%.2f total=%.2f items_sum=%.2f",
         order.get("id"), order["subtotal"], order["discount"], order["shipping"], order["total"], items_sum
@@ -243,6 +246,7 @@ def success():
         order=order,
         order_items=items,
         cart_snapshot=cart_snapshot,
-        items_sum=items_sum,   # subtotal de artículos (suma de line_total)
-        grand_sum=grand_sum    # artículos + envío
+        items_sum=items_sum,
+        grand_sum=grand_sum,
+        fire_purchase_pixel=fire_purchase_pixel,  # META PIXEL — flag de deduplicación
 )

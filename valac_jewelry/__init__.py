@@ -50,6 +50,7 @@ def create_app():
         return dict(
             SUPABASE_STORAGE_URL=app.config.get("SUPABASE_STORAGE_URL"),
             CDN_BASE_URL=app.config.get("CDN_BASE_URL"),
+            META_PIXEL_ID=app.config.get("META_PIXEL_ID"),  # META PIXEL
         )
     
     login_manager = LoginManager()

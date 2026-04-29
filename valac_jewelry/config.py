@@ -28,6 +28,9 @@ class Config:
     # WhatsApp Business - Número de VALAC Joyas
     WHATSAPP_NUMBER = os.environ.get('WHATSAPP_NUMBER', '527718574647')
 
+    # META PIXEL — ID del píxel de Meta (Facebook)
+    META_PIXEL_ID = os.environ.get('META_PIXEL_ID')
+
     # VALAC Studio – AI photography
     ANTHROPIC_API_KEY = os.environ.get('ANTHROPIC_API_KEY')
     GOOGLE_GENAI_API_KEY = os.environ.get('GOOGLE_GENAI_API_KEY')

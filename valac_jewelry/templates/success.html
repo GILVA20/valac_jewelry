@@ -83,4 +83,17 @@
 </main>
 
 {% include 'partials/tracking.html' %}
+
+{% if META_PIXEL_ID and fire_purchase_pixel %}
+<!-- META PIXEL — Purchase event (se dispara UNA SOLA VEZ por orden, protegido contra refresh) -->
+<script>
+  (function() {
+    fbqSafe('track', 'Purchase', {
+      value:    {{ order.total | float }},
+      currency: 'MXN',
+      order_id: '{{ order.id }}'
+    });
+  })();
+</script>
+{% endif %}
 {% endblock %}

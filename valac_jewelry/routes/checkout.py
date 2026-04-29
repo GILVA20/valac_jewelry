@@ -106,6 +106,7 @@ def create_order_in_db(order_data, order_items):
         order_data["id"] = order_id
         session["order_data"] = order_data
         session["order_items"] = order_items
+        session["_pixel_purchase_pending"] = True  # META PIXEL — flag de deduplicación
         return order_id
     except Exception as e:
         log.exception("Excepción insertando orden en Supabase: %s", e)

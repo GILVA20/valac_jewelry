@@ -52,6 +52,24 @@ def create_app():
             CDN_BASE_URL=app.config.get("CDN_BASE_URL"),
             META_PIXEL_ID=app.config.get("META_PIXEL_ID"),  # META PIXEL
         )
+
+    @app.context_processor
+    def inject_promo_settings():
+        """Load promo banner/section settings for all templates."""
+        import json as _json
+        try:
+            resp = app.supabase.table("site_settings").select("key, value").like("key", "promo_%").execute()
+            promo = {r["key"]: r["value"] for r in (resp.data or [])}
+        except Exception:
+            promo = {}
+        # Banner messages
+        promo_msgs = None
+        if promo.get("promo_banner_active") == "true":
+            try:
+                promo_msgs = _json.loads(promo.get("promo_banner_messages", "[]"))
+            except (_json.JSONDecodeError, TypeError):
+                promo_msgs = None
+        return dict(promo=promo, promo_msgs=promo_msgs)
     
     login_manager = LoginManager()
     login_manager.init_app(app)
@@ -116,6 +134,7 @@ def create_app():
     from .routes.admin_coupons import CouponsAdminView
     from .routes.admin_orders import OrderAdminView
     from .routes.admin_reviews import ReviewsAdminView
+    from .routes.admin_promo import PromoAdminView
     from .routes.analytics import AnalyticsAdmin
     admin.add_view(SupabaseProductAdmin(name='Productos Supabase', endpoint='supabase_products'))
     admin.add_view(BulkUploadAdminView(name='Carga Masiva', endpoint='bulk_upload'))
@@ -127,6 +146,7 @@ def create_app():
     admin.add_view(AnalyticsAdmin(name='Analytics', endpoint='analytics'))
     admin.add_view(CouponsAdminView(name='Cupones', endpoint='admin_coupons'))
     admin.add_view(ReviewsAdminView(name='Reseñas', endpoint='admin_reviews'))
+    admin.add_view(PromoAdminView(name='Promociones', endpoint='admin_promo'))
 
     # Reseñas de clientes (API + página /reseñas)
     from .routes.reviews import reviews_bp

@@ -1,0 +1,339 @@
+{% extends 'admin/master.html' %}
+{% block body %}
+<div style="max-width:900px;margin:0 auto;padding:20px;font-family:Inter,-apple-system,sans-serif">
+
+  <h2 style="font-size:1.5rem;font-weight:700;margin-bottom:24px">🎨 Gestión de Promociones</h2>
+
+  {# Flash messages #}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for cat, msg in messages %}
+    <div style="padding:10px 16px;border-radius:8px;margin-bottom:12px;font-size:14px;
+                {% if cat == 'success' %}background:#D1FAE5;color:#065F46{% elif cat == 'error' %}background:#FEE2E2;color:#991B1B{% else %}background:#FEF3C7;color:#92400E{% endif %}">
+      {{ msg }}
+    </div>
+    {% endfor %}
+  {% endif %}
+  {% endwith %}
+
+  {# ══════════════════════════════════════════════════════
+     BANNER SUPERIOR (marquee)
+     ══════════════════════════════════════════════════════ #}
+  <form method="POST" action="{{ url_for('.save_banner') }}">
+    <fieldset style="border:1px solid #E5E7EB;border-radius:12px;padding:20px;margin-bottom:24px">
+      <legend style="font-size:1.1rem;font-weight:600;padding:0 8px">📢 Banner Superior (Marquee)</legend>
+
+      {# Toggle #}
+      <label style="display:flex;align-items:center;gap:8px;margin-bottom:16px;cursor:pointer">
+        <input type="checkbox" name="banner_active" value="1"
+               {% if settings.get('promo_banner_active','true') == 'true' %}checked{% endif %}
+               style="width:18px;height:18px">
+        <span style="font-weight:500">Activo</span>
+      </label>
+
+      {# Messages #}
+      <label style="display:block;font-weight:500;margin-bottom:8px">Mensajes (uno por línea):</label>
+      <div id="banner-msgs">
+        {% for msg in messages_list %}
+        <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center">
+          <input type="text" name="banner_msg_{{ loop.index0 }}" value="{{ msg }}"
+                 style="flex:1;padding:8px 12px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px"
+                 placeholder="Mensaje {{ loop.index }}">
+          <button type="button" onclick="this.parentElement.remove()" style="color:#EF4444;font-size:18px;cursor:pointer;border:none;background:none">✕</button>
+        </div>
+        {% endfor %}
+        {% if not messages_list %}
+        <div style="display:flex;gap:8px;margin-bottom:8px;align-items:center">
+          <input type="text" name="banner_msg_0" value=""
+                 style="flex:1;padding:8px 12px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px"
+                 placeholder="Mensaje 1">
+          <button type="button" onclick="this.parentElement.remove()" style="color:#EF4444;font-size:18px;cursor:pointer;border:none;background:none">✕</button>
+        </div>
+        {% endif %}
+      </div>
+      <button type="button" onclick="addBannerMsg()" style="font-size:13px;color:#B8860B;cursor:pointer;border:none;background:none;font-weight:600">
+        + Agregar mensaje
+      </button>
+
+      {# Colors #}
+      <div style="display:flex;gap:16px;margin-top:16px;flex-wrap:wrap">
+        <label style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:14px;font-weight:500">Fondo:</span>
+          <input type="color" name="banner_bg_color"
+                 value="{{ settings.get('promo_banner_bg_color', '#000000') }}"
+                 style="width:40px;height:32px;border:1px solid #D1D5DB;border-radius:6px;cursor:pointer">
+        </label>
+        <label style="display:flex;align-items:center;gap:8px">
+          <span style="font-size:14px;font-weight:500">Texto:</span>
+          <input type="color" name="banner_text_color"
+                 value="{{ settings.get('promo_banner_text_color', '#F59E0B') }}"
+                 style="width:40px;height:32px;border:1px solid #D1D5DB;border-radius:6px;cursor:pointer">
+        </label>
+      </div>
+
+      <button type="submit"
+              style="margin-top:16px;padding:10px 24px;background:#B8860B;color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px">
+        Guardar Banner
+      </button>
+    </fieldset>
+  </form>
+
+  {# ══════════════════════════════════════════════════════
+     SECCIÓN PROMO HERO (home page)
+     ══════════════════════════════════════════════════════ #}
+  <form method="POST" action="{{ url_for('.save_section') }}">
+    <fieldset style="border:1px solid #E5E7EB;border-radius:12px;padding:20px;margin-bottom:24px">
+      <legend style="font-size:1.1rem;font-weight:600;padding:0 8px">🎬 Sección Promocional (Home)</legend>
+      <p style="font-size:13px;color:#6B7280;margin-bottom:16px">
+        Aparece arriba de "Anillos de Compromiso". Soporta imagen o video (mp4/webm) con texto superpuesto.
+      </p>
+
+      {# Toggle #}
+      <label style="display:flex;align-items:center;gap:8px;margin-bottom:16px;cursor:pointer">
+        <input type="checkbox" name="section_active" value="1"
+               {% if settings.get('promo_section_active','false') == 'true' %}checked{% endif %}
+               style="width:18px;height:18px">
+        <span style="font-weight:500">Activa</span>
+      </label>
+
+      {# Title #}
+      <label style="display:block;margin-bottom:12px">
+        <span style="font-size:14px;font-weight:500;display:block;margin-bottom:4px">Título:</span>
+        <input type="text" name="section_title"
+               value="{{ settings.get('promo_section_title', '') }}"
+               placeholder="ej: 🔥 HOT SALE"
+               style="width:100%;padding:8px 12px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px">
+      </label>
+
+      {# Subtitle #}
+      <label style="display:block;margin-bottom:12px">
+        <span style="font-size:14px;font-weight:500;display:block;margin-bottom:4px">Subtítulo:</span>
+        <input type="text" name="section_subtitle"
+               value="{{ settings.get('promo_section_subtitle', '') }}"
+               placeholder="ej: Hasta 30% en piezas seleccionadas"
+               style="width:100%;padding:8px 12px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px">
+      </label>
+
+      {# Media Upload + URL #}
+      <div style="margin-bottom:16px">
+        <span style="font-size:14px;font-weight:500;display:block;margin-bottom:8px">Imagen o video de fondo:</span>
+
+        {# Drop zone #}
+        <div id="drop-zone"
+             style="border:2px dashed #D1D5DB;border-radius:12px;padding:32px 16px;text-align:center;cursor:pointer;transition:border-color .2s;margin-bottom:8px"
+             ondragover="event.preventDefault();this.style.borderColor='#B8860B'"
+             ondragleave="this.style.borderColor='#D1D5DB'"
+             ondrop="handleDrop(event)">
+          <div id="drop-zone-content">
+            <p style="font-size:14px;color:#6B7280;margin:0">
+              <i class="fa fa-cloud-upload" style="font-size:24px;color:#B8860B;display:block;margin-bottom:8px"></i>
+              Arrastra tu imagen o video aquí, o <span style="color:#B8860B;font-weight:600;text-decoration:underline">haz clic para seleccionar</span>
+            </p>
+            <p style="font-size:12px;color:#9CA3AF;margin-top:6px">.jpg .png .webp .mp4 .webm — máx. 50 MB</p>
+          </div>
+          <div id="upload-progress" style="display:none">
+            <div style="width:100%;height:6px;background:#E5E7EB;border-radius:4px;overflow:hidden">
+              <div id="progress-bar" style="height:100%;background:#B8860B;width:0%;transition:width .3s"></div>
+            </div>
+            <p id="upload-status" style="font-size:13px;color:#6B7280;margin-top:6px">Subiendo...</p>
+          </div>
+          <input type="file" id="media-file-input" accept=".jpg,.jpeg,.png,.webp,.mp4,.webm"
+                 style="display:none" onchange="uploadFile(this.files[0])">
+        </div>
+
+        {# Current media preview #}
+        {% set current_media = settings.get('promo_section_media_url', '') %}
+        {% if current_media %}
+        <div id="current-media-preview" style="margin-bottom:8px;border-radius:8px;overflow:hidden;max-height:200px;position:relative;background:#000">
+          {% set is_vid = current_media.endswith('.mp4') or current_media.endswith('.webm') %}
+          {% if is_vid %}
+          <video src="{{ current_media }}" autoplay muted loop playsinline controls style="width:100%;max-height:200px;object-fit:cover"></video>
+          {% else %}
+          <img src="{{ current_media }}" style="width:100%;max-height:200px;object-fit:cover" alt="Media actual">
+          {% endif %}
+          <span style="position:absolute;bottom:8px;left:8px;background:rgba(0,0,0,0.7);color:#fff;font-size:11px;padding:2px 8px;border-radius:4px">Media actual</span>
+        </div>
+        {% endif %}
+
+        {# Manual URL (hidden by default, toggle) #}
+        <button type="button" onclick="document.getElementById('manual-url-row').style.display = document.getElementById('manual-url-row').style.display === 'none' ? 'block' : 'none'"
+                style="font-size:12px;color:#6B7280;cursor:pointer;border:none;background:none;text-decoration:underline;margin-bottom:4px">
+          O ingresar URL manualmente
+        </button>
+        <div id="manual-url-row" style="display:none">
+          <input type="url" name="section_media_url" id="section_media_url"
+                 value="{{ current_media }}"
+                 placeholder="https://cdn.../promo.mp4"
+                 style="width:100%;padding:8px 12px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px">
+        </div>
+      </div>
+
+      {# Link #}
+      <div style="display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap">
+        <label style="flex:1;min-width:200px">
+          <span style="font-size:14px;font-weight:500;display:block;margin-bottom:4px">Link destino:</span>
+          <input type="text" name="section_link"
+                 value="{{ settings.get('promo_section_link', '') }}"
+                 placeholder="/collection?descuento=true"
+                 style="width:100%;padding:8px 12px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px">
+        </label>
+        <label style="flex:1;min-width:200px">
+          <span style="font-size:14px;font-weight:500;display:block;margin-bottom:4px">Texto del botón:</span>
+          <input type="text" name="section_link_text"
+                 value="{{ settings.get('promo_section_link_text', 'Ver más') }}"
+                 placeholder="Ver ofertas"
+                 style="width:100%;padding:8px 12px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px">
+        </label>
+      </div>
+
+      {# BG Color #}
+      <label style="display:flex;align-items:center;gap:8px;margin-bottom:16px">
+        <span style="font-size:14px;font-weight:500">Color de fondo (si no hay media):</span>
+        <input type="color" name="section_bg_color"
+               value="{{ settings.get('promo_section_bg_color', '#000000') }}"
+               style="width:40px;height:32px;border:1px solid #D1D5DB;border-radius:6px;cursor:pointer">
+      </label>
+
+      {# Preview #}
+      <div id="section-preview" style="margin-bottom:16px;border-radius:12px;overflow:hidden;position:relative;min-height:200px;display:none;background:#000">
+        <div id="preview-media" style="position:absolute;inset:0;object-fit:cover;width:100%;height:100%"></div>
+        <div style="position:absolute;inset:0;background:linear-gradient(to right,rgba(0,0,0,0.7) 0%,rgba(0,0,0,0.3) 100%)"></div>
+        <div style="position:relative;z-index:1;padding:40px 32px;color:#fff">
+          <h3 id="preview-title" style="font-size:1.5rem;font-weight:700;font-family:'Playfair Display',serif"></h3>
+          <p id="preview-subtitle" style="font-size:1rem;margin-top:8px;opacity:0.9;font-family:'Cormorant Garamond',serif"></p>
+          <span id="preview-cta" style="display:inline-block;margin-top:16px;padding:10px 24px;background:#B8860B;color:#fff;border-radius:8px;font-weight:600;font-size:14px"></span>
+        </div>
+      </div>
+      <button type="button" onclick="updatePreview()" style="font-size:13px;color:#B8860B;cursor:pointer;border:none;background:none;font-weight:600;margin-bottom:12px">
+        👁 Vista previa
+      </button>
+
+      <br>
+      <button type="submit"
+              style="padding:10px 24px;background:#B8860B;color:#fff;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px">
+        Guardar Sección
+      </button>
+    </fieldset>
+  </form>
+
+</div>
+
+<script>
+  // ── Banner messages ────────────────────────────
+  var msgCount = {{ messages_list|length or 1 }};
+  function addBannerMsg() {
+    var container = document.getElementById('banner-msgs');
+    var div = document.createElement('div');
+    div.style.cssText = 'display:flex;gap:8px;margin-bottom:8px;align-items:center';
+    div.innerHTML = '<input type="text" name="banner_msg_' + msgCount + '" style="flex:1;padding:8px 12px;border:1px solid #D1D5DB;border-radius:8px;font-size:14px" placeholder="Mensaje ' + (msgCount+1) + '">' +
+                    '<button type="button" onclick="this.parentElement.remove()" style="color:#EF4444;font-size:18px;cursor:pointer;border:none;background:none">✕</button>';
+    container.appendChild(div);
+    msgCount++;
+  }
+
+  // ── Media upload ───────────────────────────────
+  var dropZone = document.getElementById('drop-zone');
+  dropZone.addEventListener('click', function() {
+    document.getElementById('media-file-input').click();
+  });
+
+  function handleDrop(e) {
+    e.preventDefault();
+    dropZone.style.borderColor = '#D1D5DB';
+    var file = e.dataTransfer.files[0];
+    if (file) uploadFile(file);
+  }
+
+  function uploadFile(file) {
+    if (!file) return;
+    var allowed = ['.jpg','.jpeg','.png','.webp','.mp4','.webm'];
+    var ext = '.' + file.name.split('.').pop().toLowerCase();
+    if (allowed.indexOf(ext) === -1) {
+      alert('Formato no soportado: ' + ext);
+      return;
+    }
+    if (file.size > 50 * 1024 * 1024) {
+      alert('Archivo demasiado grande. Máximo 50 MB.');
+      return;
+    }
+
+    // Show progress
+    document.getElementById('drop-zone-content').style.display = 'none';
+    document.getElementById('upload-progress').style.display = 'block';
+    document.getElementById('upload-status').textContent = 'Subiendo ' + file.name + '...';
+    document.getElementById('progress-bar').style.width = '30%';
+
+    var fd = new FormData();
+    fd.append('media_file', file);
+
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', '{{ url_for(".upload_media") }}');
+
+    xhr.upload.onprogress = function(e) {
+      if (e.lengthComputable) {
+        var pct = Math.round((e.loaded / e.total) * 90);
+        document.getElementById('progress-bar').style.width = pct + '%';
+      }
+    };
+
+    xhr.onload = function() {
+      if (xhr.status === 200) {
+        var data = JSON.parse(xhr.responseText);
+        document.getElementById('progress-bar').style.width = '100%';
+        document.getElementById('upload-status').textContent = '✓ Subido exitosamente';
+        document.getElementById('upload-status').style.color = '#065F46';
+        // Update the hidden URL field
+        var urlInput = document.getElementById('section_media_url');
+        if (urlInput) urlInput.value = data.url;
+        // Update preview thumbnail
+        setTimeout(function(){ location.reload(); }, 1200);
+      } else {
+        var err = 'Error al subir archivo.';
+        try { err = JSON.parse(xhr.responseText).error; } catch(e){}
+        document.getElementById('upload-status').textContent = '✗ ' + err;
+        document.getElementById('upload-status').style.color = '#991B1B';
+        document.getElementById('progress-bar').style.width = '0%';
+        setTimeout(function(){
+          document.getElementById('drop-zone-content').style.display = 'block';
+          document.getElementById('upload-progress').style.display = 'none';
+        }, 3000);
+      }
+    };
+
+    xhr.onerror = function() {
+      document.getElementById('upload-status').textContent = '✗ Error de conexión.';
+      document.getElementById('upload-status').style.color = '#991B1B';
+    };
+
+    xhr.send(fd);
+  }
+
+  // ── Section preview ────────────────────────────
+  function updatePreview() {
+    var preview = document.getElementById('section-preview');
+    var title = document.querySelector('[name=section_title]').value;
+    var subtitle = document.querySelector('[name=section_subtitle]').value;
+    var urlInput = document.getElementById('section_media_url');
+    var mediaUrl = urlInput ? urlInput.value : '{{ settings.get("promo_section_media_url", "") }}';
+    var linkText = document.querySelector('[name=section_link_text]').value || 'Ver más';
+    var bgColor = document.querySelector('[name=section_bg_color]').value;
+
+    document.getElementById('preview-title').textContent = title || 'Título de la promo';
+    document.getElementById('preview-subtitle').textContent = subtitle || 'Subtítulo descriptivo';
+    document.getElementById('preview-cta').textContent = linkText;
+
+    var mediaContainer = document.getElementById('preview-media');
+    mediaContainer.innerHTML = '';
+    if (mediaUrl) {
+      var ext = mediaUrl.split('.').pop().split('?')[0].toLowerCase();
+      if (['mp4','webm'].indexOf(ext) !== -1) {
+        mediaContainer.innerHTML = '<video autoplay muted loop playsinline style="width:100%;height:100%;object-fit:cover"><source src="' + mediaUrl + '"></video>';
+      } else {
+        mediaContainer.innerHTML = '<img src="' + mediaUrl + '" style="width:100%;height:100%;object-fit:cover">';
+      }
+    }
+    preview.style.background = bgColor;
+    preview.style.display = 'block';
+  }
+</script>
+{% endblock %}

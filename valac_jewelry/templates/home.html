@@ -109,6 +109,83 @@
 {% block content %}
 <main class="pt-24 md:pt-28 lg:pt-32">
 
+  {# ---------- SECCIÓN PROMO CAMPAÑA (admin-controlled) ---------- #}
+  {% if promo.get('promo_section_active') == 'true' and promo.get('promo_section_title') %}
+  {% set media = promo.get('promo_section_media_url', '') %}
+  {% set media_lower = media|lower if media else '' %}
+  {% set is_video = media and (media_lower.endswith('.mp4') or media_lower.endswith('.webm')
+                               or '.mp4?' in media_lower or '.webm?' in media_lower) %}
+  <section id="promo-hero" class="relative overflow-hidden -mt-24 md:-mt-28 lg:-mt-32"
+           style="min-height:420px;background:#1a1a1a">
+
+    {# ── Poster image: first frame placeholder while video loads ── #}
+    {% if is_video %}
+    <div id="promo-poster" class="absolute inset-0 z-[1]"
+         style="background:#1a1a1a;background-image:linear-gradient(135deg,#1a1a1a 0%,#2a2a2a 50%,#1a1a1a 100%);
+                background-size:400% 400%;animation:promo-bg-shift 3s ease infinite">
+    </div>
+    <style>
+      @keyframes promo-bg-shift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+      #promo-video.revealed{opacity:1!important}
+      #promo-poster.fade-out{opacity:0;transition:opacity .8s ease-out}
+    </style>
+    {% endif %}
+
+    {# Media background #}
+    {% if media %}
+      {% if is_video %}
+      <video id="promo-video" autoplay muted loop playsinline disablepictureinpicture
+             class="absolute inset-0 z-[2] w-full h-full object-cover" style="opacity:0;transition:opacity .8s ease-in">
+        <source src="{{ media }}" type="video/{{ 'webm' if 'webm' in media_lower else 'mp4' }}">
+      </video>
+      {% else %}
+      <img src="{{ media }}" alt="{{ promo.get('promo_section_title', '') }}"
+           class="absolute inset-0 w-full h-full object-cover" loading="eager">
+      {% endif %}
+    {% endif %}
+    {# Gradient overlay #}
+    <div class="absolute inset-0 z-[3] bg-gradient-to-r from-black/70 via-black/40 to-black/20"></div>
+    {# Content — always visible immediately #}
+    <div class="relative z-10 container mx-auto px-6 sm:px-8 pt-32 md:pt-36 lg:pt-40 pb-16 sm:pb-20 flex flex-col items-center justify-end text-center"
+         style="min-height:420px">
+      <h2 class="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white drop-shadow-lg"
+          style="font-family:'Playfair Display',serif">
+        {{ promo.get('promo_section_title', '') }}
+      </h2>
+      {% if promo.get('promo_section_subtitle') %}
+      <p class="mt-3 text-lg sm:text-xl md:text-2xl text-white/90 max-w-xl"
+         style="font-family:'Cormorant Garamond',serif">
+        {{ promo.get('promo_section_subtitle', '') }}
+      </p>
+      {% endif %}
+      {% if promo.get('promo_section_link') %}
+      <a href="{{ promo.get('promo_section_link', '#') }}"
+         class="mt-8 gender-cta inline-flex items-center gap-2 px-10 py-3.5 text-sm font-bold tracking-wider">
+        {{ promo.get('promo_section_link_text', 'Ver más') }}
+        <i class="fas fa-arrow-right text-xs"></i>
+      </a>
+      {% endif %}
+    </div>
+    {% if is_video %}
+    <script>
+    (function(){
+      var v=document.getElementById('promo-video'),
+          p=document.getElementById('promo-poster');
+      if(!v)return;
+      function reveal(){
+        v.classList.add('revealed');
+        if(p) p.classList.add('fade-out');
+      }
+      if(v.readyState>=3){reveal()}
+      else{v.addEventListener('canplay',reveal,{once:true})}
+      // Fallback: reveal after 5s even if video still buffering
+      setTimeout(function(){if(!v.classList.contains('revealed')){reveal()}},5000);
+    })();
+    </script>
+    {% endif %}
+  </section>
+  {% endif %}
+
   {# ---------- SECCIÓN COMPROMISO — HERO ---------- #}
   <section class="compromiso-home py-6 sm:py-10">
     <div class="container mx-auto px-4">
@@ -136,8 +213,8 @@
             Diamantes certificados GIA e IGI. Oro 10k, 14k y 18k. Diseño paso a paso.
           </p>
           <a href="/anillos-compromiso#configurador"
-             class="mt-5 gender-cta inline-flex items-center gap-2 px-7 py-3 text-sm font-bold uppercase tracking-wider">
-            Crear mi diseño <i class="fas fa-arrow-right text-xs"></i>
+             class="mt-5 gender-cta inline-flex items-center gap-2 px-7 py-3 text-sm font-bold tracking-wider">
+            Crear mi Diseño <i class="fas fa-arrow-right text-xs"></i>
           </a>
         </div>
       </div>

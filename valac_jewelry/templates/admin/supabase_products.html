@@ -3,6 +3,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Productos Supabase</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/output.css') }}">
   <!-- Incluye FontAwesome para iconos -->
@@ -41,6 +42,51 @@
     .filter-chip:hover { background: #bfdbfe; }
     .filter-chip .chip-x { font-weight: 700; font-size: .65rem; }
     .filter-count { font-size: .7rem; color: #6b7280; margin-left: .25rem; }
+
+    /* ── Mobile responsive ── */
+    @media (max-width: 767px) {
+      .desktop-table { display: none !important; }
+      .mobile-cards { display: block !important; }
+      .filter-panel { display: none; }
+      .filter-panel.mobile-open { display: block; }
+      .mobile-filter-toggle { display: flex; }
+    }
+    @media (min-width: 768px) {
+      .mobile-filter-toggle { display: none !important; }
+      .mobile-cards { display: none !important; }
+      .filter-panel { display: block !important; }
+    }
+    /* Card styles */
+    .product-card {
+      border: 1px solid #e5e7eb;
+      border-radius: .75rem;
+      padding: .75rem;
+      display: flex;
+      gap: .75rem;
+      align-items: flex-start;
+      transition: background .15s;
+    }
+    .product-card:active { background: #f3f4f6; }
+    .product-card .card-img {
+      width: 4.5rem; height: 4.5rem; min-width: 4.5rem;
+      border-radius: .5rem; object-fit: cover;
+      background: #f3f4f6;
+    }
+    .product-card .card-body { flex: 1; min-width: 0; }
+    .product-card .card-name {
+      font-weight: 600; font-size: .875rem; color: #1f2937;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .product-card .card-meta { font-size: .7rem; color: #6b7280; margin-top: .15rem; }
+    .product-card .card-price { font-size: 1rem; font-weight: 700; color: #111827; margin-top: .25rem; }
+    .product-card .card-price-old { font-size: .75rem; text-decoration: line-through; color: #9ca3af; margin-left: .35rem; }
+    .card-badges { display: flex; flex-wrap: wrap; gap: .25rem; margin-top: .35rem; }
+    .card-badge {
+      font-size: .6rem; font-weight: 600; padding: .1rem .4rem;
+      border-radius: 9999px; white-space: nowrap;
+    }
+    .card-actions { display: flex; gap: .75rem; margin-top: .5rem; align-items: center; }
+    .card-actions a, .card-actions button { font-size: 1.1rem; padding: .25rem; }
   </style>
 </head>
 <body class="bg-white">
@@ -74,16 +120,17 @@
       </a>
     </nav>
 
-    <h1 class="text-3xl font-bold mb-6 text-gray-800">Listado de Productos</h1>
+    <h1 class="text-2xl md:text-3xl font-bold mb-4 md:mb-6 text-gray-800">Listado de Productos</h1>
 
-    <!-- Botón para agregar producto -->
-    <a href="{{ url_for('.new') }}" class="mb-6 inline-block bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
-      <i class="fas fa-plus mr-2"></i>Agregar Producto
-    </a>
-    <!-- Botón para ver galería/ordenar -->
-    <a href="{{ url_for('.gallery') }}" class="mb-6 inline-block bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
-      <i class="fas fa-th-large mr-2"></i>Ver Galería / Ordenar
-    </a>
+    <!-- Botones de acción -->
+    <div class="flex flex-wrap gap-2 mb-4 md:mb-6">
+      <a href="{{ url_for('.new') }}" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-3 md:px-4 rounded-lg transition duration-300 text-sm md:text-base">
+        <i class="fas fa-plus mr-1"></i><span class="hidden sm:inline">Agregar Producto</span><span class="sm:hidden">Nuevo</span>
+      </a>
+      <a href="{{ url_for('.gallery') }}" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-3 md:px-4 rounded-lg transition duration-300 text-sm md:text-base">
+        <i class="fas fa-th-large mr-1"></i><span class="hidden sm:inline">Ver Galería / Ordenar</span><span class="sm:hidden">Galería</span>
+      </a>
+    </div>
 
     <!-- Campo de búsqueda -->
     <div class="mb-6">
@@ -91,33 +138,40 @@
     </div>
 
     <!-- Filtros Rápidos de Fechas -->
-    <div class="mb-6 flex gap-2 flex-wrap">
-      <button id="filter-todos" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 active">
+    <div class="mb-4 md:mb-6 flex gap-1.5 md:gap-2 flex-wrap">
+      <button id="filter-todos" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-1.5 px-3 md:py-2 md:px-4 rounded-lg transition duration-300 text-xs md:text-sm active">
         Todos
       </button>
-      <button id="filter-nuevos" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
-        Nuevos (7 días)
+      <button id="filter-nuevos" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-1.5 px-3 md:py-2 md:px-4 rounded-lg transition duration-300 text-xs md:text-sm">
+        <span class="hidden sm:inline">Nuevos (7 días)</span><span class="sm:hidden">7d</span>
       </button>
-      <button id="filter-antiguos" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
-        Stock Antiguo (+30 días)
+      <button id="filter-antiguos" class="bg-orange-500 hover:bg-orange-600 text-white font-semibold py-1.5 px-3 md:py-2 md:px-4 rounded-lg transition duration-300 text-xs md:text-sm">
+        <span class="hidden sm:inline">Stock Antiguo (+30 días)</span><span class="sm:hidden">+30d</span>
       </button>
-      <span class="border-l border-gray-300 h-8 mx-1 self-center"></span>
-      <button id="filter-inv-todos" class="bg-gray-400 hover:bg-gray-500 text-white font-bold py-2 px-4 rounded-lg transition duration-300 inv-filter active" data-inv="todos">
-        📦 Inventario: Todos
+      <span class="border-l border-gray-300 h-6 md:h-8 mx-1 self-center"></span>
+      <button id="filter-inv-todos" class="bg-gray-400 hover:bg-gray-500 text-white font-semibold py-1.5 px-3 md:py-2 md:px-4 rounded-lg transition duration-300 text-xs md:text-sm inv-filter active" data-inv="todos">
+        📦 <span class="hidden sm:inline">Inventario:</span> Todos
       </button>
-      <button id="filter-inv-disponible" class="bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 inv-filter" data-inv="disponible">
-        🟢 Disponible
+      <button id="filter-inv-disponible" class="bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-1.5 px-3 md:py-2 md:px-4 rounded-lg transition duration-300 text-xs md:text-sm inv-filter" data-inv="disponible">
+        🟢 <span class="hidden md:inline">Disponible</span><span class="md:hidden">Disp.</span>
       </button>
-      <button id="filter-inv-vendido" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 inv-filter" data-inv="vendido">
-        🔴 Vendido
+      <button id="filter-inv-vendido" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-1.5 px-3 md:py-2 md:px-4 rounded-lg transition duration-300 text-xs md:text-sm inv-filter" data-inv="vendido">
+        🔴 <span class="hidden md:inline">Vendido</span><span class="md:hidden">Vend.</span>
       </button>
-      <button id="filter-inv-devolucion" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300 inv-filter" data-inv="devolucion">
-        🟡 Devolución
+      <button id="filter-inv-devolucion" class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-1.5 px-3 md:py-2 md:px-4 rounded-lg transition duration-300 text-xs md:text-sm inv-filter" data-inv="devolucion">
+        🟡 <span class="hidden md:inline">Devolución</span><span class="md:hidden">Dev.</span>
       </button>
     </div>
 
+    <!-- Toggle filtros (solo mobile) -->
+    <button type="button" id="mobile-filter-btn" class="mobile-filter-toggle items-center gap-2 w-full mb-3 py-2.5 px-4 bg-gray-800 text-white rounded-lg text-sm font-semibold">
+      <i class="fas fa-sliders-h"></i> Filtros avanzados
+      <span id="mobile-filter-badge" class="ml-auto bg-blue-500 text-white text-xs rounded-full px-2 py-0.5 hidden">0</span>
+      <i class="fas fa-chevron-down ml-1 transition-transform" id="mobile-filter-arrow"></i>
+    </button>
+
     <!-- Panel de Filtros Avanzados -->
-    <div class="filter-panel p-4 mb-4">
+    <div class="filter-panel p-3 md:p-4 mb-4">
       <!-- Chips activos + contador -->
       <div class="flex items-center justify-between mb-3">
         <div id="active-chips" class="flex flex-wrap gap-1"></div>
@@ -238,48 +292,48 @@
     </div>
 
     <!-- Formulario de descuento en lote -->
-    <form id="batch_form" method="post" class="mb-6">
-      <div class="flex items-center space-x-2">
+    <form id="batch_form" method="post" class="mb-4 md:mb-6">
+      <div class="flex flex-wrap items-center gap-2">
         <input
           type="number"
           name="bulk_descuento_pct"
           min="0" max="100"
-          placeholder="% Descuento"
-          class="w-32 border border-gray-300 rounded-lg px-3 py-2 focus:outline-none"
+          placeholder="% Desc."
+          class="w-20 md:w-32 border border-gray-300 rounded-lg px-2 md:px-3 py-1.5 md:py-2 text-sm focus:outline-none"
         />
         <button
           formaction="{{ url_for('.apply_discount') }}"
           formmethod="post"
-          class="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300"
+          class="bg-indigo-500 hover:bg-indigo-600 text-white font-semibold py-1.5 px-3 md:py-2 md:px-4 rounded-lg transition duration-300 text-xs md:text-sm"
         >
-          Aplicar a seleccionados
+          <i class="fas fa-percent mr-1 md:hidden"></i><span class="hidden md:inline">Aplicar a seleccionados</span><span class="md:hidden">Aplicar</span>
         </button>
         <button
           formaction="{{ url_for('.remove_discount') }}"
           formmethod="post"
-          class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300"
+          class="bg-gray-500 hover:bg-gray-600 text-white font-semibold py-1.5 px-3 md:py-2 md:px-4 rounded-lg transition duration-300 text-xs md:text-sm"
         >
-          Quitar descuento
+          <i class="fas fa-times mr-1 md:hidden"></i><span class="hidden md:inline">Quitar descuento</span><span class="md:hidden">Quitar</span>
         </button>
-        <span class="border-l border-gray-300 h-8 mx-2"></span>
+        <span class="hidden md:inline-block border-l border-gray-300 h-8 mx-1"></span>
         <button
           formaction="{{ url_for('.bulk_activate') }}"
           formmethod="post"
-          class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300"
+          class="bg-green-500 hover:bg-green-600 text-white font-semibold py-1.5 px-3 md:py-2 md:px-4 rounded-lg transition duration-300 text-xs md:text-sm"
         >
-          <i class="fas fa-check-circle mr-1"></i>Activar
+          <i class="fas fa-check-circle mr-1"></i><span class="hidden sm:inline">Activar</span>
         </button>
         <button
           formaction="{{ url_for('.bulk_deactivate') }}"
           formmethod="post"
-          class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300"
+          class="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-1.5 px-3 md:py-2 md:px-4 rounded-lg transition duration-300 text-xs md:text-sm"
         >
-          <i class="fas fa-pause-circle mr-1"></i>Desactivar
+          <i class="fas fa-pause-circle mr-1"></i><span class="hidden sm:inline">Desactivar</span>
         </button>
       </div>
 
-      <!-- Tabla de productos con select y columnas de descuento -->
-      <div class="overflow-x-auto mt-4">
+      <!-- Tabla desktop -->
+      <div class="overflow-x-auto mt-4 desktop-table">
         <table class="w-full border-collapse">
           <thead class="bg-gray-100">
             <tr>
@@ -416,6 +470,96 @@
           </tbody>
         </table>
       </div>
+
+      <!-- Mobile card view -->
+      <div class="mobile-cards mt-4">
+        <div class="flex flex-col gap-2" id="mobile-card-list">
+          {% for prod in products %}
+          <div class="product-card"
+               data-card-id="{{ prod.id }}"
+               data-created-at="{{ prod.created_at }}"
+               data-genero="{{ prod.genero|default('',true) }}"
+               data-tipo="{{ prod.tipo_producto|default('',true) }}"
+               data-oro="{{ prod.tipo_oro|default('',true) }}"
+               data-foto="{{ 'con' if (prod.gallery and prod.gallery|length > 0) else 'sin' }}"
+               data-estado="{{ 'activo' if prod.activo else 'borrador' }}"
+               data-inv="{{ prod.estado_inventario|default('disponible',true) }}"
+               data-descuento="{{ 'con' if (prod.descuento_pct and prod.descuento_pct > 0) else 'sin' }}"
+               data-destacado="{{ 'si' if prod.destacado else 'no' }}"
+               data-nombre="{{ prod.nombre|lower }}">
+            <!-- Checkbox + Image -->
+            {% if prod.gallery and prod.gallery|length > 0 %}
+              <img src="{{ prod.gallery[0].imagen }}" alt="" class="card-img" loading="lazy">
+            {% elif prod.imagen %}
+              <img src="{{ prod.imagen }}" alt="" class="card-img" loading="lazy">
+            {% else %}
+              <div class="card-img flex items-center justify-center text-gray-300"><i class="fas fa-image text-2xl"></i></div>
+            {% endif %}
+
+            <div class="card-body">
+              <div class="card-name" title="{{ prod.nombre }}">{{ prod.nombre }}</div>
+              <div class="card-meta">{{ prod.tipo_producto or '' }} · {{ prod.genero or '' }} · {{ prod.tipo_oro or '' }}</div>
+
+              <!-- Price -->
+              {% if prod.descuento_pct and prod.descuento_pct > 0 %}
+                <div class="card-price">${{ prod.precio_descuento or prod.precio }}<span class="card-price-old">${{ prod.precio }}</span></div>
+              {% else %}
+                <div class="card-price">${{ prod.precio }}</div>
+              {% endif %}
+
+              <!-- Badges -->
+              <div class="card-badges">
+                {% if prod.activo %}
+                  <span class="card-badge bg-green-100 text-green-800">activo</span>
+                {% else %}
+                  <span class="card-badge bg-yellow-100 text-yellow-800">borrador</span>
+                {% endif %}
+
+                {% set inv = prod.estado_inventario or 'disponible' %}
+                {% if inv == 'vendido' %}
+                  <span class="card-badge bg-red-100 text-red-800">🔴 Vendido</span>
+                {% elif inv == 'devolucion' %}
+                  <span class="card-badge bg-yellow-100 text-yellow-800">🟡 Dev.</span>
+                {% else %}
+                  <span class="card-badge bg-emerald-100 text-emerald-800">🟢 Disp.</span>
+                {% endif %}
+
+                {% if prod.descuento_pct and prod.descuento_pct > 0 %}
+                  <span class="card-badge bg-purple-100 text-purple-800">-{{ prod.descuento_pct }}%</span>
+                {% endif %}
+
+                {% if prod.destacado %}
+                  <span class="card-badge bg-amber-100 text-amber-800">⭐</span>
+                {% endif %}
+
+                <span class="card-badge bg-gray-100 text-gray-600">Stock: {{ prod.stock_total or 0 }}</span>
+              </div>
+
+              <!-- Actions -->
+              <div class="card-actions">
+                <label class="flex items-center gap-1 text-xs text-gray-500">
+                  <input type="checkbox" name="product_ids" value="{{ prod.id }}" class="select_row rounded">
+                  Sel.
+                </label>
+                <a href="{{ url_for('.edit_product', id=prod.id) }}" class="text-blue-500" title="Editar">
+                  <i class="fas fa-edit"></i>
+                </a>
+                <a href="{{ url_for('supabase_products.toggle_destacado', product_id=prod.id) }}"
+                   onclick="event.preventDefault(); fetch(this.href, {method:'POST',headers:{'X-Requested-With':'XMLHttpRequest'}}).then(()=>location.reload());"
+                   class="cursor-pointer" title="{{ 'Quitar destacado' if prod.destacado else 'Destacar' }}">
+                  {{ '⭐' if prod.destacado else '☆' }}
+                </a>
+                <form method="POST" action="{{ url_for('supabase_products.toggle_estado', product_id=prod.id) }}" style="display:inline;">
+                  <button type="submit" class="text-xs font-semibold px-2 py-0.5 rounded-full {{ 'bg-green-100 text-green-800' if prod.activo else 'bg-yellow-100 text-yellow-800' }}">
+                    {{ 'activo' if prod.activo else 'borrador' }}
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
     </form>
 
     <!-- Paginación (opcional) -->
@@ -440,6 +584,7 @@
   <script>
     (function() {
       const allRows = Array.from(document.querySelectorAll('tbody tr'));
+      const allCards = Array.from(document.querySelectorAll('.product-card'));
       const totalProducts = allRows.length;
       const searchInput = document.getElementById('search');
       const chipsContainer = document.getElementById('active-chips');
@@ -475,31 +620,70 @@
         const cbFilters = getActiveFilters();
         let visible = 0;
 
-        allRows.forEach(row => {
-          // 1) Text search (match on nombre column — 8th td)
-          const name = (row.children[7]?.textContent || '').toLowerCase();
-          if (term && !name.includes(term)) { row.style.display = 'none'; return; }
-
+        // Helper to check a single element's dataset
+        function shouldShow(ds) {
+          // 1) Text search
+          const name = (ds.nombre || ds.createdAt || ''); // cards use data-nombre
+          if (term && !(ds.nombre || '').includes(term)) {
+            // For table rows, check child text
+            return false;
+          }
           // 2) Date quick filter
           if (currentDateFilter !== 'todos') {
-            const dd = daysDiff(parseDate(row.dataset.createdAt));
+            const dd = daysDiff(parseDate(ds.createdAt));
+            if (currentDateFilter === 'nuevos' && !(dd >= 0 && dd <= 7)) return false;
+            if (currentDateFilter === 'antiguos' && dd <= 30) return false;
+          }
+          // 3) Inventory quick-button filter
+          if (currentInvQuickFilter !== 'todos') {
+            if (ds.inv !== currentInvQuickFilter) return false;
+          }
+          // 4) Checkbox filters
+          for (const [group, values] of Object.entries(cbFilters)) {
+            const rowVal = ds[group] || '';
+            if (!values.includes(rowVal)) return false;
+          }
+          return true;
+        }
+
+        // Table rows
+        allRows.forEach(row => {
+          const ds = row.dataset;
+          const name = (row.children[7]?.textContent || '').toLowerCase();
+          // Augment dataset with nombre for search
+          const augmented = { ...ds, nombre: name };
+          if (term && !name.includes(term)) { row.style.display = 'none'; return; }
+          // Date
+          if (currentDateFilter !== 'todos') {
+            const dd = daysDiff(parseDate(ds.createdAt));
             if (currentDateFilter === 'nuevos' && !(dd >= 0 && dd <= 7)) { row.style.display = 'none'; return; }
             if (currentDateFilter === 'antiguos' && dd <= 30) { row.style.display = 'none'; return; }
           }
-
-          // 3) Inventory quick-button filter
-          if (currentInvQuickFilter !== 'todos') {
-            if (row.dataset.inv !== currentInvQuickFilter) { row.style.display = 'none'; return; }
-          }
-
-          // 4) Checkbox filters — OR within group, AND between groups
+          if (currentInvQuickFilter !== 'todos' && ds.inv !== currentInvQuickFilter) { row.style.display = 'none'; return; }
           for (const [group, values] of Object.entries(cbFilters)) {
-            const rowVal = row.dataset[group] || '';
-            if (!values.includes(rowVal)) { row.style.display = 'none'; return; }
+            if (!values.includes(ds[group] || '')) { row.style.display = 'none'; return; }
           }
-
           row.style.display = '';
           visible++;
+        });
+
+        // Mobile cards
+        allCards.forEach(card => {
+          const ds = card.dataset;
+          let show = true;
+          if (term && !(ds.nombre || '').includes(term)) show = false;
+          if (show && currentDateFilter !== 'todos') {
+            const dd = daysDiff(parseDate(ds.createdAt));
+            if (currentDateFilter === 'nuevos' && !(dd >= 0 && dd <= 7)) show = false;
+            if (currentDateFilter === 'antiguos' && dd <= 30) show = false;
+          }
+          if (show && currentInvQuickFilter !== 'todos' && ds.inv !== currentInvQuickFilter) show = false;
+          if (show) {
+            for (const [group, values] of Object.entries(cbFilters)) {
+              if (!values.includes(ds[group] || '')) { show = false; break; }
+            }
+          }
+          card.style.display = show ? '' : 'none';
         });
 
         counterEl.textContent = `Mostrando ${visible} de ${totalProducts}`;
@@ -510,12 +694,13 @@
 
       // --- Dynamic counts ---
       function updateCounts() {
-        // Count visible rows per filter value
+        // Count visible rows per filter value (use both table+cards to count once)
+        const source = window.innerWidth < 768 ? allCards : allRows;
         const counts = {};
-        allRows.forEach(row => {
-          if (row.style.display === 'none') return;
+        source.forEach(el => {
+          if (el.style.display === 'none') return;
           ['genero','tipo','oro','estado','inv','foto','descuento','destacado'].forEach(g => {
-            const v = row.dataset[g] || '';
+            const v = el.dataset[g] || '';
             const key = g + ':' + v;
             counts[key] = (counts[key] || 0) + 1;
           });
@@ -628,6 +813,29 @@
           visibleRows.forEach(r => tbody.appendChild(r));
         });
       });
+
+      // --- Mobile filter toggle ---
+      const mobileBtn = document.getElementById('mobile-filter-btn');
+      const filterPanel = document.querySelector('.filter-panel');
+      const mobileArrow = document.getElementById('mobile-filter-arrow');
+      const mobileBadge = document.getElementById('mobile-filter-badge');
+      if (mobileBtn) {
+        mobileBtn.addEventListener('click', () => {
+          filterPanel.classList.toggle('mobile-open');
+          mobileArrow.style.transform = filterPanel.classList.contains('mobile-open') ? 'rotate(180deg)' : '';
+        });
+      }
+
+      // Update mobile badge count
+      const origRenderChips = renderChips;
+      renderChips = function(cbFilters) {
+        origRenderChips(cbFilters);
+        const count = Object.values(cbFilters).reduce((s, v) => s + v.length, 0);
+        if (mobileBadge) {
+          mobileBadge.textContent = count;
+          mobileBadge.classList.toggle('hidden', count === 0);
+        }
+      };
 
       // Initial count
       applyAllFilters();

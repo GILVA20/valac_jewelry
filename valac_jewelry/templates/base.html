@@ -3,8 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Título de la página (se puede sobrescribir en cada template) -->
+  <!-- SEO + Open Graph -->
   <title>{% block title %}VALAC Joyas{% endblock %}</title>
+  <meta name="description" content="{% block meta_description %}En VALAC Joyas, la tradición y la pasión por el oro se transmiten de generación en generación. Cada pieza es el reflejo de compromiso, calidad y elegancia.{% endblock %}">
+  <meta property="og:title" content="{% block og_title %}VALAC Joyas{% endblock %}">
+  <meta property="og:description" content="{% block og_description %}Joyería de lujo mexicana — Oro real, diamantes certificados y diseño artesanal.{% endblock %}">
+  <meta property="og:image" content="{% block og_image %}{{ CDN_BASE_URL }}valac-og-cover.jpg{% endblock %}">
+  <meta property="og:url" content="{{ request.url }}">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="VALAC Joyas">
   <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
 
   <!-- Fuentes (Playfair Display, Cormorant Garamond, Roboto e Inter) -->

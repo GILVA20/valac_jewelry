@@ -58,8 +58,8 @@
   {% block head_extra %}{% endblock %}
 
   {% if META_PIXEL_ID %}
-  <!-- META PIXEL — Base code (se inicializa condicionado a consentimiento de cookies) -->
-  <script>
+  <!-- META PIXEL — Base code (init incondicional para que el crawler de Meta lo detecte) -->
+  <script data-cfasync="false">
     !function(f,b,e,v,n,t,s)
     {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
     n.callMethod.apply(n,arguments):n.queue.push(arguments)};
@@ -69,25 +69,19 @@
     s.parentNode.insertBefore(t,s)}(window,document,'script',
     'https://connect.facebook.net/en_US/fbevents.js');
 
-    // META PIXEL — Función segura: solo dispara si el Pixel está inicializado
-    // Definida aquí para que esté disponible en TODOS los scripts de la página
+    // META PIXEL — Init + PageView siempre (requerido por el crawler de Meta)
+    fbq('init', '{{ META_PIXEL_ID }}');
+    fbq('track', 'PageView');
+    window._pixelInitialized = true;
+
+    // META PIXEL — Función segura para eventos de conversión (AddToCart, Purchase, etc.)
+    // Gatea por consentimiento de cookies: solo dispara si el usuario aceptó
     window.fbqSafe = function() {
-      if (window._pixelInitialized && typeof fbq === 'function') {
+      var consent = localStorage.getItem('valac_cookie_consent');
+      if (consent === 'accepted' && typeof fbq === 'function') {
         fbq.apply(null, arguments);
       }
     };
-
-    // META PIXEL — Solo inicializar si el usuario dio consentimiento
-    (function initPixelIfConsented() {
-      var consent = localStorage.getItem('valac_cookie_consent');
-      if (consent === 'accepted') {
-        fbq('init', '{{ META_PIXEL_ID }}');
-        fbq('track', 'PageView'); // META PIXEL — PageView automático en cada página
-        window._pixelInitialized = true;
-      } else {
-        window._pixelInitialized = false;
-      }
-    })();
   </script>
   {% endif %}
 </head>
@@ -267,12 +261,6 @@
       document.getElementById('valac-cookie-accept').addEventListener('click', function() {
         localStorage.setItem('valac_cookie_consent', 'accepted');
         document.getElementById('valac-cookie-banner').style.display = 'none';
-        // META PIXEL — Inicializar Pixel inmediatamente tras aceptar
-        if (typeof fbq === 'function' && !window._pixelInitialized) {
-          fbq('init', '{{ META_PIXEL_ID }}');
-          fbq('track', 'PageView');
-          window._pixelInitialized = true;
-        }
       });
 
       document.getElementById('valac-cookie-reject').addEventListener('click', function() {

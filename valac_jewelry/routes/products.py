@@ -10,7 +10,8 @@ def product_detail(product_id):
     supabase = current_app.supabase
     _PUBLIC_FIELDS = (
         "id, nombre, descripcion, precio, descuento_pct, precio_descuento, "
-        "tipo_producto, genero, tipo_oro, imagen, stock_total, destacado, created_at"
+        "tipo_producto, genero, tipo_oro, imagen, stock_total, destacado, created_at, "
+        "specs_piedra"
     )
     response = supabase.table('products').select(_PUBLIC_FIELDS).eq('id', product_id).single().execute()
     

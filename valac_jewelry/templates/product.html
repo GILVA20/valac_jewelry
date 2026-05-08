@@ -117,6 +117,42 @@
           Categoría: {{ product.tipo_producto }}
           {% if product.peso %}<br>Peso: {{ product.peso }} g{% endif %}
         </p>
+
+        {% if product.specs_piedra %}
+        {% set sp = product.specs_piedra %}
+        <div class="mb-6 bg-gradient-to-br from-gray-50 to-white border border-gray-200 rounded-xl p-5 shadow-sm">
+          <h3 class="text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+            <i class="fa-regular fa-gem text-amber-500"></i> Especificaciones de la Piedra
+          </h3>
+          <div class="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
+            {% if sp.tipo_piedra %}
+            <div><span class="text-gray-500">Piedra:</span> <span class="font-medium text-gray-800">{{ sp.tipo_piedra }}</span></div>
+            {% endif %}
+            {% if sp.forma %}
+            <div><span class="text-gray-500">Forma:</span> <span class="font-medium text-gray-800">{{ sp.forma }}</span></div>
+            {% endif %}
+            {% if sp.quilates %}
+            <div><span class="text-gray-500">Quilates:</span> <span class="font-medium text-gray-800">{{ sp.quilates }} ct</span></div>
+            {% endif %}
+            {% if sp.color %}
+            <div><span class="text-gray-500">Color:</span> <span class="font-medium text-gray-800">{{ sp.color }}</span></div>
+            {% endif %}
+            {% if sp.claridad %}
+            <div><span class="text-gray-500">Claridad:</span> <span class="font-medium text-gray-800">{{ sp.claridad }}</span></div>
+            {% endif %}
+            {% if sp.corte %}
+            <div><span class="text-gray-500">Corte:</span> <span class="font-medium text-gray-800">{{ sp.corte }}</span></div>
+            {% endif %}
+            {% if sp.certificado %}
+            <div><span class="text-gray-500">Certificado:</span> <span class="font-medium text-gray-800">{{ sp.certificado }}</span></div>
+            {% endif %}
+            {% if sp.tipo_engaste %}
+            <div><span class="text-gray-500">Engaste:</span> <span class="font-medium text-gray-800">{{ sp.tipo_engaste }}</span></div>
+            {% endif %}
+          </div>
+        </div>
+        {% endif %}
+
         <p class="mb-6 text-gray-800">{{ product.descripcion }}</p>
         <div class="flex flex-wrap gap-4">
           {% if product.stock_total == 0 %}

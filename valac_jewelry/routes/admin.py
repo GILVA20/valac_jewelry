@@ -748,6 +748,15 @@ class SupabaseProductAdmin(BaseView):
                 "imagen": imagen_url,  # Primera imagen como principal
             }
 
+            # Specs de piedra para anillos de compromiso
+            if tipo_producto == "Anillos de Compromiso":
+                specs_raw = request.form.get("specs_piedra", "")
+                if specs_raw:
+                    try:
+                        data["specs_piedra"] = json.loads(specs_raw)
+                    except (json.JSONDecodeError, TypeError):
+                        pass
+
             response = sb.table("products").insert(data).execute()
 
             if not response.data:
@@ -866,7 +875,20 @@ class SupabaseProductAdmin(BaseView):
                 "estado_inventario": request.form.get("estado_inventario") or "disponible",
                 "devolucion_a":      request.form.get("devolucion_a") or None,
             }
+
+            # Specs de piedra para anillos de compromiso
+            specs_raw = request.form.get("specs_piedra", "")
+            _is_compromiso = (tipo_producto or "").strip() == "Anillos de Compromiso"
+            if _is_compromiso and specs_raw:
+                try:
+                    update_data["specs_piedra"] = json.loads(specs_raw)
+                except (json.JSONDecodeError, TypeError):
+                    pass
+
             clean_update_data = {k: v for k, v in update_data.items() if v is not None}
+            # Si cambió a otro tipo, limpiar specs_piedra explícitamente
+            if not _is_compromiso:
+                clean_update_data["specs_piedra"] = None
             current_app.logger.debug("[edit_product] UPDATE payload: %s", clean_update_data)
 
             # ✅ UPDATE con retorno de fila (compat supabase-py 2.x)

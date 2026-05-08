@@ -84,6 +84,7 @@
         <select id="tipo_producto" name="tipo_producto" required
                 class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
           <option value="Anillos"  {% if product.tipo_producto == "Anillos"  %}selected{% endif %}>Anillos</option>
+          <option value="Anillos de Compromiso" {% if product.tipo_producto == "Anillos de Compromiso" %}selected{% endif %}>Anillos de Compromiso</option>
           <option value="Dijes"    {% if product.tipo_producto == "Dijes"    %}selected{% endif %}>Dijes</option>
           <option value="Collares" {% if product.tipo_producto == "Collares" %}selected{% endif %}>Collares</option>
           <option value="Pulsos"   {% if product.tipo_producto == "Pulsos"   %}selected{% endif %}>Pulsos</option>
@@ -110,9 +111,90 @@
                 class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
           <option value="10k"       {% if product.tipo_oro == "10k"       %}selected{% endif %}>10k</option>
           <option value="14k"       {% if product.tipo_oro == "14k"       %}selected{% endif %}>14k</option>
+          <option value="18k"       {% if product.tipo_oro == "18k"       %}selected{% endif %}>18k</option>
           <option value="Plata .925"{% if product.tipo_oro == "Plata .925"%}selected{% endif %}>Plata .925</option>
         </select>
       </div>
+
+      <!-- ── Specs Piedra (solo Anillos de Compromiso) ──────────── -->
+      {% set sp = product.specs_piedra or {} %}
+      <div id="specs-piedra-section" class="{% if product.tipo_producto != 'Anillos de Compromiso' %}hidden{% endif %} mb-6 border-t pt-4 mt-2">
+        <h3 class="text-base font-semibold text-gray-600 mb-4">
+          <i class="fa-regular fa-gem mr-1"></i> Especificaciones de la Piedra
+        </h3>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label for="sp_tipo_piedra" class="block text-gray-700 font-medium mb-1">Tipo de Piedra:</label>
+            <select id="sp_tipo_piedra" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="">— Seleccionar —</option>
+              {% for val in ['Diamante','Moissanite','Zirconia'] %}
+              <option value="{{ val }}" {% if sp.get('tipo_piedra') == val %}selected{% endif %}>{{ val }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label for="sp_forma" class="block text-gray-700 font-medium mb-1">Forma:</label>
+            <select id="sp_forma" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="">— Seleccionar —</option>
+              {% for val in ['Redondo','Princess','Cushion','Oval','Emerald','Pear','Marquise'] %}
+              <option value="{{ val }}" {% if sp.get('forma') == val %}selected{% endif %}>{{ val }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label for="sp_quilates" class="block text-gray-700 font-medium mb-1">Quilates:</label>
+            <input type="number" step="0.01" min="0" id="sp_quilates" placeholder="ej. 0.50"
+                   value="{{ sp.get('quilates', '') }}"
+                   class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label for="sp_color" class="block text-gray-700 font-medium mb-1">Color:</label>
+            <select id="sp_color" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="">— Seleccionar —</option>
+              {% for val in ['D','E','F','G','H','I','J'] %}
+              <option value="{{ val }}" {% if sp.get('color') == val %}selected{% endif %}>{{ val }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label for="sp_claridad" class="block text-gray-700 font-medium mb-1">Claridad:</label>
+            <select id="sp_claridad" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="">— Seleccionar —</option>
+              {% for val in ['IF','VVS1','VVS2','VS1','VS2','SI1','SI2','I1'] %}
+              <option value="{{ val }}" {% if sp.get('claridad') == val %}selected{% endif %}>{{ val }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label for="sp_corte" class="block text-gray-700 font-medium mb-1">Corte:</label>
+            <select id="sp_corte" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="">— Seleccionar —</option>
+              {% for val in ['Ideal','Excellent','Very Good','Good'] %}
+              <option value="{{ val }}" {% if sp.get('corte') == val %}selected{% endif %}>{{ val }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label for="sp_certificado" class="block text-gray-700 font-medium mb-1">Certificado:</label>
+            <select id="sp_certificado" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="">— Seleccionar —</option>
+              {% for val in ['GIA','IGI','Ninguno'] %}
+              <option value="{{ val }}" {% if sp.get('certificado') == val %}selected{% endif %}>{{ val }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div>
+            <label for="sp_tipo_engaste" class="block text-gray-700 font-medium mb-1">Tipo de Engaste:</label>
+            <select id="sp_tipo_engaste" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="">— Seleccionar —</option>
+              {% for val in ['Solitario','Halo','Pavé','Three-stone','Channel','Bezel'] %}
+              <option value="{{ val }}" {% if sp.get('tipo_engaste') == val %}selected{% endif %}>{{ val }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+      </div>
+      <input type="hidden" id="specs_piedra" name="specs_piedra">
 
       <!-- ── Costos y Peso (privado, solo admin) ─────────────────── -->
       <div class="mb-2 mt-8 border-t pt-4">
@@ -274,6 +356,26 @@
     // SortableJS on-demand
     const Sortable = await import('https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/modular/sortable.esm.js')
       .then(m => m.default);
+
+    // ---------- Specs piedra toggle ----------
+    const specsSection = document.getElementById("specs-piedra-section");
+    const tipoProductoSel = document.getElementById("tipo_producto");
+    tipoProductoSel.addEventListener("change", () => {
+      specsSection.classList.toggle("hidden", tipoProductoSel.value !== "Anillos de Compromiso");
+    });
+
+    function buildSpecsPiedra() {
+      if (tipoProductoSel.value !== "Anillos de Compromiso") return "";
+      const specs = {};
+      const fields = ["tipo_piedra","forma","quilates","color","claridad","corte","certificado","tipo_engaste"];
+      fields.forEach(f => {
+        const el = document.getElementById("sp_" + f);
+        if (!el) return;
+        const v = el.value.trim();
+        if (v) specs[f] = f === "quilates" ? parseFloat(v) : v;
+      });
+      return Object.keys(specs).length ? JSON.stringify(specs) : "";
+    }
 
     // --- Helpers UI ---
     function showToast(msg, type="info") {
@@ -497,6 +599,8 @@
     async function postWithFeedback(e) {
       e.preventDefault();
       normalizeHiddenArrayField(imagenesMultiples);
+      // serializar specs piedra
+      document.getElementById("specs_piedra").value = buildSpecsPiedra();
 
       submitBtn.disabled = true;
       const originalText = submitBtn.textContent;

@@ -56,6 +56,7 @@
         <select id="tipo_producto" name="tipo_producto" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
           <option value="" disabled selected>Selecciona un tipo de producto</option>
           <option value="Anillos">Anillos</option>
+          <option value="Anillos de Compromiso">Anillos de Compromiso</option>
           <option value="Dijes">Dijes</option>
           <option value="Collares">Collares</option>
           <option value="Pulsos">Pulsos</option>
@@ -82,12 +83,108 @@
           <option value="" disabled selected>Selecciona el tipo de oro</option>
           <option value="10k">10k</option>
           <option value="14k">14k</option>
+          <option value="18k">18k</option>
         </select>
       </div>
 
-      <!-- Ocultos (portada + lista) -->
+      <!-- ── Specs Piedra (solo Anillos de Compromiso) ──────────── -->
+      <div id="specs-piedra-section" class="hidden mb-6 border-t pt-4 mt-2">
+        <h3 class="text-base font-semibold text-gray-600 mb-4">
+          <i class="fa-regular fa-gem mr-1"></i> Especificaciones de la Piedra
+        </h3>
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label for="sp_tipo_piedra" class="block text-gray-700 font-medium mb-1">Tipo de Piedra:</label>
+            <select id="sp_tipo_piedra" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="">— Seleccionar —</option>
+              <option value="Diamante">Diamante</option>
+              <option value="Moissanite">Moissanite</option>
+              <option value="Zirconia">Zirconia</option>
+            </select>
+          </div>
+          <div>
+            <label for="sp_forma" class="block text-gray-700 font-medium mb-1">Forma:</label>
+            <select id="sp_forma" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="">— Seleccionar —</option>
+              <option value="Redondo">Redondo</option>
+              <option value="Princess">Princess</option>
+              <option value="Cushion">Cushion</option>
+              <option value="Oval">Oval</option>
+              <option value="Emerald">Emerald</option>
+              <option value="Pear">Pear</option>
+              <option value="Marquise">Marquise</option>
+            </select>
+          </div>
+          <div>
+            <label for="sp_quilates" class="block text-gray-700 font-medium mb-1">Quilates:</label>
+            <input type="number" step="0.01" min="0" id="sp_quilates" placeholder="ej. 0.50"
+                   class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+          </div>
+          <div>
+            <label for="sp_color" class="block text-gray-700 font-medium mb-1">Color:</label>
+            <select id="sp_color" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="">— Seleccionar —</option>
+              <option value="D">D</option>
+              <option value="E">E</option>
+              <option value="F">F</option>
+              <option value="G">G</option>
+              <option value="H">H</option>
+              <option value="I">I</option>
+              <option value="J">J</option>
+            </select>
+          </div>
+          <div>
+            <label for="sp_claridad" class="block text-gray-700 font-medium mb-1">Claridad:</label>
+            <select id="sp_claridad" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="">— Seleccionar —</option>
+              <option value="IF">IF</option>
+              <option value="VVS1">VVS1</option>
+              <option value="VVS2">VVS2</option>
+              <option value="VS1">VS1</option>
+              <option value="VS2">VS2</option>
+              <option value="SI1">SI1</option>
+              <option value="SI2">SI2</option>
+              <option value="I1">I1</option>
+            </select>
+          </div>
+          <div>
+            <label for="sp_corte" class="block text-gray-700 font-medium mb-1">Corte:</label>
+            <select id="sp_corte" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="">— Seleccionar —</option>
+              <option value="Ideal">Ideal</option>
+              <option value="Excellent">Excellent</option>
+              <option value="Very Good">Very Good</option>
+              <option value="Good">Good</option>
+            </select>
+          </div>
+          <div>
+            <label for="sp_certificado" class="block text-gray-700 font-medium mb-1">Certificado:</label>
+            <select id="sp_certificado" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="">— Seleccionar —</option>
+              <option value="GIA">GIA</option>
+              <option value="IGI">IGI</option>
+              <option value="Ninguno">Ninguno</option>
+            </select>
+          </div>
+          <div>
+            <label for="sp_tipo_engaste" class="block text-gray-700 font-medium mb-1">Tipo de Engaste:</label>
+            <select id="sp_tipo_engaste" class="w-full border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <option value="">— Seleccionar —</option>
+              <option value="Solitario">Solitario</option>
+              <option value="Halo">Halo</option>
+              <option value="Pavé">Pavé</option>
+              <option value="Three-stone">Three-stone</option>
+              <option value="Channel">Channel</option>
+              <option value="Bezel">Bezel</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ocultos (portada + lista + specs) -->
       <input type="hidden" id="imagen" name="imagen">
       <input type="hidden" id="imagenes_multiples" name="imagenes_multiples">
+      <input type="hidden" id="specs_piedra" name="specs_piedra">
 
       <!-- Dropzone -->
       <h3 class="text-lg font-semibold mb-2">Imágenes del producto</h3>
@@ -128,6 +225,26 @@
   <script type="module">
     const Sortable = await import('https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/modular/sortable.esm.js')
       .then(m => m.default);
+
+    // ---------- Specs piedra toggle ----------
+    const specsSection = document.getElementById("specs-piedra-section");
+    const tipoProductoSel = document.getElementById("tipo_producto");
+    tipoProductoSel.addEventListener("change", () => {
+      specsSection.classList.toggle("hidden", tipoProductoSel.value !== "Anillos de Compromiso");
+    });
+
+    function buildSpecsPiedra() {
+      if (tipoProductoSel.value !== "Anillos de Compromiso") return "";
+      const specs = {};
+      const fields = ["tipo_piedra","forma","quilates","color","claridad","corte","certificado","tipo_engaste"];
+      fields.forEach(f => {
+        const el = document.getElementById("sp_" + f);
+        if (!el) return;
+        const v = el.value.trim();
+        if (v) specs[f] = f === "quilates" ? parseFloat(v) : v;
+      });
+      return Object.keys(specs).length ? JSON.stringify(specs) : "";
+    }
 
     // ---------- UI helpers ----------
     function showToast(msg, type="info") {
@@ -337,6 +454,8 @@
     const form = document.getElementById("new-form");
     form?.addEventListener("submit", (e) => {
       rebuildUrlsFromGrid();
+      // serializar specs piedra
+      document.getElementById("specs_piedra").value = buildSpecsPiedra();
       // normalizar campo hidden
       try {
         const raw = (imagenesMultiples.value || "").trim();
